@@ -2,14 +2,6 @@ from sqlmodel import create_engine, Session
 from typing import Generator
 import os
 
-def create_db_and_tables():
-    """Create database tables"""
-    from models import Client, HealthCheck, Alert
-    engine = get_engine()
-    # This would be handled by Alembic in production
-    # For now, we'll use Flask-SQLAlchemy's create_all()
-    pass
-
 def get_engine():
     """Get SQLModel database engine"""
     database_url = os.getenv("DATABASE_URL")
@@ -17,6 +9,16 @@ def get_engine():
         raise ValueError("DATABASE_URL environment variable is not set")
     
     return create_engine(database_url, echo=False)
+
+# Export engine for direct use
+engine = get_engine()
+
+def create_db_and_tables():
+    """Create database tables"""
+    from models_new import User, Client, Metric, Score, Snapshot, AuditLog
+    # This would be handled by Alembic in production
+    # For now, we'll use SQLModel's create_all()
+    pass
 
 def get_session() -> Generator[Session, None, None]:
     """Get database session"""
