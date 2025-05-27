@@ -1,13 +1,27 @@
 from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, flash
 from sqlalchemy import desc, func
+from flask_login import current_user
 from app import app, db
-from models import Client, HealthCheck, Alert
+from models import Client, HealthCheck, Alert, User, UserRole
 from forms import ClientRegistrationForm, HealthCheckForm
+from replit_auth import require_login, require_role, make_replit_blueprint
+
+# Register Replit Auth blueprint
+app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+
+# Make session permanent
+@app.before_request
+def make_session_permanent():
+    from flask import session
+    session.permanent = True
 
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
+    if not current_user.is_authenticated:
+        return render_template('landing.html')
+    
     # Get all active clients with their latest status
     clients = Client.query.filter_by(is_active=True).all()
     
@@ -35,6 +49,7 @@ def dashboard():
                          recent_alerts=recent_alerts)
 
 @app.route('/register', methods=['GET', 'POST'])
+@require_role(UserRole.MANAGER)
 def register_client():
     """Register a new client"""
     form = ClientRegistrationForm()
