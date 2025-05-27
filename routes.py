@@ -280,7 +280,7 @@ def check_and_create_alerts(client, health_check):
         db.session.rollback()
 
 # Score management routes
-@app.route('/scores/new', methods=['GET', 'POST'])
+@app.route('/score_entry', methods=['GET', 'POST'])
 def score_entry():
     """Comprehensive score entry form for all metrics"""
     # Simple authentication check
