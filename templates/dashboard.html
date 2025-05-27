@@ -25,9 +25,9 @@
                     <h5 class="card-title">Clients</h5>
                     <p class="card-text">Manage client information and assignments</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="{{ url_for('manager.client_list') }}" class="btn btn-primary">Manage Clients</a>
+                        <a href="/manager/clients" class="btn btn-primary">Manage Clients</a>
                     {% else %}
-                        <a href="{{ url_for('client_list') }}" class="btn btn-primary">View Clients</a>
+                        <a href="/clients" class="btn btn-primary">View Clients</a>
                     {% endif %}
                 </div>
             </div>
@@ -86,7 +86,7 @@
                             <ul class="list-unstyled">
                                 <li><a href="/scores/new" class="text-decoration-none">📊 Enter Client Scores</a></li>
                                 <li><a href="/scores/" class="text-decoration-none">📈 View Score History</a></li>
-                                <li><a href="{{ url_for('client_list') }}" class="text-decoration-none">👥 My Assigned Clients</a></li>
+                                <li><a href="/clients" class="text-decoration-none">👥 My Assigned Clients</a></li>
                             </ul>
                         </div>
                         <div class="col-md-6 mb-3">
