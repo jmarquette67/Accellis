@@ -24,13 +24,8 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    from sqlmodel import Session, select
-    from database import engine
     from models import User
-    
-    with Session(engine) as session:
-        statement = select(User).where(User.id == user_id)
-        return session.exec(statement).first()
+    return User.query.get(user_id)
 
 class UserSessionStorage(BaseStorage):
     def get(self, blueprint):

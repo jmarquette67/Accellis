@@ -280,14 +280,38 @@ def check_and_create_alerts(client, health_check):
         db.session.rollback()
 
 # Score management routes
-@app.route('/scores/new')
+@app.route('/scores/new', methods=['GET', 'POST'])
 def score_entry():
     """Score entry form for all users"""
     # Simple authentication check
     if not current_user.is_authenticated:
         return redirect(url_for('replit_auth.login'))
     
-    from models import Metric
+    from models import Metric, Score
+    
+    if request.method == 'POST':
+        # Handle form submission
+        client_id = request.form.get('client_id')
+        metric_id = request.form.get('metric_id')
+        value = request.form.get('value')
+        notes = request.form.get('notes', '')
+        
+        if client_id and metric_id and value:
+            try:
+                score = Score(
+                    client_id=int(client_id),
+                    metric_id=int(metric_id),
+                    value=int(value),
+                    notes=notes
+                )
+                db.session.add(score)
+                db.session.commit()
+                flash('Score entered successfully!', 'success')
+                return redirect(url_for('score_entry'))
+            except Exception as e:
+                db.session.rollback()
+                flash('Error entering score. Please try again.', 'error')
+    
     clients = Client.query.order_by(Client.name).all()
     metrics = Metric.query.order_by(Metric.name).all()
     return render_template("score_entry.html", clients=clients, metrics=metrics, user=current_user)
