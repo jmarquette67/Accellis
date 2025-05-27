@@ -337,6 +337,19 @@ def client_list():
     clients = Client.query.order_by(Client.name).all()
     return render_template('manager_clients.html', clients=clients, user=current_user)
 
+@app.route('/simple-clients')
+def simple_client_list():
+    """Simple client list for testing"""
+    if not current_user.is_authenticated:
+        return redirect(url_for('replit_auth.login'))
+    
+    clients = Client.query.order_by(Client.name).all()
+    client_html = "<h2>Your Clients</h2><ul>"
+    for client in clients:
+        client_html += f"<li>{client.name} - {client.description}</li>"
+    client_html += "</ul>"
+    return f"<html><body>{client_html}<p>Total clients: {len(clients)}</p></body></html>"
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', error_message='Page not found'), 404
