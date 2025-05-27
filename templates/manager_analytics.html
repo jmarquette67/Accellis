@@ -1,23 +1,115 @@
 {% extends "base.html" %}
 
-{% block title %}Client Analytics - Accellis{% endblock %}
+{% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid">
+    <!-- Page Header -->
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>Client Performance Analytics</h2>
-                    <p class="text-muted">Weighted scoring analysis across all metrics</p>
+                    <h1><i data-feather="bar-chart-2" class="me-2"></i>Comprehensive Analytics</h1>
+                    <p class="text-muted">Advanced reporting with client rankings, trends, and insights</p>
                 </div>
-                <div>
-                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-list"></i> Basic View
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="exportReport('pdf')">
+                        <i data-feather="download" class="me-1"></i>Export PDF
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="exportReport('excel')">
+                        <i data-feather="file-text" class="me-1"></i>Export Excel
+                    </button>
+                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-1"></i>Dashboard
                     </a>
-                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-primary">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filter Controls -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i data-feather="filter" class="me-2"></i>Advanced Filters & Date Range Analysis</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('manager.client_table') }}">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="month" class="form-control" name="date_from" id="date_from" 
+                               value="{{ request.args.get('date_from', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="month" class="form-control" name="date_to" id="date_to" 
+                               value="{{ request.args.get('date_to', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="metric_filter" class="form-label">Focus Metric</label>
+                        <select class="form-select" name="metric_filter" id="metric_filter">
+                            <option value="">All Metrics</option>
+                            {% if rows and rows[0] and rows[0].metric_scores %}
+                                {% for metric_name in rows[0].metric_scores.keys() %}
+                                <option value="{{ metric_name }}">{{ metric_name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="client_filter" class="form-label">Compare Clients</label>
+                        <select class="form-select" name="client_filter" id="client_filter" multiple>
+                            {% for row in rows %}
+                            <option value="{{ row.client.id }}">{{ row.client.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="search" class="me-1"></i>Apply Filters
+                        </button>
+                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
+                            <i data-feather="refresh-cw" class="me-1"></i>Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Executive Summary Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h4>{{ rows|length }}</h4>
+                    <p class="mb-0">Total Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h4>{{ (rows | selectattr('weighted_score', '>=', 80) | list | length) }}</h4>
+                    <p class="mb-0">High Performers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h4>{{ (rows | selectattr('weighted_score', '<', 60) | list | length) }}</h4>
+                    <p class="mb-0">Need Attention</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h4>{{ ((rows | sum(attribute='weighted_score') / rows|length) | round) if rows else 0 }}%</h4>
+                    <p class="mb-0">Average Score</p>
                 </div>
             </div>
         </div>
@@ -74,12 +166,12 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ url_for('manager.client_details', client_id=r.client.id) }}" 
-                                               class="btn btn-outline-primary" title="View Details">
-                                                <i class="fas fa-eye"></i>
+                                               class="btn btn-outline-primary" title="View Individual Dashboard">
+                                                <i data-feather="user"></i> Dashboard
                                             </a>
                                             <a href="{{ url_for('manager.client_trend', client_id=r.client.id) }}" 
-                                               class="btn btn-outline-info" title="View Trends">
-                                                <i class="fas fa-chart-line"></i> Trends
+                                               class="btn btn-outline-info" title="Performance Trends">
+                                                <i data-feather="trending-up"></i> Trends
                                             </a>
                                         </div>
                                     </td>
