@@ -4,8 +4,21 @@ from models import Client, HealthCheck, Alert, User, UserRole
 from replit_auth import require_login
 from flask_login import current_user
 from datetime import datetime, timedelta
+from sqlalchemy import func
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
+
+def latest_health_checks_subq():
+    """Returns subquery with latest health check per client."""
+    subq = (
+        db.session.query(
+            HealthCheck.client_id,
+            func.max(HealthCheck.timestamp).label("max_timestamp")
+        )
+        .group_by(HealthCheck.client_id)
+        .subquery()
+    )
+    return subq
 
 def require_manager():
     """Decorator to ensure user has manager or admin role"""
