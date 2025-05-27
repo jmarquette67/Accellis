@@ -282,7 +282,7 @@ def check_and_create_alerts(client, health_check):
 # Score management routes
 @app.route('/scores/new', methods=['GET', 'POST'])
 def score_entry():
-    """Score entry form for all users"""
+    """Comprehensive score entry form for all metrics"""
     # Simple authentication check
     if not current_user.is_authenticated:
         return redirect(url_for('replit_auth.login'))
@@ -290,31 +290,51 @@ def score_entry():
     from models import Metric, Score
     
     if request.method == 'POST':
-        # Handle form submission
+        # Handle form submission for all metrics
         client_id = request.form.get('client_id')
-        metric_id = request.form.get('metric_id')
-        value = request.form.get('value')
         notes = request.form.get('notes', '')
         
-        if client_id and metric_id and value:
+        if client_id:
             try:
-                score = Score(
-                    client_id=int(client_id),
-                    metric_id=int(metric_id),
-                    value=int(value),
-                    notes=notes
-                )
-                db.session.add(score)
+                scores_created = 0
+                metrics = Metric.query.all()
+                
+                for metric in metrics:
+                    metric_field = f'metric_{metric.id}'
+                    score_value = request.form.get(metric_field)
+                    
+                    if score_value and score_value.strip():
+                        # Delete existing score for this client/metric combination
+                        existing_score = Score.query.filter_by(
+                            client_id=int(client_id),
+                            metric_id=metric.id
+                        ).first()
+                        
+                        if existing_score:
+                            db.session.delete(existing_score)
+                        
+                        # Create new score
+                        score = Score(
+                            client_id=int(client_id),
+                            metric_id=metric.id,
+                            value=int(float(score_value)),
+                            notes=notes
+                        )
+                        db.session.add(score)
+                        scores_created += 1
+                
                 db.session.commit()
-                flash('Score entered successfully!', 'success')
+                flash(f'Successfully saved {scores_created} metric scores!', 'success')
                 return redirect(url_for('score_entry'))
+                
             except Exception as e:
                 db.session.rollback()
-                flash('Error entering score. Please try again.', 'error')
+                flash('Error saving scores. Please try again.', 'error')
+                print(f"Error saving scores: {e}")
     
     clients = Client.query.order_by(Client.name).all()
-    metrics = Metric.query.order_by(Metric.name).all()
-    return render_template("score_entry.html", clients=clients, metrics=metrics, user=current_user)
+    metrics = Metric.query.order_by(Metric.weight.desc(), Metric.name).all()
+    return render_template("comprehensive_score_entry.html", clients=clients, metrics=metrics, user=current_user)
 
 @app.route('/scores/')
 def score_history():

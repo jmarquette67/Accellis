@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Score Entry - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Client Performance Score Entry</h2>
+                    <p class="text-muted">Enter all engagement metrics for one client</p>
+                </div>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Select Client</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="client_id" class="form-label">Client *</label>
+                            <select class="form-select" name="client_id" id="client_id" required onchange="updateClientSelection()">
+                                <option value="">Choose a client...</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4" id="metrics-card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0">Engagement Metrics</h5>
+                        <small class="text-muted">Score each metric from 0-100</small>
+                    </div>
+                    <div class="card-body">
+                        {% for metric in metrics %}
+                        <div class="mb-4 p-3 border rounded">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <label for="metric_{{ metric.id }}" class="form-label fw-bold">
+                                        {{ metric.name }}
+                                    </label>
+                                    <p class="small text-muted mb-2">{{ metric.description }}</p>
+                                    <span class="badge bg-info">Weight: {{ metric.weight }}%</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" 
+                                           class="form-control metric-input" 
+                                           name="metric_{{ metric.id }}" 
+                                           id="metric_{{ metric.id }}"
+                                           min="0" 
+                                           max="100" 
+                                           placeholder="0-100"
+                                           data-weight="{{ metric.weight }}"
+                                           onchange="calculateTotal()">
+                                </div>
+                                <div class="col-md-2">
+                                    <span id="weighted_{{ metric.id }}" class="text-muted small">
+                                        Weighted: 0
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>Total Score Calculation</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Total Weighted Score: <span id="total-score">0</span> / 100</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span id="score-grade" class="badge bg-secondary">Not Calculated</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" name="notes" id="notes" rows="3" 
+                                      placeholder="Additional notes about this scoring session..."></textarea>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Save All Scores
+                            </button>
+                            <a href="/scores/" class="btn btn-outline-secondary ms-2">View Score History</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Scoring Guidelines</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="badge bg-success">85-100</span> Excellent Performance
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-primary">70-84</span> Good Performance
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-warning">60-69</span> Needs Attention
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-danger">0-59</span> Critical Issues
+                        </div>
+                        
+                        <hr>
+                        <h6>Metric Weights</h6>
+                        <small class="text-muted">
+                            Each metric contributes differently to the total score based on business importance.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function updateClientSelection() {
+    const clientSelect = document.getElementById('client_id');
+    const metricsCard = document.getElementById('metrics-card');
+    
+    if (clientSelect.value) {
+        metricsCard.style.display = 'block';
+        metricsCard.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        metricsCard.style.display = 'none';
+    }
+}
+
+function calculateTotal() {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    
+    const metricInputs = document.querySelectorAll('.metric-input');
+    
+    metricInputs.forEach(input => {
+        const score = parseFloat(input.value) || 0;
+        const weight = parseFloat(input.dataset.weight) || 0;
+        const weightedScore = (score * weight) / 100;
+        
+        totalWeightedScore += weightedScore;
+        totalWeight += weight;
+        
+        // Update individual weighted display
+        const weightedDisplay = document.getElementById('weighted_' + input.id.split('_')[1]);
+        if (weightedDisplay) {
+            weightedDisplay.textContent = `Weighted: ${weightedScore.toFixed(1)}`;
+        }
+    });
+    
+    // Update total score
+    const totalScoreElement = document.getElementById('total-score');
+    const scoreGradeElement = document.getElementById('score-grade');
+    
+    totalScoreElement.textContent = totalWeightedScore.toFixed(1);
+    
+    // Update grade badge
+    if (totalWeightedScore >= 85) {
+        scoreGradeElement.textContent = 'Excellent';
+        scoreGradeElement.className = 'badge bg-success';
+    } else if (totalWeightedScore >= 70) {
+        scoreGradeElement.textContent = 'Good';
+        scoreGradeElement.className = 'badge bg-primary';
+    } else if (totalWeightedScore >= 60) {
+        scoreGradeElement.textContent = 'Needs Attention';
+        scoreGradeElement.className = 'badge bg-warning';
+    } else if (totalWeightedScore > 0) {
+        scoreGradeElement.textContent = 'Critical';
+        scoreGradeElement.className = 'badge bg-danger';
+    } else {
+        scoreGradeElement.textContent = 'Not Calculated';
+        scoreGradeElement.className = 'badge bg-secondary';
+    }
+}
+</script>
+{% endblock %}
