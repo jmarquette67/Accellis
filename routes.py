@@ -29,7 +29,7 @@ def dashboard():
         if user_authenticated:
             user = current_user
             # Use the full dashboard template now that authentication is working
-            return render_template('app/dashboard.html', user=user)
+            return render_template('dashboard.html', user=user)
     except Exception as e:
         user_authenticated = False
         app.logger.error(f"Authentication check failed: {e}")
