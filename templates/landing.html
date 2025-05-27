@@ -1,69 +1,33 @@
-{% extends "base.html" %}
-
-{% block title %}Welcome - Accellis Health Check System{% endblock %}
-
-{% block content %}
-<div class="container-fluid">
-    <div class="row justify-content-center min-vh-100">
-        <div class="col-lg-8 col-xl-6 d-flex flex-column justify-content-center">
-            <div class="text-center mb-5">
-                <div class="mb-4">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                    </svg>
-                </div>
-                <h1 class="display-4 fw-bold text-primary mb-3">Accellis Health Check System</h1>
-                <p class="lead text-muted mb-4">
-                    Monitor and manage your client systems with real-time health analytics and intelligent alerts.
-                </p>
-            </div>
-
-            <div class="row g-4 mb-5">
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                            <i data-feather="activity" class="text-primary"></i>
-                        </div>
-                        <h5>Real-Time Monitoring</h5>
-                        <p class="text-muted small">Track CPU, memory, disk usage, and system uptime across all your client systems.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                            <i data-feather="bell" class="text-warning"></i>
-                        </div>
-                        <h5>Smart Alerts</h5>
-                        <p class="text-muted small">Receive intelligent notifications when system metrics exceed predefined thresholds.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                            <i data-feather="shield" class="text-info"></i>
-                        </div>
-                        <h5>Role-Based Access</h5>
-                        <p class="text-muted small">Secure access control with different permission levels for administrators and team members.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary btn-lg px-5">
-                    <i data-feather="log-in" class="me-2"></i>
-                    Sign In to Continue
-                </a>
-                <p class="text-muted mt-3 small">
-                    Secure authentication powered by Replit
-                </p>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accellis Client Scoring Platform</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <strong>Accellis</strong> Client Scoring
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('replit_auth.login') }}">Login</a>
             </div>
         </div>
-    </div>
-</div>
+    </nav>
 
-<style>
-.min-vh-100 {
-    min-height: 100vh;
-}
-</style>
-{% endblock %}
+    <main class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1 class="display-4 mb-4">Accellis Client Scoring Platform</h1>
+                <p class="lead mb-4">Comprehensive client relationship and performance management</p>
+                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary btn-lg">Sign In to Continue</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
