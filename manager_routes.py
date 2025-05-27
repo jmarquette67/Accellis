@@ -88,7 +88,8 @@ def client_table():
     rows = [
         {
             "client": v["client"],
-            "overall": round(v["sum"] / v["weight"]) if v["weight"] > 0 else 0
+            "overall": round(v["sum"] / v["weight"]) if v["weight"] > 0 else 0,
+            "weighted_score": round(v["sum"] / v["weight"]) if v["weight"] > 0 else 0
         }
         for v in totals.values()
     ]
