@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, abort,
 from sqlmodel import Session, select
 from app.database import engine
 from app.models import Client, Metric, Score, AuditLog, RoleType, User
+from app.utils import current_user, role_required, manager_or_admin_required
 
 bp = Blueprint("scores", __name__, url_prefix="/scores")
 
@@ -79,6 +80,7 @@ def metric_scores(metric_id):
     return render_template('scores/metric_scores.html', metric=metric, scores=scores)
 
 @bp.route("/unlock/<int:score_id>", methods=['POST'])
+@manager_or_admin_required
 def unlock_score(score_id):
     """Unlock a score for editing (Admin/Manager only)"""
     with Session(engine) as session:
@@ -86,16 +88,27 @@ def unlock_score(score_id):
         if not score:
             abort(404)
         
-        # TODO: Add role-based access control check here
         # Unlock the score
         score.locked = False
         session.add(score)
+        session.commit()
+        
+        # Log the action
+        user = current_user()
+        audit_log = AuditLog(
+            user_id=user.id,
+            action="unlock_score",
+            target_table="score",
+            target_id=score_id
+        )
+        session.add(audit_log)
         session.commit()
         
         flash(f'Score unlocked successfully', 'success')
         return redirect(url_for('scores.client_scores', client_id=score.client_id))
 
 @bp.route("/lock/<int:score_id>", methods=['POST'])
+@manager_or_admin_required
 def lock_score(score_id):
     """Lock a score (Admin/Manager only)"""
     with Session(engine) as session:
@@ -103,10 +116,20 @@ def lock_score(score_id):
         if not score:
             abort(404)
         
-        # TODO: Add role-based access control check here
         # Lock the score
         score.locked = True
         session.add(score)
+        session.commit()
+        
+        # Log the action
+        user = current_user()
+        audit_log = AuditLog(
+            user_id=user.id,
+            action="lock_score",
+            target_table="score",
+            target_id=score_id
+        )
+        session.add(audit_log)
         session.commit()
         
         flash(f'Score locked successfully', 'success')
