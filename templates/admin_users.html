@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - User Management - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>User Management</h2>
+                    <p class="text-muted">Manage user roles and permissions</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Admin Console
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Users</h5>
+                    <small class="text-muted">Manage user roles and access levels</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Current Role</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user_item in users %}
+                                <tr>
+                                    <td><code>{{ user_item.id }}</code></td>
+                                    <td>{{ user_item.email or 'No email' }}</td>
+                                    <td>
+                                        {% if user_item.first_name or user_item.last_name %}
+                                        {{ user_item.first_name or '' }} {{ user_item.last_name or '' }}
+                                        {% else %}
+                                        <span class="text-muted">No name set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user_item.role.value == 'ADMIN' %}
+                                        <span class="badge bg-danger">{{ user_item.role.value }}</span>
+                                        {% elif user_item.role.value == 'MANAGER' %}
+                                        <span class="badge bg-warning">{{ user_item.role.value }}</span>
+                                        {% elif user_item.role.value == 'VCIO' %}
+                                        <span class="badge bg-info">{{ user_item.role.value }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ user_item.role.value }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user_item.created_at.strftime('%Y-%m-%d') if user_item.created_at else 'Unknown' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editUserModal{{ loop.index }}">
+                                            <i class="fas fa-edit"></i> Edit Role
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6>Role Hierarchy</h6>
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-danger mb-2">ADMIN</span>
+                                <p class="small text-muted">Full system access</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-warning mb-2">MANAGER</span>
+                                <p class="small text-muted">Management reports & analytics</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-info mb-2">VCIO</span>
+                                <p class="small text-muted">Virtual CIO functions</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-secondary mb-2">TAM</span>
+                                <p class="small text-muted">Technical Account Manager</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modals -->
+{% for user_item in users %}
+<div class="modal fade" id="editUserModal{{ loop.index }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User: {{ user_item.email or user_item.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_update_user', user_id=user_item.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">User Role</label>
+                        <select class="form-select" name="role" required>
+                            <option value="ADMIN" {% if user_item.role.value == 'ADMIN' %}selected{% endif %}>ADMIN - Full System Access</option>
+                            <option value="MANAGER" {% if user_item.role.value == 'MANAGER' %}selected{% endif %}>MANAGER - Management Reports</option>
+                            <option value="VCIO" {% if user_item.role.value == 'VCIO' %}selected{% endif %}>VCIO - Virtual CIO</option>
+                            <option value="TAM" {% if user_item.role.value == 'TAM' %}selected{% endif %}>TAM - Technical Account Manager</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> Changing user roles will immediately affect their access permissions.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

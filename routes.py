@@ -371,6 +371,36 @@ def simple_client_list():
     return f"<html><body>{client_html}<p>Total clients: {len(clients)}</p></body></html>"
 
 # Admin routes
+@app.route('/admin')
+def admin_dashboard():
+    """Main admin console dashboard"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Metric, Score
+    
+    # Get system statistics
+    stats = {
+        'total_users': User.query.count(),
+        'total_clients': Client.query.count(),
+        'total_metrics': Metric.query.count(),
+        'total_scores': Score.query.count()
+    }
+    
+    # Get recent activity (placeholder for now)
+    recent_activity = [
+        {
+            'timestamp': datetime.utcnow(),
+            'action': 'System Initialized',
+            'type_color': 'success',
+            'user_email': current_user.email,
+            'details': 'Admin console accessed'
+        }
+    ]
+    
+    return render_template("admin_dashboard.html", stats=stats, recent_activity=recent_activity, user=current_user)
+
 @app.route('/admin/metrics')
 def admin_metrics():
     """Admin metrics management interface"""
@@ -404,6 +434,94 @@ def admin_update_metric(metric_id):
         flash('Error updating metric. Please try again.', 'error')
     
     return redirect(url_for('admin_metrics'))
+
+@app.route('/admin/users')
+def admin_users():
+    """Admin user management interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    users = User.query.order_by(User.email).all()
+    return render_template("admin_users.html", users=users, user=current_user)
+
+@app.route('/admin/users/<user_id>/update', methods=['POST'])
+def admin_update_user(user_id):
+    """Update user role via admin interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    user_to_update = User.query.get_or_404(user_id)
+    
+    try:
+        new_role = request.form.get('role')
+        user_to_update.role = UserRole(new_role)
+        db.session.commit()
+        flash(f'Successfully updated {user_to_update.email} to {new_role} role', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error updating user role. Please try again.', 'error')
+    
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/clients')
+def admin_clients():
+    """Admin client management interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    clients = Client.query.order_by(Client.name).all()
+    return render_template("admin_clients.html", clients=clients, user=current_user)
+
+@app.route('/admin/data')
+def admin_data():
+    """Admin data management interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    return render_template("admin_data.html", user=current_user)
+
+@app.route('/admin/backup')
+def admin_backup():
+    """System backup functionality"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    flash('Backup functionality will be implemented based on your requirements', 'info')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/import')
+def admin_import():
+    """Data import functionality"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    return render_template("admin_import.html", user=current_user)
+
+@app.route('/admin/reports')
+def admin_reports():
+    """Admin reports interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    flash('Admin reports functionality will be implemented based on your requirements', 'info')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/settings')
+def admin_settings():
+    """Admin system settings"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    flash('System settings functionality will be implemented based on your requirements', 'info')
+    return redirect(url_for('admin_dashboard'))
 
 @app.errorhandler(404)
 def not_found_error(error):

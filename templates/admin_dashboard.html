@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Console - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Admin Console</h2>
+                    <p class="text-muted">Complete administrative control for your Accellis platform</p>
+                </div>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Metrics Management</h5>
+                    <p class="card-text">Manage engagement metrics, weights, and scoring criteria</p>
+                    <a href="{{ url_for('admin_metrics') }}" class="btn btn-primary">Manage Metrics</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">User Management</h5>
+                    <p class="card-text">Control user roles, permissions, and access levels</p>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-success">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-building fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Client Management</h5>
+                    <p class="card-text">Add, edit, and organize client accounts and data</p>
+                    <a href="{{ url_for('admin_clients') }}" class="btn btn-info">Manage Clients</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-database fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Data Management</h5>
+                    <p class="card-text">Import/export data, backup, and system maintenance</p>
+                    <a href="{{ url_for('admin_data') }}" class="btn btn-warning">Manage Data</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Overview -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">System Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-primary">{{ stats.total_users }}</h3>
+                            <p class="text-muted">Total Users</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-success">{{ stats.total_clients }}</h3>
+                            <p class="text-muted">Active Clients</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-info">{{ stats.total_metrics }}</h3>
+                            <p class="text-muted">Metrics Configured</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-warning">{{ stats.total_scores }}</h3>
+                            <p class="text-muted">Scores Recorded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin_backup') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-download"></i> Backup System
+                        </a>
+                        <a href="{{ url_for('admin_import') }}" class="btn btn-outline-success">
+                            <i class="fas fa-upload"></i> Import Data
+                        </a>
+                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info">
+                            <i class="fas fa-file-alt"></i> Generate Reports
+                        </a>
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-cog"></i> System Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Administrative Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                    <th>User</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activity %}
+                                <tr>
+                                    <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ activity.type_color }}">{{ activity.action }}</span>
+                                    </td>
+                                    <td>{{ activity.user_email or 'System' }}</td>
+                                    <td>{{ activity.details }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

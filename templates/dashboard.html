@@ -64,7 +64,7 @@
                     <h5 class="card-title">Settings</h5>
                     <p class="card-text">Configure metrics and system settings</p>
                     {% if user.role and user.role.value == 'ADMIN' %}
-                        <a href="{{ url_for('admin_metrics') }}" class="btn btn-warning">Manage Metrics</a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning">Admin Console</a>
                     {% elif user.role and user.role.value == 'MANAGER' %}
                         <a href="#" class="btn btn-secondary">Manager Tools</a>
                     {% else %}
