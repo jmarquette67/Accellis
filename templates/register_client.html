@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Register Client - Client Health Check System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i data-feather="plus-circle" class="me-2"></i>
+                    Register New Client
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">A friendly name for this client system</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.hostname.label(class="form-label") }}
+                                {{ form.hostname(class="form-control" + (" is-invalid" if form.hostname.errors else "")) }}
+                                {% if form.hostname.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.hostname.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Unique hostname or identifier for the client</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.ip_address.label(class="form-label") }}
+                        {{ form.ip_address(class="form-control" + (" is-invalid" if form.ip_address.errors else "")) }}
+                        {% if form.ip_address.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.ip_address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">IP address of the client system</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Optional description of the client system</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i data-feather="arrow-left" class="me-1"></i>
+                            Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-1"></i>
+                            Register Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- API Information Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="code" class="me-2"></i>
+                    API Integration
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>After registration, your client can check in using the following API endpoint:</p>
+                <div class="bg-dark p-3 rounded">
+                    <code class="text-warning">POST /api/client/&lt;hostname&gt;/checkin</code>
+                </div>
+                
+                <h6 class="mt-3">Required JSON payload:</h6>
+                <pre class="bg-dark text-light p-3 rounded"><code>{
+  "cpu_usage": 45.2,
+  "memory_usage": 67.8,
+  "disk_usage": 23.1,
+  "uptime": 86400,
+  "load_average": 0.8,
+  "network_rx": 1024000,
+  "network_tx": 512000,
+  "notes": "Optional status notes"
+}</code></pre>
+
+                <div class="alert alert-info mt-3">
+                    <i data-feather="info" class="me-2"></i>
+                    <strong>Note:</strong> The hostname in the URL must match exactly what you register here.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-focus on name field
+    document.getElementById('name').focus();
+    
+    // Auto-generate hostname from name
+    document.getElementById('name').addEventListener('input', function() {
+        const name = this.value;
+        const hostname = name.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 50);
+        
+        if (hostname && !document.getElementById('hostname').value) {
+            document.getElementById('hostname').value = hostname;
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+/* Custom styles for Client Health Check System */
+
+:root {
+    --primary-color: 198 54% 51%;     /* #3b82f6 */
+    --success-color: 142 71% 45%;     /* #22c55e */
+    --warning-color: 45 93% 58%;      /* #f59e0b */
+    --danger-color: 0 72% 51%;        /* #dc2626 */
+    --info-color: 199 89% 48%;        /* #0ea5e9 */
+    --secondary-color: 215 25% 27%;   /* #374151 */
+}
+
+/* Dashboard specific styles */
+.metric-card {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.metric-card:last-child {
+    border-bottom: none;
+}
+
+.metric-card h3 {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+/* Status badges with improved visibility */
+.badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+}
+
+/* Alert styling */
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+/* Table improvements */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--bs-secondary);
+}
+
+.table td {
+    vertical-align: middle;
+    border-color: var(--bs-border-color-translucent);
+}
+
+.table tbody tr:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+/* Card improvements */
+.card {
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    background-color: var(--bs-secondary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    padding: 1rem 1.25rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-indicator.healthy {
+    background-color: rgb(var(--success-color));
+}
+
+.status-indicator.warning {
+    background-color: rgb(var(--warning-color));
+}
+
+.status-indicator.critical {
+    background-color: rgb(var(--danger-color));
+}
+
+.status-indicator.offline {
+    background-color: rgb(var(--secondary-color));
+}
+
+/* Form improvements */
+.form-label {
+    font-weight: 500;
+    color: var(--bs-body-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus {
+    border-color: rgb(var(--primary-color));
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+}
+
+/* Button improvements */
+.btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Navigation improvements */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 1rem 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .metric-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .table-responsive {
+        border: none;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--bs-border-color);
+    border-top-color: rgb(var(--primary-color));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Status transitions */
+.status-transition {
+    transition: all 0.3s ease;
+}
+
+/* Code blocks */
+pre {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    padding: 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+code {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+/* Time formatting */
+.time-ago {
+    font-weight: 500;
+    color: var(--bs-body-color);
+}
+
+/* Empty states */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--bs-secondary);
+}
+
+.empty-state i {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Alert actions */
+.alert .btn {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* Breadcrumb improvements */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '›';
+    font-weight: 600;
+}
+
+/* Footer improvements */
+footer {
+    border-top: 1px solid var(--bs-border-color);
+    margin-top: auto;
+}
+
+footer .container {
+    padding: 1.5rem 0;
+}

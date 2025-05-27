@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Client Health Check System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6">
+            <i data-feather="monitor" class="me-2"></i>
+            System Health Dashboard
+        </h1>
+        <p class="text-muted">Real-time monitoring of client systems and services</p>
+    </div>
+</div>
+
+<!-- System Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i data-feather="server" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4>{{ stats.total }}</h4>
+                <small>Total Clients</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i data-feather="check-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4>{{ stats.healthy }}</h4>
+                <small>Healthy</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i data-feather="alert-triangle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4>{{ stats.warning }}</h4>
+                <small>Warning</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <i data-feather="x-circle" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4>{{ stats.critical }}</h4>
+                <small>Critical</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <i data-feather="wifi-off" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4>{{ stats.offline }}</h4>
+                <small>Offline</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border">
+            <div class="card-body text-center">
+                <button class="btn btn-outline-success btn-sm" onclick="refreshDashboard()">
+                    <i data-feather="refresh-cw" style="width: 20px; height: 20px;"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Status Chart -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="pie-chart" class="me-2"></i>
+                    System Status Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="alert-circle" class="me-2"></i>
+                    Recent Alerts
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="alerts-container" style="max-height: 250px; overflow-y: auto;">
+                    {% if recent_alerts %}
+                        {% for alert in recent_alerts %}
+                        <div class="alert alert-{{ 'danger' if alert.severity == 'critical' else 'warning' }} alert-sm mb-2">
+                            <small>
+                                <strong>{{ alert.client.name }}</strong>: {{ alert.message }}
+                                <br>
+                                <span class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                            </small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted text-center">
+                            <i data-feather="check" class="me-2"></i>
+                            No active alerts
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clients Table -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i data-feather="list" class="me-2"></i>
+                    Client Systems
+                </h5>
+                <a href="{{ url_for('register_client') }}" class="btn btn-success btn-sm">
+                    <i data-feather="plus" class="me-1"></i>
+                    Add Client
+                </a>
+            </div>
+            <div class="card-body">
+                {% if clients %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Client Name</th>
+                                <th>Hostname</th>
+                                <th>IP Address</th>
+                                <th>Last Check-in</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in clients %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{{ client.status_color }}">
+                                        {{ client.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ client.name }}</strong>
+                                    {% if client.description %}
+                                    <br><small class="text-muted">{{ client.description[:50] }}{% if client.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td><code>{{ client.hostname }}</code></td>
+                                <td><code>{{ client.ip_address }}</code></td>
+                                <td>
+                                    {% if client.last_checkin %}
+                                        <span class="time-ago" data-time="{{ client.last_checkin.isoformat() }}">
+                                            {{ client.last_checkin.strftime('%Y-%m-%d %H:%M:%S') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('client_details', client_id=client.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i data-feather="eye" class="me-1"></i>
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="server" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                    <h5 class="text-muted">No Clients Registered</h5>
+                    <p class="text-muted">Get started by registering your first client system.</p>
+                    <a href="{{ url_for('register_client') }}" class="btn btn-primary">
+                        <i data-feather="plus" class="me-1"></i>
+                        Register First Client
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Initialize status chart
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    const statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Healthy', 'Warning', 'Critical', 'Offline'],
+            datasets: [{
+                data: [{{ stats.healthy }}, {{ stats.warning }}, {{ stats.critical }}, {{ stats.offline }}],
+                backgroundColor: [
+                    '#198754',  // success
+                    '#ffc107',  // warning
+                    '#dc3545',  // danger
+                    '#6c757d'   // secondary
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+    
+    // Update time ago indicators
+    function updateTimeAgo() {
+        document.querySelectorAll('.time-ago').forEach(element => {
+            const timeStr = element.getAttribute('data-time');
+            if (timeStr) {
+                const time = new Date(timeStr);
+                const now = new Date();
+                const diff = now - time;
+                const minutes = Math.floor(diff / 60000);
+                
+                if (minutes < 1) {
+                    element.textContent = 'Just now';
+                } else if (minutes < 60) {
+                    element.textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                } else if (minutes < 1440) {
+                    const hours = Math.floor(minutes / 60);
+                    element.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                } else {
+                    const days = Math.floor(minutes / 1440);
+                    element.textContent = `${days} day${days > 1 ? 's' : ''} ago`;
+                }
+            }
+        });
+    }
+    
+    // Update time ago every minute
+    setInterval(updateTimeAgo, 60000);
+    updateTimeAgo();
+    
+    // Refresh dashboard function
+    function refreshDashboard() {
+        location.reload();
+    }
+    
+    // Auto-refresh every 2 minutes
+    setInterval(refreshDashboard, 120000);
+</script>
+{% endblock %}

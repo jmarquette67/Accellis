@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.name }} - Client Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ client.name }}</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-6">
+                    <span class="badge bg-{{ client.status_color }} me-2">{{ client.status.title() }}</span>
+                    {{ client.name }}
+                </h1>
+                <p class="text-muted">{{ client.description or 'No description provided' }}</p>
+            </div>
+            <button class="btn btn-outline-primary" onclick="refreshClientData()">
+                <i data-feather="refresh-cw" class="me-1"></i>
+                Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Client Information -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    Client Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Hostname:</dt>
+                    <dd class="col-sm-8"><code>{{ client.hostname }}</code></dd>
+                    
+                    <dt class="col-sm-4">IP Address:</dt>
+                    <dd class="col-sm-8"><code>{{ client.ip_address }}</code></dd>
+                    
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ client.status_color }}">{{ client.status.title() }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Registered:</dt>
+                    <dd class="col-sm-8">{{ client.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                    
+                    <dt class="col-sm-4">Last Check-in:</dt>
+                    <dd class="col-sm-8">
+                        {% if client.last_checkin %}
+                            <span class="time-ago" data-time="{{ client.last_checkin.isoformat() }}">
+                                {{ client.last_checkin.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">Never</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="activity" class="me-2"></i>
+                    Current Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_checks %}
+                    {% set latest = recent_checks[0] %}
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="metric-card">
+                                <h3 class="text-{{ 'danger' if latest.cpu_usage > 90 else 'warning' if latest.cpu_usage > 75 else 'success' }}">
+                                    {{ "%.1f"|format(latest.cpu_usage) }}%
+                                </h3>
+                                <small class="text-muted">CPU Usage</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="metric-card">
+                                <h3 class="text-{{ 'danger' if latest.memory_usage > 95 else 'warning' if latest.memory_usage > 85 else 'success' }}">
+                                    {{ "%.1f"|format(latest.memory_usage) }}%
+                                </h3>
+                                <small class="text-muted">Memory</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="metric-card">
+                                <h3 class="text-{{ 'danger' if latest.disk_usage > 95 else 'warning' if latest.disk_usage > 85 else 'success' }}">
+                                    {{ "%.1f"|format(latest.disk_usage) }}%
+                                </h3>
+                                <small class="text-muted">Disk Usage</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Uptime:</dt>
+                        <dd class="col-sm-8">
+                            {% set days = latest.uptime // 86400 %}
+                            {% set hours = (latest.uptime % 86400) // 3600 %}
+                            {% set minutes = (latest.uptime % 3600) // 60 %}
+                            {{ days }}d {{ hours }}h {{ minutes }}m
+                        </dd>
+                        
+                        {% if latest.load_average %}
+                        <dt class="col-sm-4">Load Average:</dt>
+                        <dd class="col-sm-8">{{ "%.2f"|format(latest.load_average) }}</dd>
+                        {% endif %}
+                    </dl>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i data-feather="database" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>No metrics available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Charts -->
+{% if recent_checks %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="trending-up" class="me-2"></i>
+                    Metrics Timeline (Last 24 Hours)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="metricsChart" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Alerts and Recent Activity -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    Client Alerts
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for alert in alerts %}
+                        <div class="alert alert-{{ 'danger' if alert.severity == 'critical' else 'warning' }} alert-sm mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ alert.alert_type.title() }} Alert</strong>
+                                    <br>
+                                    {{ alert.message }}
+                                    <br>
+                                    <small class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                </div>
+                                {% if alert.is_active %}
+                                <button class="btn btn-sm btn-outline-secondary" onclick="resolveAlert({{ alert.id }})">
+                                    <i data-feather="check" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i data-feather="check-circle" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>No alerts for this client</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="clock" class="me-2"></i>
+                    Recent Check-ins
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_checks %}
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for check in recent_checks[:10] %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ check.timestamp.strftime('%H:%M:%S') }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    CPU: {{ "%.1f"|format(check.cpu_usage) }}% | 
+                                    Mem: {{ "%.1f"|format(check.memory_usage) }}% | 
+                                    Disk: {{ "%.1f"|format(check.disk_usage) }}%
+                                </small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if check.cpu_usage > 90 or check.memory_usage > 95 or check.disk_usage > 95 else 'warning' if check.cpu_usage > 75 or check.memory_usage > 85 or check.disk_usage > 85 else 'success' }}">
+                                {{ 'Critical' if check.cpu_usage > 90 or check.memory_usage > 95 or check.disk_usage > 95 else 'Warning' if check.cpu_usage > 75 or check.memory_usage > 85 or check.disk_usage > 85 else 'OK' }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i data-feather="database" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>No check-ins recorded</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% if recent_checks %}
+    // Prepare chart data
+    const chartData = {
+        labels: [{% for check in recent_checks|reverse %}'{{ check.timestamp.strftime("%H:%M") }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [
+            {
+                label: 'CPU Usage (%)',
+                data: [{% for check in recent_checks|reverse %}{{ check.cpu_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Memory Usage (%)',
+                data: [{% for check in recent_checks|reverse %}{{ check.memory_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Disk Usage (%)',
+                data: [{% for check in recent_checks|reverse %}{{ check.disk_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                tension: 0.4
+            }
+        ]
+    };
+    
+    // Create metrics chart
+    const ctx = document.getElementById('metricsChart').getContext('2d');
+    const metricsChart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Update time ago indicators
+    function updateTimeAgo() {
+        document.querySelectorAll('.time-ago').forEach(element => {
+            const timeStr = element.getAttribute('data-time');
+            if (timeStr) {
+                const time = new Date(timeStr);
+                const now = new Date();
+                const diff = now - time;
+                const minutes = Math.floor(diff / 60000);
+                
+                if (minutes < 1) {
+                    element.textContent = 'Just now';
+                } else if (minutes < 60) {
+                    element.textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                } else if (minutes < 1440) {
+                    const hours = Math.floor(minutes / 60);
+                    element.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                } else {
+                    const days = Math.floor(minutes / 1440);
+                    element.textContent = `${days} day${days > 1 ? 's' : ''} ago`;
+                }
+            }
+        });
+    }
+    
+    setInterval(updateTimeAgo, 60000);
+    updateTimeAgo();
+    
+    // Refresh client data
+    function refreshClientData() {
+        location.reload();
+    }
+    
+    // Resolve alert
+    function resolveAlert(alertId) {
+        fetch(`/api/alert/${alertId}/resolve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Failed to resolve alert');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error resolving alert');
+        });
+    }
+    
+    // Auto-refresh every 2 minutes
+    setInterval(refreshClientData, 120000);
+</script>
+{% endblock %}
