@@ -130,8 +130,7 @@ def make_replit_blueprint():
 def save_user(user_claims):
     from sqlmodel import Session, select
     from database import engine
-    from models import User
-    from app.models import RoleType
+    from app.models import User, RoleType
     
     with Session(engine) as session:
         # Try to find existing user
