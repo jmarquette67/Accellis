@@ -128,39 +128,37 @@ def make_replit_blueprint():
     return replit_bp
 
 def save_user(user_claims):
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    
-    from sqlmodel import Session, select
-    from database import engine
-    sys.path.append('app')
     from models import User, RoleType
+    from app import db
     
-    with Session(engine) as session:
-        # Try to find existing user
-        statement = select(User).where(User.id == user_claims['sub'])
-        existing_user = session.exec(statement).first()
-        
-        if existing_user:
-            # Update existing user with available fields
-            if hasattr(existing_user, 'username') and user_claims.get('username'):
-                existing_user.username = user_claims.get('username')
-            session.add(existing_user)
-            session.commit()
-            session.refresh(existing_user)
-            return existing_user
-        else:
-            # Create new user with current model structure
-            new_user = User(
-                id=user_claims['sub'],
-                username=user_claims.get('username', f"user_{user_claims['sub']}"),
-                role=RoleType.TAM
-            )
-            session.add(new_user)
-            session.commit()
-            session.refresh(new_user)
-            return new_user
+    # Try to find existing user
+    existing_user = User.query.filter_by(id=user_claims['sub']).first()
+    
+    if existing_user:
+        # Update existing user with available fields
+        if user_claims.get('email'):
+            existing_user.email = user_claims.get('email')
+        if user_claims.get('first_name'):
+            existing_user.first_name = user_claims.get('first_name')
+        if user_claims.get('last_name'):
+            existing_user.last_name = user_claims.get('last_name')
+        if user_claims.get('profile_image_url'):
+            existing_user.profile_image_url = user_claims.get('profile_image_url')
+        db.session.commit()
+        return existing_user
+    else:
+        # Create new user with current model structure
+        new_user = User(
+            id=user_claims['sub'],
+            email=user_claims.get('email'),
+            first_name=user_claims.get('first_name'),
+            last_name=user_claims.get('last_name'),
+            profile_image_url=user_claims.get('profile_image_url'),
+            role=RoleType.TAM
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return new_user
 
 @oauth_authorized.connect
 def logged_in(blueprint, token):
