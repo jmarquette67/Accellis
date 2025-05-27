@@ -335,7 +335,7 @@ def client_list():
         return redirect(url_for('replit_auth.login'))
         
     clients = Client.query.order_by(Client.name).all()
-    return render_template('manager_clients.html', clients=clients, user=current_user)
+    return render_template('simple_client_list.html', clients=clients, user=current_user)
 
 @app.route('/simple-clients')
 def simple_client_list():
