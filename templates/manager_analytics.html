@@ -92,7 +92,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h4>{{ (rows | selectattr('weighted_score', '>=', 80) | list | length) }}</h4>
+                    <h4>{{ rows | selectattr('weighted_score', '>=', 80) | list | length if rows else 0 }}</h4>
                     <p class="mb-0">High Performers</p>
                 </div>
             </div>
@@ -100,7 +100,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
-                    <h4>{{ (rows | selectattr('weighted_score', '<', 60) | list | length) }}</h4>
+                    <h4>{{ rows | selectattr('weighted_score', '<', 60) | list | length if rows else 0 }}</h4>
                     <p class="mb-0">Need Attention</p>
                 </div>
             </div>
@@ -108,7 +108,7 @@
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h4>{{ ((rows | sum(attribute='weighted_score') / rows|length) | round) if rows else 0 }}%</h4>
+                    <h4>{{ ((rows | sum(attribute='weighted_score') / rows|length) | round) if rows and rows|length > 0 else 0 }}%</h4>
                     <p class="mb-0">Average Score</p>
                 </div>
             </div>
