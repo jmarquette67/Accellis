@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from app.database import engine
 from app.models import Client, Metric, Score, AuditLog, RoleType, User
 from app.utils import current_user, role_required, manager_or_admin_required
+from app.forms import build_score_form, ScoreEditForm
 
 bp = Blueprint("scores", __name__, url_prefix="/scores")
 
@@ -134,3 +135,52 @@ def lock_score(score_id):
         
         flash(f'Score locked successfully', 'success')
         return redirect(url_for('scores.client_scores', client_id=score.client_id))
+
+@bp.route("/client/<int:client_id>/enter", methods=['GET', 'POST'])
+@role_required('ADMIN', 'MANAGER', 'VCIO')
+def enter_scores(client_id):
+    """Enter scores for all metrics for a specific client"""
+    with Session(engine) as session:
+        # Get client
+        client = session.get(Client, client_id)
+        if not client:
+            abort(404)
+        
+        # Get all metrics
+        metrics = session.exec(select(Metric)).all()
+        
+        # Build dynamic form
+        ScoreForm = build_score_form(metrics)
+        form = ScoreForm(request.form)
+        
+        if request.method == 'POST' and form.validate():
+            user = current_user()
+            
+            # Create scores for each metric
+            for metric in metrics:
+                field_name = f"metric_{metric.id}"
+                score_value = getattr(form, field_name).data
+                
+                # Create new score
+                score = Score(
+                    client_id=client_id,
+                    metric_id=metric.id,
+                    value=score_value,
+                    locked=True  # Lock by default
+                )
+                session.add(score)
+                
+                # Log the action
+                audit_log = AuditLog(
+                    user_id=user.id,
+                    action="create_score",
+                    target_table="score",
+                    target_id=0  # Will be updated after commit
+                )
+                session.add(audit_log)
+            
+            session.commit()
+            flash(f'Scores entered successfully for {client.name}', 'success')
+            return redirect(url_for('scores.client_scores', client_id=client_id))
+    
+    return render_template('scores/enter_scores.html', client=client, form=form, metrics=metrics)
