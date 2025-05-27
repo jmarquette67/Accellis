@@ -281,21 +281,37 @@ def check_and_create_alerts(client, health_check):
 
 # Score management routes
 @app.route('/scores/new')
-@require_login
 def score_entry():
     """Score entry form for all users"""
+    # Simple authentication check
+    if not current_user.is_authenticated:
+        return redirect(url_for('replit_auth.login'))
+    
     from models import Metric
     clients = Client.query.order_by(Client.name).all()
     metrics = Metric.query.order_by(Metric.name).all()
     return render_template("score_entry.html", clients=clients, metrics=metrics)
 
 @app.route('/scores/')
-@require_login  
 def score_history():
     """View score history"""
+    # Simple authentication check
+    if not current_user.is_authenticated:
+        return redirect(url_for('replit_auth.login'))
+        
     from models import Score
     recent_scores = Score.query.order_by(Score.taken_at.desc()).limit(20).all()
     return render_template("score_history.html", scores=recent_scores)
+
+@app.route('/clients')
+def client_list():
+    """Display list of clients"""
+    # Simple authentication check
+    if not current_user.is_authenticated:
+        return redirect(url_for('replit_auth.login'))
+        
+    clients = Client.query.order_by(Client.name).all()
+    return render_template('manager_clients.html', clients=clients)
 
 @app.errorhandler(404)
 def not_found_error(error):
