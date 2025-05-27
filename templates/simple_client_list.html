@@ -31,6 +31,7 @@
                             <thead>
                                 <tr>
                                     <th>Client Name</th>
+                                    <th>Account Owner (TAM/vCIO)</th>
                                     <th>Description</th>
                                     <th>Hostname</th>
                                     <th>Status</th>
@@ -42,6 +43,9 @@
                                 <tr>
                                     <td>
                                         <strong>{{ client.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">Unassigned</span>
                                     </td>
                                     <td>
                                         {{ client.description or 'No description' }}
