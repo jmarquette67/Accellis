@@ -136,51 +136,41 @@ def lock_score(score_id):
         flash(f'Score locked successfully', 'success')
         return redirect(url_for('scores.client_scores', client_id=score.client_id))
 
-@bp.route("/client/<int:client_id>/enter", methods=['GET', 'POST'])
-@role_required('ADMIN', 'MANAGER', 'VCIO')
+@bp.route("/new/<int:client_id>", methods=["GET", "POST"])
+@role_required(RoleType.VCIO, RoleType.TAM, RoleType.MANAGER, RoleType.ADMIN)
 def enter_scores(client_id):
     """Enter scores for all metrics for a specific client"""
-    with Session(engine) as session:
-        # Get client
-        client = session.get(Client, client_id)
+    user = current_user()
+    with Session(engine) as s:
+        client = s.get(Client, client_id)
         if not client:
             abort(404)
-        
-        # Get all metrics
-        metrics = session.exec(select(Metric)).all()
-        
-        # Build dynamic form
+
+        # allow only if user owns client OR elevated role
+        if (user.role not in (RoleType.ADMIN, RoleType.MANAGER) and
+                client_id not in [uc.client_id for uc in user.clients]):
+            abort(403)
+
+        metrics = s.exec(select(Metric).order_by(Metric.id)).all()
         ScoreForm = build_score_form(metrics)
         form = ScoreForm(request.form)
-        
-        if request.method == 'POST' and form.validate():
-            user = current_user()
-            
-            # Create scores for each metric
-            for metric in metrics:
-                field_name = f"metric_{metric.id}"
-                score_value = getattr(form, field_name).data
-                
-                # Create new score
-                score = Score(
-                    client_id=client_id,
-                    metric_id=metric.id,
-                    value=score_value,
-                    locked=True  # Lock by default
-                )
-                session.add(score)
-                
-                # Log the action
-                audit_log = AuditLog(
-                    user_id=user.id,
-                    action="create_score",
-                    target_table="score",
-                    target_id=0  # Will be updated after commit
-                )
-                session.add(audit_log)
-            
-            session.commit()
+
+        if request.method == "POST" and form.validate():
+            for m in metrics:
+                field = getattr(form, f"metric_{m.id}")
+                value = round(field.data)          # 0-100 whole numbers
+                score = Score(client_id=client_id,
+                              metric_id=m.id,
+                              value=value,
+                              locked=True)
+                s.add(score)
+                s.add(AuditLog(user_id=user.id,
+                               action="CREATE",
+                               target_table="score",
+                               target_id=m.id))
+            s.commit()
             flash(f'Scores entered successfully for {client.name}', 'success')
-            return redirect(url_for('scores.client_scores', client_id=client_id))
-    
-    return render_template('scores/enter_scores.html', client=client, form=form, metrics=metrics)
+            return redirect(url_for("dashboard"))
+
+        return render_template("app/score_form.html",
+                               form=form, client=client)
