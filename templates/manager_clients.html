@@ -103,7 +103,7 @@
     <div class="row mt-4">
         {% set status_counts = {} %}
         {% for client in clients %}
-            {% set status = client.status() %}
+            {% set status = client.status %}
             {% if status in status_counts %}
                 {% set _ = status_counts.update({status: status_counts[status] + 1}) %}
             {% else %}
