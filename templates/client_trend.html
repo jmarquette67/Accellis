@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.name }} - Performance Trends - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>{{ client.name }} - Performance Trends</h2>
+                    <p class="text-muted">Historical performance analysis over the last 12 data points</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Analytics
+                    </a>
+                    <a href="{{ url_for('manager.client_details', client_id=client.id) }}" class="btn btn-primary">
+                        <i class="fas fa-info-circle"></i> Client Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if data %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Performance Trend Chart</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Analysis Summary -->
+    <div class="row mt-4">
+        {% set latest_score = data[-1].y if data else 0 %}
+        {% set earliest_score = data[0].y if data else 0 %}
+        {% set trend_direction = "improving" if latest_score > earliest_score else ("declining" if latest_score < earliest_score else "stable") %}
+        {% set avg_score = (data | sum(attribute='y') / data | length) | round if data else 0 %}
+
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ latest_score }}</h3>
+                    <p class="card-text">Latest Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ avg_score }}</h3>
+                    <p class="card-text">Average Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-{{ 'success' if trend_direction == 'improving' else ('danger' if trend_direction == 'declining' else 'secondary') }}">
+                        {% if trend_direction == 'improving' %}
+                            <i class="fas fa-arrow-up"></i>
+                        {% elif trend_direction == 'declining' %}
+                            <i class="fas fa-arrow-down"></i>
+                        {% else %}
+                            <i class="fas fa-minus"></i>
+                        {% endif %}
+                    </h3>
+                    <p class="card-text">{{ trend_direction|title }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ data|length }}</h3>
+                    <p class="card-text">Data Points</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Insights -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Performance Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Recent Performance</h6>
+                            {% if latest_score >= 80 %}
+                                <p class="text-success">Excellent performance with a score of {{ latest_score }}. Client is exceeding expectations.</p>
+                            {% elif latest_score >= 60 %}
+                                <p class="text-warning">Good performance with room for improvement. Current score: {{ latest_score }}.</p>
+                            {% else %}
+                                <p class="text-danger">Performance needs attention. Current score of {{ latest_score }} requires action.</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Trend Analysis</h6>
+                            {% if trend_direction == 'improving' %}
+                                <p class="text-success">Positive trend! Performance has improved from {{ earliest_score }} to {{ latest_score }}.</p>
+                            {% elif trend_direction == 'declining' %}
+                                <p class="text-danger">Declining trend. Performance dropped from {{ earliest_score }} to {{ latest_score }}. Consider intervention.</p>
+                            {% else %}
+                                <p class="text-secondary">Stable performance. Score has remained consistent around {{ avg_score }}.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h5 class="text-muted">No Trend Data Available</h5>
+                    <p class="text-muted">Performance trends will appear here once scoring data is available for this client.</p>
+                    <a href="{{ url_for('manager.client_table') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if data %}
+const ctx = document.getElementById('trendChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ data | map(attribute='x') | list | tojson }},
+        datasets: [{
+            label: 'Performance Score',
+            data: {{ data | map(attribute='y') | list | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: '{{ client.name }} Performance Over Time'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: 'Score'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

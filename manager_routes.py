@@ -95,6 +95,29 @@ def client_table():
 
     return render_template("manager_analytics.html", rows=rows)
 
+@manager_bp.route("/client/<int:client_id>/trend")
+@require_login
+def client_trend(client_id):
+    """Display performance trend analysis for a specific client"""
+    require_manager()
+    
+    client = Client.query.get_or_404(client_id)
+    
+    # Get last 12 scores for trend analysis
+    points = (
+        Score.query
+        .filter(Score.client_id == client_id)
+        .order_by(Score.taken_at.desc())
+        .limit(12)
+        .all()
+    )
+    
+    # Format data for chart (oldest to newest)
+    data = [{"x": sc.taken_at.strftime("%Y-%m-%d"), "y": sc.value} for sc in points]
+    data = data[::-1]  # Reverse to show oldest → newest
+    
+    return render_template("client_trend.html", client=client, data=data)
+
 @manager_bp.route("/clients/<int:client_id>/details")
 @require_login
 def client_details(client_id):
