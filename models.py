@@ -13,6 +13,9 @@ class UserRole(enum.Enum):
     VCIO = "VCIO"
     TAM = "TAM"
 
+# Alias for compatibility with authentication system
+RoleType = UserRole
+
 # User model for Replit Auth
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
