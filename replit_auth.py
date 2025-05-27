@@ -128,9 +128,14 @@ def make_replit_blueprint():
     return replit_bp
 
 def save_user(user_claims):
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    
     from sqlmodel import Session, select
     from database import engine
-    from app.models import User, RoleType
+    sys.path.append('app')
+    from models import User, RoleType
     
     with Session(engine) as session:
         # Try to find existing user
