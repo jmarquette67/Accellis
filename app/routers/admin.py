@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import current_user
 from sqlmodel import Session, select
-from database import get_session, engine
+from database import engine
 from models import User, Client, Metric, Score, UserClient, AuditLog, RoleType
 from datetime import datetime
 
