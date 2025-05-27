@@ -1,0 +1,81 @@
+import sys, pandas as pd
+from datetime import datetime
+from sqlmodel import Session
+from database import engine
+from models import User, Client, Metric, Score, UserClient
+
+FILE = sys.argv[1] if len(sys.argv) > 1 else "client_scores.xlsx"
+
+def main():
+    ts = datetime.utcnow()               # all scores stamped with same time
+    with Session(engine) as s:
+        wb = pd.ExcelFile(FILE)          # reads workbook once
+        for sheet in wb.sheet_names:
+            df = wb.parse(sheet, header=0)
+
+            # --- 1. Get or create the user (sheet title) ---
+            user = s.exec(
+                User.select().where(User.username == sheet)
+            ).first()
+            if not user:
+                user = User(username=sheet, role="TAM")  # default
+                s.add(user); s.commit(); s.refresh(user)
+
+            # --- 2. Metric rows are the first five columns ---
+            metrics_block = df.iloc[:, :5].dropna(how='all')
+            for _, row in metrics_block.iterrows():
+                m = s.exec(
+                    Metric.select().where(Metric.name == row["Metric"])
+                ).first()
+                if not m:
+                    m = Metric(
+                        name=row["Metric"],
+                        description=row["Description"],
+                        weight=int(row["Metric Weighting"]),
+                        high_threshold=80,
+                        low_threshold=40,
+                    )
+                    s.add(m)
+                    s.commit(); s.refresh(m)
+
+            # --- 3. Client columns start at col 6 ---
+            for client_name in df.columns[5:]:
+                if pd.isna(client_name):          # blank header
+                    continue
+                client = s.exec(
+                    Client.select().where(Client.name == client_name)
+                ).first()
+                if not client:
+                    client = Client(name=client_name)
+                    s.add(client); s.commit(); s.refresh(client)
+
+                # user↔client link
+                link = s.exec(UserClient.select().where(
+                    (UserClient.user_id == user.id) &
+                    (UserClient.client_id == client.id)
+                )).first()
+                if not link:
+                    s.add(UserClient(user_id=user.id, client_id=client.id))
+                    s.commit()
+
+                # --- 4. Iterate rows again to pull numeric scores ---
+                for _, row in df.iterrows():
+                    metric_name = row["Metric"]
+                    value = row[client_name]
+                    if pd.isna(value):          # empty cell
+                        continue
+                    metric = s.exec(
+                        Metric.select().where(Metric.name == metric_name)
+                    ).first()
+
+                    sc = Score(client_id=client.id,
+                               metric_id=metric.id,
+                               value=int(round(value)),
+                               taken_at=ts,
+                               locked=True)
+                    s.add(sc)
+        s.commit()
+    print("Import complete.")
+
+if __name__ == "__main__":
+    main()
