@@ -320,13 +320,27 @@ def score_entry():
                         if existing_score:
                             db.session.delete(existing_score)
                         
+                        # Apply sophisticated weighting for Help Desk metric
+                        if metric.name == "1. Help Desk Usage":
+                            # Convert numerical input to weighted score using your Q1 2025 thresholds
+                            tickets_per_user = float(score_value)
+                            if tickets_per_user >= 0.25 and tickets_per_user <= 1.0:
+                                weighted_value = 1  # Ideal Usage
+                            else:
+                                weighted_value = 0  # High or Low Usage
+                            score_notes = f"Tickets/user/month: {tickets_per_user} | {notes}" if notes else f"Tickets/user/month: {tickets_per_user}"
+                        else:
+                            # Regular scoring for other metrics
+                            weighted_value = int(float(score_value))
+                            score_notes = f"{notes} (Scored for {score_month})" if notes else f"Scored for {score_month}"
+                        
                         # Create new score for the selected month
                         score = Score(
                             client_id=int(client_id),
                             metric_id=metric.id,
-                            value=int(float(score_value)),
+                            value=weighted_value,
                             taken_at=score_date.replace(day=15),  # Middle of the month
-                            notes=f"{notes} (Scored for {score_month})" if notes else f"Scored for {score_month}"
+                            notes=score_notes
                         )
                         db.session.add(score)
                         scores_created += 1
