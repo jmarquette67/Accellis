@@ -10,6 +10,8 @@ from replit_auth import require_login, require_role, make_replit_blueprint
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
+# Register Scores blueprint - we'll add this later when the structure is ready
+
 # Make session permanent
 @app.before_request
 def make_session_permanent():
