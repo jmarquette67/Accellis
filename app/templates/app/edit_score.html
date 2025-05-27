@@ -1,0 +1,48 @@
+{% extends "app/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Edit Score</h2>
+                    <small class="text-muted">
+                        Client: {{ score.client.name }} | 
+                        Metric: {{ score.metric.name }} |
+                        Current: {{ score.value }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Override Notice:</strong> This action will be logged in the audit trail.
+                    </div>
+                    
+                    <form method="post">
+                        {% for field in form if field.name not in ['csrf_token'] %}
+                            <div class="mb-3">
+                                <label for="{{ field.id }}" class="form-label">
+                                    {{ field.label.text }}
+                                </label>
+                                {{ field(class="form-control") }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in field.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('scores.client_scores', client_id=score.client_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-warning">Override Score</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

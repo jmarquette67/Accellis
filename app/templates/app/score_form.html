@@ -1,0 +1,43 @@
+{% extends "app/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Enter Scores for {{ client.name }}</h2>
+                    <small class="text-muted">All scores will be locked after submission</small>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% for field in form if field.name not in ['csrf_token', 'submit'] %}
+                            <div class="mb-3">
+                                <label for="{{ field.id }}" class="form-label">
+                                    {{ field.label.text }}
+                                    {% if field.description %}
+                                        <small class="text-muted d-block">{{ field.description }}</small>
+                                    {% endif %}
+                                </label>
+                                {{ field(class="form-control") }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in field.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save & Lock Scores</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

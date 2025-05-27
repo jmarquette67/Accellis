@@ -4,6 +4,7 @@ from app.database import engine
 from app.models import Client, Metric, Score, AuditLog, RoleType, User
 from app.utils import current_user, role_required, manager_or_admin_required
 from app.forms import build_score_form, ScoreEditForm
+from wtforms import Form, IntegerField, validators
 
 bp = Blueprint("scores", __name__, url_prefix="/scores")
 
@@ -174,3 +175,32 @@ def enter_scores(client_id):
 
         return render_template("app/score_form.html",
                                form=form, client=client)
+
+@bp.route("/edit/<int:score_id>", methods=["GET", "POST"])
+@role_required(RoleType.ADMIN, RoleType.MANAGER)
+def edit_score(score_id):
+    """Edit an individual score (Admin/Manager only)"""
+    with Session(engine) as s:
+        sc = s.get(Score, score_id)
+        if not sc:
+            abort(404)
+
+        class EditForm(Form):
+            value = IntegerField("Score",
+                     [validators.InputRequired(),
+                      validators.NumberRange(min=0, max=100)])
+
+        form = EditForm(request.form, value=sc.value)
+
+        if request.method == "POST" and form.validate():
+            old_value = sc.value
+            sc.value = round(form.value.data)
+            s.add(AuditLog(user_id=current_user().id,
+                           action="OVERRIDE",
+                           target_table="score",
+                           target_id=score_id))
+            s.commit()
+            flash(f'Score updated from {old_value} to {sc.value}', 'success')
+            return redirect(url_for("scores.client_scores", client_id=sc.client_id))
+
+        return render_template("app/edit_score.html", form=form, score=sc)
