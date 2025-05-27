@@ -370,6 +370,41 @@ def simple_client_list():
     client_html += "</ul>"
     return f"<html><body>{client_html}<p>Total clients: {len(clients)}</p></body></html>"
 
+# Admin routes
+@app.route('/admin/metrics')
+def admin_metrics():
+    """Admin metrics management interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Metric
+    metrics = Metric.query.order_by(Metric.weight, Metric.name).all()
+    return render_template("admin_metrics.html", metrics=metrics, user=current_user)
+
+@app.route('/admin/metrics/<int:metric_id>/update', methods=['POST'])
+def admin_update_metric(metric_id):
+    """Update a metric via admin interface"""
+    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
+        flash('Admin access required', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Metric
+    metric = Metric.query.get_or_404(metric_id)
+    
+    try:
+        metric.name = request.form.get('name')
+        metric.weight = int(request.form.get('weight'))
+        metric.description = request.form.get('description')
+        
+        db.session.commit()
+        flash(f'Successfully updated metric: {metric.name}', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error updating metric. Please try again.', 'error')
+    
+    return redirect(url_for('admin_metrics'))
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', error_message='Page not found'), 404
