@@ -24,4 +24,5 @@ dependencies = [
     "python-multipart>=0.0.20",
     "weasyprint>=65.1",
     "pydantic>=2.11.5",
+    "asgiref>=3.8.1",
 ]
