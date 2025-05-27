@@ -10,7 +10,9 @@ from replit_auth import require_login, require_role, make_replit_blueprint
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
-# Register Scores blueprint - we'll add this later when the structure is ready
+# Register Scores blueprint - we'll add this when ready
+# from app.routers.scores import bp as scores_bp
+# app.register_blueprint(scores_bp)
 
 # Make session permanent
 @app.before_request
@@ -25,26 +27,16 @@ def dashboard():
     try:
         user_authenticated = current_user.is_authenticated
         if user_authenticated:
-            # Simple authenticated dashboard without complex queries for now
-            return f"""
-            <h1>Welcome to Accellis Client Scoring Platform!</h1>
-            <p>Successfully logged in as: {current_user.email or current_user.id}</p>
-            <p>Your role: {getattr(current_user, 'role', 'TAM')}</p>
-            <a href="/auth/replit_auth/logout">Logout</a>
-            """
+            user = current_user
+            return render_template('app/dashboard.html', user=user)
     except:
         user_authenticated = False
     
     if not user_authenticated:
         return render_template('landing.html')
     
-    # Authentication successful - show simple dashboard
-    return """
-    <h1>🎉 Authentication Successful!</h1>
-    <p>Welcome to your Accellis Client Scoring Platform</p>
-    <p>You are successfully logged in</p>
-    <a href="/auth/replit_auth/logout">Logout</a>
-    """
+    # Fallback for unauthenticated users
+    return render_template('landing.html')
     
     # Get system overview stats
     total_clients = len(clients)

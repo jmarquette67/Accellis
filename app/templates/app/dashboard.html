@@ -1,126 +1,113 @@
 {% extends "app/base.html" %}
 
-{% block title %}Dashboard - Accellis Client Scoring{% endblock %}
-
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">Dashboard</h1>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary">
-            <div class="card-body text-center">
-                <h5 class="card-title">Total Clients</h5>
-                <h2 class="mb-0">{{ client_count }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success">
-            <div class="card-body text-center">
-                <h5 class="card-title">High Performers</h5>
-                <h2 class="mb-0">{{ high_performers }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning">
-            <div class="card-body text-center">
-                <h5 class="card-title">Needs Attention</h5>
-                <h2 class="mb-0">{{ needs_attention }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info">
-            <div class="card-body text-center">
-                <h5 class="card-title">Total MRR</h5>
-                <h2 class="mb-0">${{ total_mrr | default(0) | int | number_format }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Recent Client Activity</h5>
-            </div>
-            <div class="card-body">
-                {% if recent_clients %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Client</th>
-                                <th>Industry</th>
-                                <th>MRR</th>
-                                <th>Renewal Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for client in recent_clients %}
-                            <tr>
-                                <td><strong>{{ client.name }}</strong></td>
-                                <td>{{ client.industry | default('N/A') }}</td>
-                                <td>${{ client.mrr | default(0) | int | number_format }}</td>
-                                <td>{{ client.renewal_date.strftime('%Y-%m-%d') if client.renewal_date else 'N/A' }}</td>
-                                <td>
-                                    <a href="{{ url_for('admin.client_list') }}" class="btn btn-sm btn-outline-primary">View</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-1">Accellis Client Scoring Platform</h1>
+                    <p class="text-muted mb-0">Welcome back, {{ user.first_name or user.email.split('@')[0] if user.email else 'User' }}! Your role: <span class="badge bg-primary">{{ user.role.value if user.role else 'TAM' }}</span></p>
                 </div>
-                {% else %}
-                <p class="text-muted">No client data available.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('admin.client_list') }}" class="btn btn-primary">View All Clients</a>
-                    
-                    {% if user.role.value in ['ADMIN', 'MANAGER'] %}
-                    <a href="{{ url_for('admin.client_new') }}" class="btn btn-success">Add New Client</a>
-                    <a href="{{ url_for('admin.metric_list') }}" class="btn btn-info">Manage Metrics</a>
-                    <a href="{{ url_for('admin.user_client_assign') }}" class="btn btn-warning">Assign Users</a>
-                    {% endif %}
+                <div>
+                    <a href="{{ url_for('replit_auth.logout') }}" class="btn btn-outline-secondary">Logout</a>
                 </div>
             </div>
         </div>
-        
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5 class="mb-0">Your Role</h5>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Clients</h5>
+                    <p class="card-text">Manage client information and assignments</p>
+                    <a href="#" class="btn btn-primary">View Clients</a>
+                </div>
             </div>
-            <div class="card-body">
-                <p><strong>Role:</strong> {{ user.role.value }}</p>
-                <p><strong>Username:</strong> {{ user.username }}</p>
-                <small class="text-muted">
-                    {% if user.role.value == 'ADMIN' %}
-                    Full system access and user management
-                    {% elif user.role.value == 'MANAGER' %}
-                    Client and metric management
-                    {% elif user.role.value == 'VCIO' %}
-                    Strategic client oversight
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Score Entry</h5>
+                    <p class="card-text">Enter performance scores for your clients</p>
+                    <a href="#" class="btn btn-success">Enter Scores</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Reports</h5>
+                    <p class="card-text">View client performance analytics</p>
+                    <a href="#" class="btn btn-info">View Reports</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Settings</h5>
+                    <p class="card-text">Configure metrics and system settings</p>
+                    {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
+                        <a href="#" class="btn btn-warning">Manage System</a>
                     {% else %}
-                    Technical account management
+                        <span class="text-muted">Admin Access Required</span>
                     {% endif %}
-                </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6>For TAMs & VCIOs</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="/scores/new" class="text-decoration-none">📊 Enter Client Scores</a></li>
+                                <li><a href="/scores/" class="text-decoration-none">📈 View Score History</a></li>
+                                <li><a href="#" class="text-decoration-none">👥 My Assigned Clients</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
+                            <h6>Management Tools</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="#" class="text-decoration-none">🔧 Manage Metrics</a></li>
+                                <li><a href="#" class="text-decoration-none">👤 User Management</a></li>
+                                <li><a href="#" class="text-decoration-none">🔓 Unlock/Lock Scores</a></li>
+                                <li><a href="#" class="text-decoration-none">📋 Audit Logs</a></li>
+                            </ul>
+                            {% else %}
+                            <h6>Need Help?</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="#" class="text-decoration-none">📖 User Guide</a></li>
+                                <li><a href="#" class="text-decoration-none">💬 Contact Support</a></li>
+                                <li><a href="#" class="text-decoration-none">🎯 Scoring Guidelines</a></li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center text-muted py-4">
+                        <p>No recent activity to display</p>
+                        <small>Score entries and updates will appear here</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
