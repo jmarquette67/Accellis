@@ -27,7 +27,7 @@
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
                         <a href="{{ url_for('manager.client_list') }}" class="btn btn-primary">Manage Clients</a>
                     {% else %}
-                        <a href="#" class="btn btn-primary">View Clients</a>
+                        <a href="{{ url_for('client_list') }}" class="btn btn-primary">View Clients</a>
                     {% endif %}
                 </div>
             </div>
