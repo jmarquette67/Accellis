@@ -180,3 +180,51 @@ class Alert(db.Model):
             'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
             'is_active': self.is_active
         }
+
+class Metric(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    weight = db.Column(db.Integer, nullable=False)  # 1-100
+    high_threshold = db.Column(db.Integer, nullable=False)  # >= marks "high"
+    low_threshold = db.Column(db.Integer, nullable=False)   # <= marks "low"
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    scores = db.relationship('Score', backref='metric', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'weight': self.weight,
+            'high_threshold': self.high_threshold,
+            'low_threshold': self.low_threshold,
+            'created_at': self.created_at.isoformat()
+        }
+
+class Score(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    metric_id = db.Column(db.Integer, db.ForeignKey('metric.id'), nullable=False)
+    value = db.Column(db.Integer, nullable=False)  # 0-100, rounded on save
+    taken_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    locked = db.Column(db.Boolean, default=True)
+    notes = db.Column(db.Text)
+    
+    # Relationships
+    client = db.relationship('Client', backref='scores')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'client_id': self.client_id,
+            'client_name': self.client.name if self.client else 'Unknown',
+            'metric_id': self.metric_id,
+            'metric_name': self.metric.name if self.metric else 'Unknown',
+            'value': self.value,
+            'taken_at': self.taken_at.isoformat(),
+            'locked': self.locked,
+            'notes': self.notes
+        }

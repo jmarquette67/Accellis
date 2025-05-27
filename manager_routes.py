@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
 from app import db
-from models import Client, HealthCheck, Alert, User, UserRole
+from models import Client, HealthCheck, Alert, User, UserRole, Metric, Score
 from replit_auth import require_login
 from flask_login import current_user
 from datetime import datetime, timedelta
@@ -8,14 +8,15 @@ from sqlalchemy import func
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 
-def latest_health_checks_subq():
-    """Returns subquery with latest health check per client."""
+def latest_scores_subq(session):
+    """Returns subquery with latest score per metric per client."""
     subq = (
-        db.session.query(
-            HealthCheck.client_id,
-            func.max(HealthCheck.timestamp).label("max_timestamp")
+        session.query(
+            Score.client_id,
+            Score.metric_id,
+            func.max(Score.taken_at).label("max_ts")
         )
-        .group_by(HealthCheck.client_id)
+        .group_by(Score.client_id, Score.metric_id)
         .subquery()
     )
     return subq
@@ -59,6 +60,40 @@ def client_list():
     
     clients = Client.query.order_by(Client.name).all()
     return render_template('manager_clients.html', clients=clients)
+
+@manager_bp.route("/clients/analytics")
+@require_login
+def client_table():
+    """Advanced client analytics with weighted scoring"""
+    require_manager()
+    
+    subq = latest_scores_subq(db.session)
+    # join subq back to full Score rows
+    latest = (
+        db.session.query(Score)
+        .join(subq, (Score.client_id == subq.c.client_id) &
+                   (Score.metric_id == subq.c.metric_id) &
+                   (Score.taken_at == subq.c.max_ts))
+        .all()
+    )
+
+    # compute weighted average per client
+    totals = {}
+    for sc in latest:
+        w = sc.metric.weight
+        totals.setdefault(sc.client_id, {"sum": 0, "weight": 0, "client": sc.client})
+        totals[sc.client_id]["sum"] += sc.value * w
+        totals[sc.client_id]["weight"] += w
+
+    rows = [
+        {
+            "client": v["client"],
+            "overall": round(v["sum"] / v["weight"]) if v["weight"] > 0 else 0
+        }
+        for v in totals.values()
+    ]
+
+    return render_template("manager_analytics.html", rows=rows)
 
 @manager_bp.route("/clients/<int:client_id>/details")
 @require_login

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Client Analytics - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Client Performance Analytics</h2>
+                    <p class="text-muted">Weighted scoring analysis across all metrics</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-list"></i> Basic View
+                    </a>
+                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if rows %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Latest Client Scores ({{ rows|length }} clients)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Client Name</th>
+                                    <th>Overall Score</th>
+                                    <th>Performance Level</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in rows %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ r.client.name }}</strong>
+                                        {% if r.client.description %}
+                                        <br>
+                                        <small class="text-muted">{{ r.client.description[:40] }}{% if r.client.description|length > 40 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="h4 
+                                            {% if r.overall >= 80 %}text-success
+                                            {% elif r.overall >= 60 %}text-warning
+                                            {% else %}text-danger{% endif %}">
+                                            {{ r.overall }}
+                                        </span>
+                                        <small class="text-muted">/100</small>
+                                    </td>
+                                    <td>
+                                        {% if r.overall >= 80 %}
+                                            <span class="badge bg-success">Excellent</span>
+                                        {% elif r.overall >= 60 %}
+                                            <span class="badge bg-warning">Good</span>
+                                        {% elif r.overall >= 40 %}
+                                            <span class="badge bg-warning">Needs Attention</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Critical</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('manager.client_details', client_id=r.client.id) }}" 
+                                               class="btn btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('manager.client_trends', client_id=r.client.id) }}" 
+                                               class="btn btn-outline-info" title="View Trends">
+                                                <i class="fas fa-chart-line"></i> Trends
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Summary -->
+    <div class="row mt-4">
+        {% set excellent_count = rows | selectattr('overall', 'ge', 80) | list | length %}
+        {% set good_count = rows | selectattr('overall', 'ge', 60) | rejectattr('overall', 'ge', 80) | list | length %}
+        {% set needs_attention_count = rows | selectattr('overall', 'ge', 40) | rejectattr('overall', 'ge', 60) | list | length %}
+        {% set critical_count = rows | rejectattr('overall', 'ge', 40) | list | length %}
+
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h3 class="text-success">{{ excellent_count }}</h3>
+                    <p class="card-text">Excellent (80+)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ good_count }}</h3>
+                    <p class="card-text">Good (60-79)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ needs_attention_count }}</h3>
+                    <p class="card-text">Needs Attention (40-59)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h3 class="text-danger">{{ critical_count }}</h3>
+                    <p class="card-text">Critical (<40)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h5 class="text-muted">No Scoring Data Available</h5>
+                    <p class="text-muted">Client scores will appear here once metrics and scoring data are entered.</p>
+                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-refresh every 60 seconds to show latest scores
+setTimeout(function() {
+    location.reload();
+}, 60000);
+</script>
+{% endblock %}

@@ -87,6 +87,7 @@
                             <ul class="list-unstyled">
                                 <li><a href="{{ url_for('manager.dashboard') }}" class="text-decoration-none">📊 Management Dashboard</a></li>
                                 <li><a href="{{ url_for('manager.client_list') }}" class="text-decoration-none">🏢 Client Management</a></li>
+                                <li><a href="{{ url_for('manager.client_table') }}" class="text-decoration-none">📈 Performance Analytics</a></li>
                                 <li><a href="{{ url_for('manager.alert_management') }}" class="text-decoration-none">⚠️ Alert Management</a></li>
                                 {% if user.role and user.role.value == 'ADMIN' %}
                                 <li><a href="{{ url_for('manager.user_management') }}" class="text-decoration-none">👤 User Management</a></li>
