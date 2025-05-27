@@ -10,9 +10,13 @@ class RoleType(str, Enum):
     TAM = "TAM"
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[str] = Field(default=None, primary_key=True)  # Changed to string for Replit user IDs
     username: str = Field(index=True, unique=True)
-    role: RoleType
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    role: RoleType = Field(default=RoleType.TAM)
     
     # Relationships
     clients: List["UserClient"] = Relationship(back_populates="user")
@@ -29,7 +33,7 @@ class Client(SQLModel, table=True):
     scores: List["Score"] = Relationship(back_populates="client")
 
 class UserClient(SQLModel, table=True):
-    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    user_id: str = Field(foreign_key="user.id", primary_key=True)
     client_id: int = Field(foreign_key="client.id", primary_key=True)
     user: User = Relationship(back_populates="clients")
     client: Client = Relationship(back_populates="users")
@@ -61,7 +65,7 @@ class Snapshot(SQLModel, table=True):
 
 class AuditLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: str = Field(foreign_key="user.id")
     action: str
     target_table: str
     target_id: int
