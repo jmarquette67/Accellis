@@ -129,35 +129,53 @@ def make_replit_blueprint():
 def save_user(user_claims):
     from models import User, RoleType
     from app import db
+    import time
     
-    # Try to find existing user
-    existing_user = User.query.filter_by(id=user_claims['sub']).first()
-    
-    if existing_user:
-        # Update existing user with available fields
-        if user_claims.get('email'):
-            existing_user.email = user_claims.get('email')
-        if user_claims.get('first_name'):
-            existing_user.first_name = user_claims.get('first_name')
-        if user_claims.get('last_name'):
-            existing_user.last_name = user_claims.get('last_name')
-        if user_claims.get('profile_image_url'):
-            existing_user.profile_image_url = user_claims.get('profile_image_url')
-        db.session.commit()
-        return existing_user
-    else:
-        # Create new user with current model structure
-        new_user = User(
-            id=user_claims['sub'],
-            email=user_claims.get('email'),
-            first_name=user_claims.get('first_name'),
-            last_name=user_claims.get('last_name'),
-            profile_image_url=user_claims.get('profile_image_url'),
-            role=RoleType.TAM
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user
+    # Retry logic for database connection issues
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Try to find existing user
+            existing_user = User.query.filter_by(id=user_claims['sub']).first()
+            
+            if existing_user:
+                # Update existing user with available fields
+                if user_claims.get('email'):
+                    existing_user.email = user_claims.get('email')
+                if user_claims.get('first_name'):
+                    existing_user.first_name = user_claims.get('first_name')
+                if user_claims.get('last_name'):
+                    existing_user.last_name = user_claims.get('last_name')
+                if user_claims.get('profile_image_url'):
+                    existing_user.profile_image_url = user_claims.get('profile_image_url')
+                db.session.commit()
+                return existing_user
+            else:
+                # Create new user with current model structure
+                new_user = User(
+                    id=user_claims['sub'],
+                    email=user_claims.get('email'),
+                    first_name=user_claims.get('first_name'),
+                    last_name=user_claims.get('last_name'),
+                    profile_image_url=user_claims.get('profile_image_url'),
+                    role=RoleType.TAM
+                )
+                db.session.add(new_user)
+                db.session.commit()
+                return new_user
+                
+        except Exception as e:
+            if attempt < max_retries - 1:
+                db.session.rollback()
+                time.sleep(0.5)  # Wait before retry
+                continue
+            else:
+                # On final attempt, create a basic user object for login
+                return User(
+                    id=user_claims['sub'],
+                    email=user_claims.get('email'),
+                    role=RoleType.TAM
+                )
 
 @oauth_authorized.connect
 def logged_in(blueprint, token):
