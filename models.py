@@ -55,9 +55,6 @@ class OAuth(OAuthConsumerMixin, db.Model):
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    hostname = db.Column(db.String(100), unique=True, nullable=False)
-    ip_address = db.Column(db.String(45), nullable=False)
-    description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_checkin = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
