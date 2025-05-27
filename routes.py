@@ -28,29 +28,8 @@ def dashboard():
         user_authenticated = current_user.is_authenticated
         if user_authenticated:
             user = current_user
-            # Simple authenticated response to avoid template issues
-            return f"""
-            <html>
-            <head>
-                <title>Accellis Dashboard</title>
-                <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-            </head>
-            <body data-bs-theme="dark">
-                <div class="container mt-5">
-                    <div class="row">
-                        <div class="col-12">
-                            <h1>Welcome to Accellis Client Scoring Platform!</h1>
-                            <p class="lead">Successfully logged in as: {user.email or user.id}</p>
-                            <p>Your role: <span class="badge bg-primary">{getattr(user, 'role', 'TAM')}</span></p>
-                            <div class="mt-4">
-                                <a href="/auth/replit_auth/logout" class="btn btn-outline-secondary">Logout</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
+            # Use the full dashboard template now that authentication is working
+            return render_template('app/dashboard.html', user=user)
     except Exception as e:
         user_authenticated = False
         app.logger.error(f"Authentication check failed: {e}")
