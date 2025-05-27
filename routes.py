@@ -292,9 +292,10 @@ def score_entry():
     if request.method == 'POST':
         # Handle form submission for all metrics
         client_id = request.form.get('client_id')
+        score_month = request.form.get('score_month')
         notes = request.form.get('notes', '')
         
-        if client_id:
+        if client_id and score_month:
             try:
                 scores_created = 0
                 metrics = Metric.query.all()
@@ -304,21 +305,28 @@ def score_entry():
                     score_value = request.form.get(metric_field)
                     
                     if score_value and score_value.strip():
-                        # Delete existing score for this client/metric combination
-                        existing_score = Score.query.filter_by(
-                            client_id=int(client_id),
-                            metric_id=metric.id
+                        # Parse the selected month
+                        from datetime import datetime, timedelta
+                        score_date = datetime.strptime(score_month, '%Y-%m')
+                        
+                        # Delete existing score for this client/metric/month combination
+                        existing_score = Score.query.filter(
+                            Score.client_id == int(client_id),
+                            Score.metric_id == metric.id,
+                            Score.taken_at >= score_date.replace(day=1),
+                            Score.taken_at < (score_date.replace(day=28) + timedelta(days=4))
                         ).first()
                         
                         if existing_score:
                             db.session.delete(existing_score)
                         
-                        # Create new score
+                        # Create new score for the selected month
                         score = Score(
                             client_id=int(client_id),
                             metric_id=metric.id,
                             value=int(float(score_value)),
-                            notes=notes
+                            taken_at=score_date.replace(day=15),  # Middle of the month
+                            notes=f"{notes} (Scored for {score_month})" if notes else f"Scored for {score_month}"
                         )
                         db.session.add(score)
                         scores_created += 1
@@ -332,9 +340,17 @@ def score_entry():
                 flash('Error saving scores. Please try again.', 'error')
                 print(f"Error saving scores: {e}")
     
+    from datetime import datetime
+    
     clients = Client.query.order_by(Client.name).all()
     metrics = Metric.query.order_by(Metric.weight.desc(), Metric.name).all()
-    return render_template("comprehensive_score_entry.html", clients=clients, metrics=metrics, user=current_user)
+    current_month = datetime.now().strftime('%Y-%m')
+    
+    return render_template("comprehensive_score_entry.html", 
+                         clients=clients, 
+                         metrics=metrics, 
+                         current_month=current_month,
+                         user=current_user)
 
 @app.route('/scores/')
 def score_history():

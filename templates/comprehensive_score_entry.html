@@ -26,14 +26,26 @@
                         <h5 class="mb-0">Select Client</h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label for="client_id" class="form-label">Client *</label>
-                            <select class="form-select" name="client_id" id="client_id" required onchange="updateClientSelection()">
-                                <option value="">Choose a client...</option>
-                                {% for client in clients %}
-                                <option value="{{ client.id }}">{{ client.name }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="client_id" class="form-label">Client *</label>
+                                    <select class="form-select" name="client_id" id="client_id" required onchange="updateClientSelection()">
+                                        <option value="">Choose a client...</option>
+                                        {% for client in clients %}
+                                        <option value="{{ client.id }}">{{ client.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="score_month" class="form-label">Scoring Month *</label>
+                                    <input type="month" class="form-control" name="score_month" id="score_month" 
+                                           value="{{ current_month }}" required>
+                                    <small class="text-muted">Select the month you're scoring for</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
