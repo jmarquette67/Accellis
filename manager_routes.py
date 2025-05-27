@@ -118,6 +118,21 @@ def client_trend(client_id):
     
     return render_template("client_trend.html", client=client, data=data)
 
+@manager_bp.route("/scores/new")
+@require_login
+def score_entry():
+    """Score entry form for all users"""
+    clients = Client.query.order_by(Client.name).all()
+    metrics = Metric.query.order_by(Metric.name).all()
+    return render_template("score_entry.html", clients=clients, metrics=metrics)
+
+@manager_bp.route("/scores/")
+@require_login  
+def score_history():
+    """View score history"""
+    recent_scores = Score.query.order_by(Score.taken_at.desc()).limit(20).all()
+    return render_template("score_history.html", scores=recent_scores)
+
 @manager_bp.route("/clients/<int:client_id>/details")
 @require_login
 def client_details(client_id):

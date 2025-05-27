@@ -37,7 +37,11 @@
                 <div class="card-body">
                     <h5 class="card-title">Score Entry</h5>
                     <p class="card-text">Enter performance scores for your clients</p>
-                    <a href="#" class="btn btn-success">Enter Scores</a>
+                    {% if user.role and user.role.value in ['ADMIN', 'MANAGER', 'VCIO', 'TAM'] %}
+                        <a href="/scores/new" class="btn btn-success">Enter Scores</a>
+                    {% else %}
+                        <span class="text-muted">Access Required</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -46,7 +50,11 @@
                 <div class="card-body">
                     <h5 class="card-title">Reports</h5>
                     <p class="card-text">View client performance analytics</p>
-                    <a href="#" class="btn btn-info">View Reports</a>
+                    {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
+                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-info">View Reports</a>
+                    {% else %}
+                        <a href="/scores/" class="btn btn-info">View Scores</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

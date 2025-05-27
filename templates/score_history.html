@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Score History - Accellis{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Score History</h2>
+                    <p class="text-muted">Recent performance scores across all clients</p>
+                </div>
+                <div>
+                    <a href="/scores/new" class="btn btn-success me-2">
+                        <i class="fas fa-plus"></i> Add Score
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if scores %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Scores ({{ scores|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Metric</th>
+                                    <th>Score</th>
+                                    <th>Performance</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in scores %}
+                                <tr>
+                                    <td>
+                                        <small>{{ score.taken_at.strftime('%Y-%m-%d') }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ score.taken_at.strftime('%H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ score.client.name }}</strong>
+                                    </td>
+                                    <td>
+                                        {{ score.metric.name }}
+                                        <br>
+                                        <small class="text-muted">Weight: {{ score.metric.weight }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="h5 
+                                            {% if score.value >= 80 %}text-success
+                                            {% elif score.value >= 60 %}text-warning
+                                            {% else %}text-danger{% endif %}">
+                                            {{ score.value }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if score.value >= 80 %}
+                                            <span class="badge bg-success">Excellent</span>
+                                        {% elif score.value >= 60 %}
+                                            <span class="badge bg-warning">Good</span>
+                                        {% elif score.value >= 40 %}
+                                            <span class="badge bg-warning">Fair</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Poor</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if score.notes %}
+                                            {{ score.notes[:50] }}{% if score.notes|length > 50 %}...{% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No notes</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h5 class="text-muted">No Scores Available</h5>
+                    <p class="text-muted">Start entering performance scores to track client progress.</p>
+                    <a href="/scores/new" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Enter First Score
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
