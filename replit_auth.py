@@ -16,8 +16,10 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from sqlalchemy.exc import NoResultFound
 from werkzeug.local import LocalProxy
 
-from app import app, db
-from models import OAuth, User, UserRole
+from app_new import app
+from models_new import User, RoleType
+from sqlmodel import Session, select
+from app_new import engine
 
 login_manager = LoginManager(app)
 

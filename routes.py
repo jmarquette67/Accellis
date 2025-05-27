@@ -19,7 +19,13 @@ def make_session_permanent():
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
-    if not current_user.is_authenticated:
+    # Check if user is authenticated (with fallback for missing login manager)
+    try:
+        user_authenticated = current_user.is_authenticated
+    except:
+        user_authenticated = False
+    
+    if not user_authenticated:
         return render_template('landing.html')
     
     # Get all active clients with their latest status

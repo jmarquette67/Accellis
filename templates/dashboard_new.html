@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Accellis Client Scoring System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Client Scoring Dashboard</h1>
+                    <p class="text-muted mb-0">Track and manage client performance metrics</p>
+                </div>
+                {% if current_user.role.value in ['ADMIN', 'MANAGER'] %}
+                <div>
+                    <a href="{{ url_for('add_client') }}" class="btn btn-primary">
+                        <i data-feather="plus"></i>
+                        Add Client
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="users" class="text-primary mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-primary">{{ stats.total }}</h3>
+                    <p class="text-muted small mb-0">Total Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success bg-opacity-10 border-success border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="trending-up" class="text-success mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-success">{{ stats.excellent }}</h3>
+                    <p class="text-muted small mb-0">Excellent (90+)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info bg-opacity-10 border-info border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="thumbs-up" class="text-info mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-info">{{ stats.good }}</h3>
+                    <p class="text-muted small mb-0">Good (70-89)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning bg-opacity-10 border-warning border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="alert-triangle" class="text-warning mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-warning">{{ stats.needs_attention }}</h3>
+                    <p class="text-muted small mb-0">Needs Attention (50-69)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger bg-opacity-10 border-danger border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="alert-circle" class="text-danger mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-danger">{{ stats.critical }}</h3>
+                    <p class="text-muted small mb-0">Critical (&lt;50)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary bg-opacity-10 border-secondary border-opacity-25">
+                <div class="card-body text-center">
+                    <i data-feather="help-circle" class="text-secondary mb-2" style="width: 32px; height: 32px;"></i>
+                    <h3 class="h4 mb-1 text-secondary">{{ stats.no_data }}</h3>
+                    <p class="text-muted small mb-0">No Data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Clients Table -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Client Performance</h5>
+                    <a href="{{ url_for('clients_list') }}" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if clients %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Industry</th>
+                                    <th>MRR</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for client in clients[:10] %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ client.name }}</strong>
+                                            {% if client.renewal_date %}
+                                            <br><small class="text-muted">Renewal: {{ client.renewal_date.strftime('%Y-%m-%d') }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ client.industry or 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if client.mrr %}
+                                        ${{ "{:,}".format(client.mrr) }}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set score = recent_scores.get(client.id) %}
+                                        {% if score %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                <div class="progress-bar 
+                                                    {% if score >= 90 %}bg-success
+                                                    {% elif score >= 70 %}bg-info
+                                                    {% elif score >= 50 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    style="width: {{ score }}%"></div>
+                                            </div>
+                                            <span class="small">{{ "%.0f"|format(score) }}</span>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">No scores</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set score = recent_scores.get(client.id) %}
+                                        {% if score %}
+                                            {% if score >= 90 %}
+                                            <span class="badge bg-success">Excellent</span>
+                                            {% elif score >= 70 %}
+                                            <span class="badge bg-info">Good</span>
+                                            {% elif score >= 50 %}
+                                            <span class="badge bg-warning">Needs Attention</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Critical</span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="badge bg-secondary">No Data</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('client_detail', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i data-feather="eye" style="width: 14px; height: 14px;"></i>
+                                        </a>
+                                        <a href="{{ url_for('add_score', client_id=client.id) }}" class="btn btn-outline-success btn-sm">
+                                            <i data-feather="plus" style="width: 14px; height: 14px;"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i data-feather="users" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <h6 class="text-muted">No clients found</h6>
+                        <p class="text-muted small">Get started by adding your first client</p>
+                        {% if current_user.role.value in ['ADMIN', 'MANAGER'] %}
+                        <a href="{{ url_for('add_client') }}" class="btn btn-primary">Add Client</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_logs %}
+                    <div class="activity-feed">
+                        {% for log in recent_logs %}
+                        <div class="activity-item d-flex mb-3">
+                            <div class="activity-icon me-3">
+                                {% if log.action == 'CREATE' %}
+                                <i data-feather="plus-circle" class="text-success"></i>
+                                {% elif log.action == 'UPDATE' %}
+                                <i data-feather="edit" class="text-info"></i>
+                                {% elif log.action == 'DELETE' %}
+                                <i data-feather="trash-2" class="text-danger"></i>
+                                {% else %}
+                                <i data-feather="activity" class="text-muted"></i>
+                                {% endif %}
+                            </div>
+                            <div class="activity-content flex-grow-1">
+                                <p class="mb-1 small">
+                                    <strong>{{ log.action }}</strong> {{ log.target_table }} 
+                                    <span class="text-muted">#{{ log.target_id }}</span>
+                                </p>
+                                <p class="text-muted small mb-0">
+                                    {{ log.timestamp.strftime('%b %d, %Y at %I:%M %p') }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i data-feather="activity" class="text-muted mb-2"></i>
+                        <p class="text-muted small mb-0">No recent activity</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize Feather icons
+feather.replace();
+
+// Auto-refresh dashboard every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}
