@@ -1,0 +1,130 @@
+{% extends "app/base.html" %}
+
+{% block title %}User Assignment - Accellis Client Scoring{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Assign User to Client</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">User *</label>
+                        <select class="form-select" id="user_id" name="user_id" required>
+                            <option value="">Select User</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }} ({{ user.role.value }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="client_id" class="form-label">Client *</label>
+                        <select class="form-select" id="client_id" name="client_id" required>
+                            <option value="">Select Client</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">Assign User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Assignments</h5>
+            </div>
+            <div class="card-body">
+                {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Client</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                            {% set user = users | selectattr('id', 'equalto', assignment.user_id) | first %}
+                            {% set client = clients | selectattr('id', 'equalto', assignment.client_id) | first %}
+                            <tr>
+                                <td>{{ user.username if user else 'Unknown' }}</td>
+                                <td>
+                                    {% if user %}
+                                    <span class="badge bg-secondary">{{ user.role.value }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ client.name if client else 'Unknown' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No assignments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Role Permissions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>ADMIN</h6>
+                        <ul class="small">
+                            <li>Full system access</li>
+                            <li>User management</li>
+                            <li>All client access</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>MANAGER</h6>
+                        <ul class="small">
+                            <li>Client management</li>
+                            <li>Metric management</li>
+                            <li>User assignments</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>VCIO</h6>
+                        <ul class="small">
+                            <li>Strategic oversight</li>
+                            <li>Assigned clients only</li>
+                            <li>Performance analysis</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>TAM</h6>
+                        <ul class="small">
+                            <li>Technical account management</li>
+                            <li>Assigned clients only</li>
+                            <li>Day-to-day operations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

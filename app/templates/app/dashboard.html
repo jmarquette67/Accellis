@@ -1,0 +1,128 @@
+{% extends "app/base.html" %}
+
+{% block title %}Dashboard - Accellis Client Scoring{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Dashboard</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Clients</h5>
+                <h2 class="mb-0">{{ client_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success">
+            <div class="card-body text-center">
+                <h5 class="card-title">High Performers</h5>
+                <h2 class="mb-0">{{ high_performers }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title">Needs Attention</h5>
+                <h2 class="mb-0">{{ needs_attention }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total MRR</h5>
+                <h2 class="mb-0">${{ total_mrr | default(0) | int | number_format }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Client Activity</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_clients %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Industry</th>
+                                <th>MRR</th>
+                                <th>Renewal Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in recent_clients %}
+                            <tr>
+                                <td><strong>{{ client.name }}</strong></td>
+                                <td>{{ client.industry | default('N/A') }}</td>
+                                <td>${{ client.mrr | default(0) | int | number_format }}</td>
+                                <td>{{ client.renewal_date.strftime('%Y-%m-%d') if client.renewal_date else 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.client_list') }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No client data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.client_list') }}" class="btn btn-primary">View All Clients</a>
+                    
+                    {% if user.role.value in ['ADMIN', 'MANAGER'] %}
+                    <a href="{{ url_for('admin.client_new') }}" class="btn btn-success">Add New Client</a>
+                    <a href="{{ url_for('admin.metric_list') }}" class="btn btn-info">Manage Metrics</a>
+                    <a href="{{ url_for('admin.user_client_assign') }}" class="btn btn-warning">Assign Users</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Your Role</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Role:</strong> {{ user.role.value }}</p>
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <small class="text-muted">
+                    {% if user.role.value == 'ADMIN' %}
+                    Full system access and user management
+                    {% elif user.role.value == 'MANAGER' %}
+                    Client and metric management
+                    {% elif user.role.value == 'VCIO' %}
+                    Strategic client oversight
+                    {% else %}
+                    Technical account management
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

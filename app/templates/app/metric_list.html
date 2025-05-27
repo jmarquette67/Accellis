@@ -1,0 +1,99 @@
+{% extends "app/base.html" %}
+
+{% block title %}Metrics - Accellis Client Scoring{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Performance Metrics</h1>
+            {% if current_user.role.value in ['ADMIN', 'MANAGER'] %}
+            <a href="{{ url_for('admin.metric_new') }}" class="btn btn-success">Add New Metric</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if metrics %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Metric Name</th>
+                                <th>Description</th>
+                                <th>Weight</th>
+                                <th>Thresholds</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric in metrics %}
+                            <tr>
+                                <td>
+                                    <strong>{{ metric.name }}</strong>
+                                </td>
+                                <td>
+                                    {{ metric.description or 'No description provided' }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ metric.weight }}%</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <span class="badge bg-success">High: ≥{{ metric.high_threshold }}</span>
+                                        <span class="badge bg-warning">Low: ≤{{ metric.low_threshold }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary">View Scores</button>
+                                        {% if current_user.role.value in ['ADMIN', 'MANAGER'] %}
+                                        <button class="btn btn-outline-secondary">Edit</button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <h4>No Metrics Found</h4>
+            <p>No performance metrics have been created yet.</p>
+            {% if current_user.role.value in ['ADMIN', 'MANAGER'] %}
+            <a href="{{ url_for('admin.metric_new') }}" class="btn btn-primary">Create Your First Metric</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">About Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <p>Performance metrics help evaluate client relationships across multiple dimensions:</p>
+                <ul>
+                    <li><strong>Weight:</strong> How important this metric is to overall client scoring (1-100%)</li>
+                    <li><strong>High Threshold:</strong> Scores at or above this value are considered excellent</li>
+                    <li><strong>Low Threshold:</strong> Scores at or below this value need attention</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

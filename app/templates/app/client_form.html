@@ -1,0 +1,59 @@
+{% extends "app/base.html" %}
+
+{% block title %}Add Client - Accellis Client Scoring{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Add New Client</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Client Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="industry" class="form-label">Industry</label>
+                        <select class="form-select" id="industry" name="industry">
+                            <option value="">Select Industry</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Financial Services">Financial Services</option>
+                            <option value="Retail">Retail</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Education">Education</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Professional Services">Professional Services</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mrr" class="form-label">Monthly Recurring Revenue (MRR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="mrr" name="mrr" min="0" step="100">
+                        </div>
+                        <div class="form-text">Enter the monthly recurring revenue for this client</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="renewal_date" class="form-label">Contract Renewal Date</label>
+                        <input type="date" class="form-control" id="renewal_date" name="renewal_date">
+                        <div class="form-text">When does this client's contract come up for renewal?</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Create Client</button>
+                        <a href="{{ url_for('admin.client_list') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
