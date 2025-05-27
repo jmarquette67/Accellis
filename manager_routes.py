@@ -141,19 +141,99 @@ def client_details(client_id):
     
     client = Client.query.get_or_404(client_id)
     
-    # Get recent health checks for trends
-    health_checks = HealthCheck.query.filter_by(client_id=client_id)\
-                                   .order_by(HealthCheck.timestamp.desc())\
-                                   .limit(20).all()
+    from datetime import datetime, timedelta
     
-    # Get active alerts for this client
-    alerts = Alert.query.filter_by(client_id=client_id, is_active=True)\
-                       .order_by(Alert.created_at.desc()).all()
+    # Calculate comprehensive client statistics from actual engagement scores
+    all_scores = Score.query.filter_by(client_id=client_id).all()
     
-    return render_template('manager_client_details.html', 
+    if all_scores:
+        # Calculate simple average for current score
+        recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
+        current_score = round(sum(s.value for s in recent_scores) / len(recent_scores))
+        highest_score = max(s.value for s in all_scores)
+        lowest_score = min(s.value for s in all_scores)
+    else:
+        current_score = highest_score = lowest_score = 0
+    
+    # Get monthly trend data for the last 12 months
+    twelve_months_ago = datetime.now() - timedelta(days=365)
+    
+    monthly_scores = db.session.query(
+        db.func.date_trunc('month', Score.taken_at).label('month'),
+        db.func.avg(Score.value).label('avg_score')
+    ).filter(
+        Score.client_id == client_id,
+        Score.taken_at >= twelve_months_ago
+    ).group_by(db.func.date_trunc('month', Score.taken_at)).order_by('month').all()
+    
+    # Prepare chart data
+    month_labels = []
+    score_data = []
+    recent_history = []
+    
+    for i, month_data in enumerate(monthly_scores):
+        month_str = month_data.month.strftime('%b %Y')
+        score = round(month_data.avg_score)
+        
+        month_labels.append(month_str)
+        score_data.append(score)
+        
+        # Determine trend
+        trend = 'stable'
+        if i > 0:
+            prev_score = score_data[i-1]
+            if score > prev_score + 5:
+                trend = 'up'
+            elif score < prev_score - 5:
+                trend = 'down'
+        
+        # Determine score color
+        if score >= 80:
+            score_color = 'success'
+        elif score >= 60:
+            score_color = 'warning'
+        else:
+            score_color = 'danger'
+        
+        # Get actual highest and lowest metrics for this month
+        month_start = month_data.month.replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        month_metrics = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client_id,
+            Score.taken_at >= month_start,
+            Score.taken_at <= month_end
+        ).all()
+        
+        if month_metrics:
+            highest_metric = max(month_metrics, key=lambda x: x[0].value)[1].name
+            lowest_metric = min(month_metrics, key=lambda x: x[0].value)[1].name
+        else:
+            highest_metric = 'N/A'
+            lowest_metric = 'N/A'
+        
+        recent_history.append({
+            'month': month_str,
+            'score': score,
+            'score_color': score_color,
+            'trend': trend,
+            'highest_metric': highest_metric,
+            'lowest_metric': lowest_metric
+        })
+    
+    # Get total months tracked
+    total_months = len(set(s.taken_at.strftime('%Y-%m') for s in all_scores))
+    
+    import json
+    return render_template('manager_client_details.html',
                          client=client,
-                         health_checks=health_checks,
-                         alerts=alerts)
+                         current_score=current_score,
+                         highest_score=highest_score,
+                         lowest_score=lowest_score,
+                         total_months=total_months,
+                         month_labels=json.dumps(month_labels),
+                         score_data=json.dumps(score_data),
+                         recent_history=list(reversed(recent_history[-6:])))
 
 @manager_bp.route("/alerts")
 @require_login

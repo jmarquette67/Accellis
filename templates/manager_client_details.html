@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.name }} - Client Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i data-feather="user" class="me-2"></i>{{ client.name }}</h1>
+                <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left" class="me-1"></i>Back to Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ current_score }}</h4>
+                            <p class="card-text">Current Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i data-feather="target" class="icon-large"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ highest_score }}</h4>
+                            <p class="card-text">Highest Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i data-feather="trending-up" class="icon-large"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ lowest_score }}</h4>
+                            <p class="card-text">Lowest Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i data-feather="trending-down" class="icon-large"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_months }}</h4>
+                            <p class="card-text">Months Tracked</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i data-feather="calendar" class="icon-large"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Information & Contacts -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="info" class="me-2"></i>Client Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="30%">Name:</th>
+                            <td>{{ client.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Hostname:</th>
+                            <td>{{ client.hostname }}</td>
+                        </tr>
+                        <tr>
+                            <th>IP Address:</th>
+                            <td>{{ client.ip_address }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td><span class="badge bg-{{ client.status_color() }}">{{ client.status() }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ client.created_at.strftime('%B %d, %Y') }}</td>
+                        </tr>
+                        {% if client.description %}
+                        <tr>
+                            <th>Description:</th>
+                            <td>{{ client.description }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="users" class="me-2"></i>Key Contacts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="contact-section mb-3">
+                        <h6 class="text-primary">Primary Contact</h6>
+                        <p class="mb-1"><strong>John Smith</strong> - CEO</p>
+                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>john.smith@{{ client.hostname }}</p>
+                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4567</p>
+                    </div>
+                    <div class="contact-section mb-3">
+                        <h6 class="text-info">IT Contact</h6>
+                        <p class="mb-1"><strong>Sarah Johnson</strong> - IT Director</p>
+                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>sarah.johnson@{{ client.hostname }}</p>
+                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4568</p>
+                    </div>
+                    <div class="contact-section">
+                        <h6 class="text-success">Account Manager</h6>
+                        <p class="mb-1"><strong>Michael Davis</strong> - Operations Manager</p>
+                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>michael.davis@{{ client.hostname }}</p>
+                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4569</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Trends Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="trending-up" class="me-2"></i>Performance Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" width="400" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Score History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="list" class="me-2"></i>Recent Score History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Overall Score</th>
+                                    <th>Highest Metric</th>
+                                    <th>Lowest Metric</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for month_data in recent_history %}
+                                <tr>
+                                    <td>{{ month_data.month }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ month_data.score_color }}">{{ month_data.score }}%</span>
+                                    </td>
+                                    <td>{{ month_data.highest_metric }}</td>
+                                    <td>{{ month_data.lowest_metric }}</td>
+                                    <td>
+                                        {% if month_data.trend == 'up' %}
+                                            <i data-feather="trending-up" class="text-success"></i>
+                                        {% elif month_data.trend == 'down' %}
+                                            <i data-feather="trending-down" class="text-danger"></i>
+                                        {% else %}
+                                            <i data-feather="minus" class="text-secondary"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Performance Trends Chart
+const ctx = document.getElementById('trendsChart').getContext('2d');
+const trendsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ month_labels | safe }},
+        datasets: [{
+            label: 'Overall Score',
+            data: {{ score_data | safe }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.icon-large {
+    width: 3rem;
+    height: 3rem;
+}
+.contact-section {
+    border-left: 3px solid #e9ecef;
+    padding-left: 15px;
+}
+</style>
+{% endblock %}
