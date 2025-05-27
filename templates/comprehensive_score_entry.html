@@ -41,7 +41,7 @@
                 <div class="card mt-4" id="metrics-card" style="display: none;">
                     <div class="card-header">
                         <h5 class="mb-0">Engagement Metrics</h5>
-                        <small class="text-muted">Score each metric from 0-100</small>
+                        <small class="text-muted">Score each metric: 0 (not happening) or 1 (happening). Cross Selling can have up to 10 points.</small>
                     </div>
                     <div class="card-body">
                         {% for metric in metrics %}
@@ -52,18 +52,31 @@
                                         {{ metric.name }}
                                     </label>
                                     <p class="small text-muted mb-2">{{ metric.description }}</p>
-                                    <span class="badge bg-info">Weight: {{ metric.weight }}%</span>
+                                    <span class="badge bg-info">Weight: {{ metric.weight }}</span>
                                 </div>
                                 <div class="col-md-4">
+                                    {% if "Cross Selling" in metric.name %}
                                     <input type="number" 
                                            class="form-control metric-input" 
                                            name="metric_{{ metric.id }}" 
                                            id="metric_{{ metric.id }}"
                                            min="0" 
-                                           max="100" 
-                                           placeholder="0-100"
+                                           max="10" 
+                                           placeholder="0-10"
                                            data-weight="{{ metric.weight }}"
                                            onchange="calculateTotal()">
+                                    <small class="text-muted">0-10 points</small>
+                                    {% else %}
+                                    <select class="form-select metric-input" 
+                                            name="metric_{{ metric.id }}" 
+                                            id="metric_{{ metric.id }}"
+                                            data-weight="{{ metric.weight }}"
+                                            onchange="calculateTotal()">
+                                        <option value="">Choose...</option>
+                                        <option value="0">0 - Not Happening</option>
+                                        <option value="1">1 - Happening</option>
+                                    </select>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-2">
                                     <span id="weighted_{{ metric.id }}" class="text-muted small">
@@ -78,7 +91,8 @@
                             <h6>Total Score Calculation</h6>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>Total Weighted Score: <span id="total-score">0</span> / 100</strong>
+                                    <strong>Total Weighted Score: <span id="total-score">0</span> / 43</strong>
+                                    <small class="text-muted d-block">Maximum possible score is 43 (all metrics at max × weights)</small>
                                 </div>
                                 <div class="col-md-6">
                                     <span id="score-grade" class="badge bg-secondary">Not Calculated</span>
@@ -105,26 +119,36 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0">Scoring Guidelines</h6>
+                        <h6 class="mb-0">Scoring System</h6>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <span class="badge bg-success">85-100</span> Excellent Performance
+                            <span class="badge bg-success">40+ points</span> Excellent Engagement
                         </div>
                         <div class="mb-3">
-                            <span class="badge bg-primary">70-84</span> Good Performance
+                            <span class="badge bg-primary">30-39</span> Good Engagement
                         </div>
                         <div class="mb-3">
-                            <span class="badge bg-warning">60-69</span> Needs Attention
+                            <span class="badge bg-warning">20-29</span> Needs Attention
                         </div>
                         <div class="mb-3">
-                            <span class="badge bg-danger">0-59</span> Critical Issues
+                            <span class="badge bg-danger">0-19</span> Critical Issues
                         </div>
                         
                         <hr>
-                        <h6>Metric Weights</h6>
+                        <h6>Scoring Method</h6>
+                        <ul class="small text-muted">
+                            <li>Most metrics: 0 (not happening) or 1 (happening)</li>
+                            <li>Cross Selling: 0-10 points</li>
+                            <li>Final score = base score × weight</li>
+                            <li>Total = sum of all weighted scores</li>
+                        </ul>
+                        
+                        <hr>
+                        <h6>Highest Impact Metrics</h6>
                         <small class="text-muted">
-                            Each metric contributes differently to the total score based on business importance.
+                            Project Engagement, Regular Feedback (Weight 1)<br>
+                            Strategic Reviews, Support Satisfaction (Weight 2)
                         </small>
                     </div>
                 </div>
@@ -148,17 +172,15 @@ function updateClientSelection() {
 
 function calculateTotal() {
     let totalWeightedScore = 0;
-    let totalWeight = 0;
     
     const metricInputs = document.querySelectorAll('.metric-input');
     
     metricInputs.forEach(input => {
-        const score = parseFloat(input.value) || 0;
+        const baseScore = parseFloat(input.value) || 0;
         const weight = parseFloat(input.dataset.weight) || 0;
-        const weightedScore = (score * weight) / 100;
+        const weightedScore = baseScore * weight;  // Base score multiplied by weight
         
         totalWeightedScore += weightedScore;
-        totalWeight += weight;
         
         // Update individual weighted display
         const weightedDisplay = document.getElementById('weighted_' + input.id.split('_')[1]);
@@ -173,14 +195,14 @@ function calculateTotal() {
     
     totalScoreElement.textContent = totalWeightedScore.toFixed(1);
     
-    // Update grade badge
-    if (totalWeightedScore >= 85) {
+    // Update grade badge based on total weighted score
+    if (totalWeightedScore >= 40) {
         scoreGradeElement.textContent = 'Excellent';
         scoreGradeElement.className = 'badge bg-success';
-    } else if (totalWeightedScore >= 70) {
+    } else if (totalWeightedScore >= 30) {
         scoreGradeElement.textContent = 'Good';
         scoreGradeElement.className = 'badge bg-primary';
-    } else if (totalWeightedScore >= 60) {
+    } else if (totalWeightedScore >= 20) {
         scoreGradeElement.textContent = 'Needs Attention';
         scoreGradeElement.className = 'badge bg-warning';
     } else if (totalWeightedScore > 0) {
