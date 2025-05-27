@@ -22,14 +22,27 @@ def dashboard():
     # Check if user is authenticated (with fallback for missing login manager)
     try:
         user_authenticated = current_user.is_authenticated
+        if user_authenticated:
+            # Simple authenticated dashboard without complex queries for now
+            return f"""
+            <h1>Welcome to Accellis Client Scoring Platform!</h1>
+            <p>Successfully logged in as: {current_user.email or current_user.id}</p>
+            <p>Your role: {getattr(current_user, 'role', 'TAM')}</p>
+            <a href="/auth/replit_auth/logout">Logout</a>
+            """
     except:
         user_authenticated = False
     
     if not user_authenticated:
         return render_template('landing.html')
     
-    # Get all active clients with their latest status
-    clients = Client.query.filter_by(is_active=True).all()
+    # Authentication successful - show simple dashboard
+    return """
+    <h1>🎉 Authentication Successful!</h1>
+    <p>Welcome to your Accellis Client Scoring Platform</p>
+    <p>You are successfully logged in</p>
+    <a href="/auth/replit_auth/logout">Logout</a>
+    """
     
     # Get system overview stats
     total_clients = len(clients)

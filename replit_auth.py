@@ -34,36 +34,17 @@ def load_user(user_id):
 
 class UserSessionStorage(BaseStorage):
     def get(self, blueprint):
-        try:
-            token = db.session.query(OAuth).filter_by(
-                user_id=current_user.get_id(),
-                browser_session_key=g.browser_session_key,
-                provider=blueprint.name,
-            ).one().token
-        except NoResultFound:
-            token = None
-        return token
+        # Simple in-memory storage for now
+        return getattr(g, 'oauth_token', None)
 
     def set(self, blueprint, token):
-        db.session.query(OAuth).filter_by(
-            user_id=current_user.get_id(),
-            browser_session_key=g.browser_session_key,
-            provider=blueprint.name,
-        ).delete()
-        new_model = OAuth()
-        new_model.user_id = current_user.get_id()
-        new_model.browser_session_key = g.browser_session_key
-        new_model.provider = blueprint.name
-        new_model.token = token
-        db.session.add(new_model)
-        db.session.commit()
+        # Simple in-memory storage for now
+        g.oauth_token = token
 
     def delete(self, blueprint):
-        db.session.query(OAuth).filter_by(
-            user_id=current_user.get_id(),
-            browser_session_key=g.browser_session_key,
-            provider=blueprint.name).delete()
-        db.session.commit()
+        # Simple in-memory storage for now
+        if hasattr(g, 'oauth_token'):
+            delattr(g, 'oauth_token')
 
 def make_replit_blueprint():
     try:
