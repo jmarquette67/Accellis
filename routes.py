@@ -279,6 +279,24 @@ def check_and_create_alerts(client, health_check):
         app.logger.error(f'Error creating alerts: {e}')
         db.session.rollback()
 
+# Score management routes
+@app.route('/scores/new')
+@require_login
+def score_entry():
+    """Score entry form for all users"""
+    from models import Metric
+    clients = Client.query.order_by(Client.name).all()
+    metrics = Metric.query.order_by(Metric.name).all()
+    return render_template("score_entry.html", clients=clients, metrics=metrics)
+
+@app.route('/scores/')
+@require_login  
+def score_history():
+    """View score history"""
+    from models import Score
+    recent_scores = Score.query.order_by(Score.taken_at.desc()).limit(20).all()
+    return render_template("score_history.html", scores=recent_scores)
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', error_message='Page not found'), 404
