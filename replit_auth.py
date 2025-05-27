@@ -122,23 +122,34 @@ def make_replit_blueprint():
     return replit_bp
 
 def save_user(user_claims):
-    user = User()
-    user.id = user_claims['sub']
-    user.email = user_claims.get('email')
-    user.first_name = user_claims.get('first_name')
-    user.last_name = user_claims.get('last_name')
-    user.profile_image_url = user_claims.get('profile_image_url')
+    from sqlmodel import Session, select
+    from database import engine
+    from models import User, RoleType
     
-    # Check if this is an existing user or set default role
-    existing_user = User.query.filter_by(id=user_claims['sub']).first()
-    if not existing_user:
-        user.role = UserRole.TAM  # Default role for new users
-    else:
-        user.role = existing_user.role  # Keep existing role
-    
-    merged_user = db.session.merge(user)
-    db.session.commit()
-    return merged_user
+    with Session(engine) as session:
+        # Try to find existing user
+        statement = select(User).where(User.id == user_claims['sub'])
+        existing_user = session.exec(statement).first()
+        
+        if existing_user:
+            # Update existing user with available fields
+            if hasattr(existing_user, 'username') and user_claims.get('username'):
+                existing_user.username = user_claims.get('username')
+            session.add(existing_user)
+            session.commit()
+            session.refresh(existing_user)
+            return existing_user
+        else:
+            # Create new user with current model structure
+            new_user = User(
+                id=user_claims['sub'],
+                username=user_claims.get('username', f"user_{user_claims['sub']}"),
+                role=RoleType.TAM
+            )
+            session.add(new_user)
+            session.commit()
+            session.refresh(new_user)
+            return new_user
 
 @oauth_authorized.connect
 def logged_in(blueprint, token):
