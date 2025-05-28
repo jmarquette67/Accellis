@@ -314,18 +314,24 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Performance Trends Chart - Clean Implementation
+// Rebuilt Performance Trends Chart 
 document.addEventListener('DOMContentLoaded', function() {
     const chartCanvas = document.getElementById('trendsChart');
-    if (chartCanvas) {
+    if (!chartCanvas) return;
+    
+    // Clean up any existing chart
+    if (window.trendsChart) {
+        try {
+            window.trendsChart.destroy();
+        } catch (e) {
+            console.log('Chart cleanup handled');
+        }
+        window.trendsChart = null;
+    }
+    
+    try {
         const ctx = chartCanvas.getContext('2d');
         
-        // Destroy existing chart if it exists
-        if (window.trendsChart instanceof Chart) {
-            window.trendsChart.destroy();
-        }
-        
-        // Create new chart with stable configuration
         window.trendsChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -335,20 +341,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     data: {{ score_data | safe }},
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    borderWidth: 3,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.2,
                     fill: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
-                },
+                animation: false,
                 interaction: {
                     intersect: false,
                     mode: 'nearest'
@@ -356,45 +359,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100,
                         grid: {
                             color: 'rgba(0,0,0,0.1)'
-                        },
-                        ticks: {
-                            stepSize: 20,
-                            font: {
-                                size: 12
-                            }
                         }
                     },
                     x: {
                         grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 12
-                            }
+                            color: 'rgba(0,0,0,0.1)'
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20
-                        }
+                        position: 'top'
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleColor: 'white',
-                        bodyColor: 'white',
-                        borderColor: '#0d6efd',
-                        borderWidth: 1,
-                        cornerRadius: 6,
-                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Score: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const dataIndex = elements[0].index;
+                        const month = this.data.labels[dataIndex];
+                        const score = this.data.datasets[0].data[dataIndex];
+                        showScoreModal(month, score);
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Chart error:', error);
+        chartCanvas.style.display = 'none';
+    }
+});
                         callbacks: {
                             title: function(context) {
                                 return context[0].label;
