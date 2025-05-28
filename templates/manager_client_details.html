@@ -20,7 +20,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5><i data-feather="lightbulb" class="me-2"></i>Key Insights for {{ client.name }}</h5>
+                    <h5><i data-feather="zap" class="me-2"></i>Key Insights for {{ client.name }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -34,7 +34,7 @@
                                             <strong>{{ metric.name }}</strong>
                                             <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
                                         </div>
-                                        <span class="badge bg-success rounded-pill">{{ metric.score }}%</span>
+                                        <span class="badge bg-success rounded-pill">{{ metric.score }}</span>
                                     </div>
                                     {% endfor %}
                                 {% else %}
@@ -52,7 +52,7 @@
                                             <strong>{{ metric.name }}</strong>
                                             <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
                                         </div>
-                                        <span class="badge bg-warning rounded-pill">{{ metric.score }}%</span>
+                                        <span class="badge bg-warning rounded-pill">{{ metric.score }}</span>
                                     </div>
                                     {% endfor %}
                                 {% else %}
@@ -73,7 +73,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ current_score }}%</h4>
+                            <h4 class="card-title">{{ current_score }}</h4>
                             <p class="card-text">Current Score</p>
                             <small class="opacity-75">Click to view details</small>
                         </div>
@@ -89,7 +89,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ highest_score }}%</h4>
+                            <h4 class="card-title">{{ highest_score }}</h4>
                             <p class="card-text">Highest Score</p>
                             <small class="opacity-75">Click to view details</small>
                         </div>
@@ -105,7 +105,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ lowest_score }}%</h4>
+                            <h4 class="card-title">{{ lowest_score }}</h4>
                             <p class="card-text">Lowest Score</p>
                             <small class="opacity-75">Click to view details</small>
                         </div>
@@ -233,7 +233,7 @@
                                 <tr class="clickable-row" data-month="{{ month_data.month }}" style="cursor: pointer;">
                                     <td>{{ month_data.month }}</td>
                                     <td>
-                                        <span class="badge bg-{{ month_data.score_color }}">{{ month_data.score }}%</span>
+                                        <span class="badge bg-{{ month_data.score_color }}">{{ month_data.score }}</span>
                                     </td>
                                     <td>{{ month_data.highest_metric }}</td>
                                     <td>{{ month_data.lowest_metric }}</td>
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.clickable-card').forEach(card => {
         card.addEventListener('click', function() {
             const scoreType = this.dataset.scoreType;
-            const scoreValue = this.querySelector('.card-title').textContent.replace('%', '');
+            const scoreValue = this.querySelector('.card-title').textContent;
             
             switch(scoreType) {
                 case 'current':
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('click', function(e) {
             if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
                 const month = this.dataset.month;
-                const score = this.querySelector('.badge').textContent.replace('%', '');
+                const score = this.querySelector('.badge').textContent;
                 viewScoreDetails(month, score);
             }
         });
