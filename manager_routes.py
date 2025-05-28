@@ -224,7 +224,8 @@ def client_details(client_id):
                     month_total_weight += metric.weight
                 
                 if month_total_weight > 0:
-                    monthly_weighted_scores.append(month_total_weighted / month_total_weight)
+                    # Use total weighted points as the score (not average)
+                    monthly_weighted_scores.append(month_total_weighted)
         
         if monthly_weighted_scores:
             highest_score = round(max(monthly_weighted_scores))
