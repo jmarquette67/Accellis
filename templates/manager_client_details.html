@@ -397,33 +397,6 @@ document.addEventListener('DOMContentLoaded', function() {
         chartCanvas.style.display = 'none';
     }
 });
-                        callbacks: {
-                            title: function(context) {
-                                return context[0].label;
-                            },
-                            label: function(context) {
-                                return `Score: ${context.parsed.y}`;
-                            }
-                        }
-                }
-            },
-            onHover: function(event, activeElements) {
-                if (event.native && event.native.target) {
-                    event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
-                }
-            },
-            onClick: function(event, elements) {
-                if (elements.length > 0) {
-                    const dataIndex = elements[0].index;
-                    const month = this.data.labels[dataIndex];
-                    const score = this.data.datasets[0].data[dataIndex];
-                    // Show score details
-                    showScoreModal(month, score);
-                }
-            }
-        });
-    }
-});
 
 // Show score details function - DEFINE FIRST
 function showScoreModal(month, score) {
