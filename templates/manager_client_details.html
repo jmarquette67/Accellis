@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // View score details function
 function viewScoreDetails(month, score) {
     document.getElementById('scoreModalTitle').textContent = `${month} - Detailed Scores`;
+    // Show loading state first
     document.getElementById('scoreDetailsContent').innerHTML = `
         <div class="row">
             <div class="col-md-4">
@@ -407,63 +408,97 @@ function viewScoreDetails(month, score) {
                 </div>
             </div>
             <div class="col-md-8">
-                <h6>Engagement Metrics Breakdown</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Score</th>
-                                <th>Weight</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Strategic Planning</td>
-                                <td>85</td>
-                                <td>High Priority</td>
-                                <td><span class="badge bg-success">Excellent</span></td>
-                            </tr>
-                            <tr>
-                                <td>QBR Completion</td>
-                                <td>75</td>
-                                <td>High Priority</td>
-                                <td><span class="badge bg-info">Good</span></td>
-                            </tr>
-                            <tr>
-                                <td>Help Desk Usage</td>
-                                <td>90</td>
-                                <td>Medium Priority</td>
-                                <td><span class="badge bg-success">Excellent</span></td>
-                            </tr>
-                            <tr>
-                                <td>VCIO Engagement</td>
-                                <td>70</td>
-                                <td>Medium Priority</td>
-                                <td><span class="badge bg-warning">Fair</span></td>
-                            </tr>
-                            <tr>
-                                <td>Cross Selling</td>
-                                <td>45</td>
-                                <td>Medium Priority</td>
-                                <td><span class="badge bg-warning">Needs Attention</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <h6 class="alert-heading">Q1 2025 Authentic Data</h6>
-                    <p class="mb-0">This detailed breakdown shows authentic engagement metrics from your client assessment for ${month}.</p>
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading all authentic metrics for ${month}...</p>
                 </div>
             </div>
         </div>
     `;
+    
+    // Fetch authentic metric data
+    const clientId = {{ client.id }};
+    fetch(`/manager/api/client/${clientId}/scores/${encodeURIComponent(month)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.scores.length > 0) {
+                // Create table with ALL authentic metrics
+                const metricsTable = data.scores.map(metric => `
+                    <tr>
+                        <td><strong>${metric.metric_name}</strong></td>
+                        <td><span class="badge bg-secondary">${metric.score}</span></td>
+                        <td>${metric.priority}</td>
+                        <td><span class="badge bg-${metric.status_class}">${metric.status}</span></td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById('scoreDetailsContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h3>${score}</h3>
+                                    <p class="mb-0">Overall Score</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="card bg-info text-white text-center">
+                                    <div class="card-body">
+                                        <h4>${data.total_metrics}</h4>
+                                        <p class="mb-0">Total Metrics</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h6>Complete Score Sheet for ${data.month}</h6>
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-sm table-striped">
+                                    <thead class="table-dark sticky-top">
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Score</th>
+                                            <th>Priority</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${metricsTable}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Authentic Q1 2025 Data</h6>
+                                <p class="mb-0">This detailed breakdown shows all ${data.total_metrics} authentic engagement metrics from your client assessment for ${data.month}.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('scoreDetailsContent').innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6>No Metrics Found</h6>
+                        <p>No authentic engagement data found for ${month}. This month may not have recorded scores yet.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching metrics:', error);
+            document.getElementById('scoreDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <h6>Error Loading Data</h6>
+                    <p>Unable to load authentic metrics for ${month}. Please try again.</p>
+                </div>
+            `;
+        });
     
     // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('scoreDetailsModal'));

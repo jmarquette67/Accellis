@@ -259,6 +259,73 @@ def client_details(client_id):
                          top_metrics=top_metrics,
                          bottom_metrics=bottom_metrics)
 
+@manager_bp.route("/api/client/<int:client_id>/scores/<month>")
+@require_login
+def get_monthly_scores(client_id, month):
+    """Get all metric scores for a specific client and month"""
+    require_manager()
+    
+    try:
+        # Parse the month (format: YYYY-MM or 'Month YYYY')
+        if '-' in month:
+            year, month_num = month.split('-')
+        else:
+            # Handle format like 'January 2025'
+            from datetime import datetime
+            date_obj = datetime.strptime(month, '%B %Y')
+            year = date_obj.year
+            month_num = date_obj.month
+        
+        # Get all scores for this client and month
+        monthly_scores = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client_id,
+            db.extract('year', Score.taken_at) == int(year),
+            db.extract('month', Score.taken_at) == int(month_num)
+        ).order_by(Metric.weight.desc(), Metric.name).all()
+        
+        # Format the response
+        scores_data = []
+        for score, metric in monthly_scores:
+            # Determine score status
+            if score.value >= metric.high_threshold:
+                status = 'Excellent'
+                status_class = 'success'
+            elif score.value >= metric.low_threshold:
+                status = 'Good'
+                status_class = 'info'
+            else:
+                status = 'Needs Attention'
+                status_class = 'warning'
+            
+            # Get priority level based on weight
+            if metric.weight >= 4:
+                priority = 'High Priority'
+            elif metric.weight >= 3:
+                priority = 'Medium Priority'
+            else:
+                priority = 'Low Priority'
+            
+            scores_data.append({
+                'metric_name': metric.name,
+                'score': score.value,
+                'priority': priority,
+                'status': status,
+                'status_class': status_class,
+                'weight': metric.weight,
+                'notes': score.notes or '',
+                'date': score.taken_at.strftime('%B %d, %Y')
+            })
+        
+        return {
+            'success': True,
+            'month': month,
+            'scores': scores_data,
+            'total_metrics': len(scores_data)
+        }
+        
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
+
 @manager_bp.route("/reports/advanced")
 @require_login
 def advanced_reports():
