@@ -488,8 +488,33 @@ def advanced_reports():
         ).all()
         
         if scores:
-            # Calculate average score from authentic engagement metrics
-            overall_score = round(sum(s.value for s in scores) / len(scores))
+            # Calculate weighted score using authentic engagement metrics
+            total_weighted = 0
+            total_weight = 0
+            
+            # Group scores by month to avoid duplicates
+            monthly_scores = {}
+            for score in scores:
+                month_key = score.taken_at.strftime('%Y-%m')
+                if month_key not in monthly_scores:
+                    monthly_scores[month_key] = {}
+                monthly_scores[month_key][score.metric_id] = score
+            
+            # Calculate weighted totals for each month, then average
+            month_totals = []
+            for month_data in monthly_scores.values():
+                month_weighted = 0
+                month_weight = 0
+                for score in month_data.values():
+                    # Scale score to 0-1 range and apply metric weight
+                    scaled_value = score.value / 100.0
+                    month_weighted += scaled_value * score.metric.weight
+                    month_weight += score.metric.weight
+                
+                if month_weight > 0:
+                    month_totals.append(month_weighted)
+            
+            overall_score = round(sum(month_totals) / len(month_totals)) if month_totals else 0
             
             # Calculate trend from actual data
             first_half = [s for s in scores if s.taken_at <= from_date + timedelta(days=90)]

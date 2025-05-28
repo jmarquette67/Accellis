@@ -210,6 +210,37 @@
         </div>
     </div>
 
+    <!-- Score Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card clickable-card h-100" data-score-type="current" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary">{{ current_score }}</h3>
+                    <p class="card-text">Current Score</p>
+                    <small class="text-muted">Latest engagement assessment</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card clickable-card h-100" data-score-type="highest" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-success">{{ highest_score }}</h3>
+                    <p class="card-text">Best Performance</p>
+                    <small class="text-muted">Peak engagement month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card clickable-card h-100" data-score-type="lowest" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-warning">{{ lowest_score }}</h3>
+                    <p class="card-text">Needs Attention</p>
+                    <small class="text-muted">Focus area for improvement</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Score Sheets -->
     <div class="row">
         <div class="col-12">
@@ -395,6 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Show score details function - DEFINE FIRST
 function showScoreModal(month, score) {
     document.getElementById('scoreModalTitle').textContent = `${month} - Detailed Scores`;
+    
     // Show loading state first
     document.getElementById('scoreDetailsContent').innerHTML = `
         <div class="row">
