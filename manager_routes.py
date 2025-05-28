@@ -177,9 +177,17 @@ def client_details(client_id):
             
             current_score = round(total_weighted_score / total_weight) if total_weight > 0 else 0
         else:
-            # Fallback to simple average if no recent weighted data
+            # Fallback to properly scaled average if no recent weighted data
             recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
-            current_score = round(sum(s.value for s in recent_scores) / len(recent_scores))
+            total_scaled = 0
+            for score in recent_scores:
+                # Need to get metric info for proper scaling
+                metric = Metric.query.get(score.metric_id)
+                if metric and "Cross Selling" in metric.name:
+                    total_scaled += score.value * 10
+                else:
+                    total_scaled += score.value * 100
+            current_score = round(total_scaled / len(recent_scores)) if recent_scores else 0
         
         # Calculate weighted highest and lowest monthly scores
         monthly_weighted_scores = []
