@@ -213,6 +213,39 @@ def client_details(client_id):
     # Get total months tracked
     total_months = len(set(s.taken_at.strftime('%Y-%m') for s in all_scores))
     
+    # Calculate top and bottom metrics for insights
+    top_metrics = []
+    bottom_metrics = []
+    
+    if all_scores:
+        # Group scores by metric and get recent averages
+        metric_averages = {}
+        for score in all_scores[-20:]:  # Last 20 scores for recency
+            if score.metric_id not in metric_averages:
+                metric_averages[score.metric_id] = {
+                    'scores': [],
+                    'metric': score.metric,
+                    'latest_date': score.taken_at
+                }
+            metric_averages[score.metric_id]['scores'].append(score.value)
+            if score.taken_at > metric_averages[score.metric_id]['latest_date']:
+                metric_averages[score.metric_id]['latest_date'] = score.taken_at
+        
+        # Calculate averages and sort
+        metric_performance = []
+        for metric_data in metric_averages.values():
+            avg_score = sum(metric_data['scores']) / len(metric_data['scores'])
+            metric_performance.append({
+                'name': metric_data['metric'].name,
+                'score': round(avg_score),
+                'date': metric_data['latest_date']
+            })
+        
+        # Sort by score and get top/bottom 3
+        metric_performance.sort(key=lambda x: x['score'], reverse=True)
+        top_metrics = metric_performance[:3]
+        bottom_metrics = metric_performance[-3:]
+
     import json
     return render_template('manager_client_details.html',
                          client=client,
@@ -222,7 +255,9 @@ def client_details(client_id):
                          total_months=total_months,
                          month_labels=json.dumps(month_labels),
                          score_data=json.dumps(score_data),
-                         recent_history=list(reversed(recent_history[-6:])))
+                         recent_history=list(reversed(recent_history[-6:])),
+                         top_metrics=top_metrics,
+                         bottom_metrics=bottom_metrics)
 
 @manager_bp.route("/reports/advanced")
 @require_login
