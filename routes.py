@@ -439,7 +439,7 @@ def admin_metrics():
         return redirect(url_for('dashboard'))
     
     from models import Metric
-    metrics = Metric.query.order_by(Metric.weight, Metric.name).all()
+    metrics = Metric.query.order_by(Metric.id).all()
     return render_template("admin_metrics.html", metrics=metrics, user=current_user)
 
 @app.route('/admin/metrics/<int:metric_id>/update', methods=['POST'])
