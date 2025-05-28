@@ -65,7 +65,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <small class="text-muted">{{ metric.description[:100] }}{% if metric.description|length > 100 %}...{% endif %}</small>
+                                        <small class="text-muted">{{ metric.description[:100] if metric.description else 'No description available' }}{% if metric.description and metric.description|length > 100 %}...{% endif %}</small>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" 

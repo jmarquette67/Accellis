@@ -248,7 +248,7 @@ def client_details(client_id):
         month_scores = db.session.query(Score, Metric).join(Metric).filter(
             Score.client_id == client_id,
             db.func.date_trunc('month', Score.taken_at) == month_group.month
-        ).all()
+        ).order_by(Metric.id).all()
         
         if month_scores:
             month_total_weighted = 0
