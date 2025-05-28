@@ -160,21 +160,23 @@ def client_details(client_id):
         
         if all_weighted_scores:
             # Calculate weighted average with proper scaling for current score
-            total_weighted_score = 0
-            total_weight = 0
+            weighted_values = []
+            weights = []
             
             for score, metric in all_weighted_scores:
                 # Scale only binary metrics to 0-100, keep Cross Selling as actual count
                 if "Cross Selling" in metric.name:
-                    # Cross Selling stays as actual number of lines sold
-                    scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                    scaled_value = score.value * 10  # Cross Selling as actual lines * 10 for scaling
                 else:
-                    scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                    scaled_value = score.value * 100  # Binary metrics: 0-1 to 0-100
                 
-                total_weighted_score += scaled_value * metric.weight
-                total_weight += metric.weight
+                weighted_values.append(scaled_value * metric.weight)
+                weights.append(metric.weight)
             
-            current_score = round(total_weighted_score / total_weight) if total_weight > 0 else 0
+            if weights:
+                current_score = round(sum(weighted_values) / sum(weights))
+            else:
+                current_score = 0
         else:
             # Fallback to properly scaled average if no recent weighted data
             recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
