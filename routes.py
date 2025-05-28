@@ -357,7 +357,7 @@ def score_entry():
     from datetime import datetime
     
     clients = Client.query.order_by(Client.name).all()
-    metrics = Metric.query.order_by(Metric.weight.desc(), Metric.name).all()
+    metrics = Metric.query.order_by(Metric.id).all()
     current_month = datetime.now().strftime('%Y-%m')
     
     return render_template("comprehensive_score_entry.html", 

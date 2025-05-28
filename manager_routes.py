@@ -68,9 +68,10 @@ def client_table():
     require_manager()
     
     subq = latest_scores_subq(db.session)
-    # join subq back to full Score rows
+    # join subq back to full Score rows with Metric data
     latest = (
-        db.session.query(Score)
+        db.session.query(Score, Metric)
+        .join(Metric, Score.metric_id == Metric.id)
         .join(subq, (Score.client_id == subq.c.client_id) &
                    (Score.metric_id == subq.c.metric_id) &
                    (Score.taken_at == subq.c.max_ts))
@@ -79,8 +80,8 @@ def client_table():
 
     # compute weighted average per client
     totals = {}
-    for sc in latest:
-        w = sc.metric.weight
+    for sc, metric in latest:
+        w = metric.weight
         totals.setdefault(sc.client_id, {"sum": 0, "weight": 0, "client": sc.client})
         totals[sc.client_id]["sum"] += sc.value * w
         totals[sc.client_id]["weight"] += w
@@ -202,7 +203,7 @@ def client_details(client_id):
             month_scores = db.session.query(Score, Metric).join(Metric).filter(
                 Score.client_id == client_id,
                 db.func.date_trunc('month', Score.taken_at) == month_group.month
-            ).all()
+            ).order_by(Metric.id).all()
             
             if month_scores:
                 month_total_weighted = 0
