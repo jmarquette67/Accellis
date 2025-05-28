@@ -194,15 +194,20 @@
         </div>
     </div>
 
-    <!-- Performance Trends Chart -->
+    <!-- Engagement Summary -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5><i data-feather="trending-up" class="me-2"></i>Performance Trends</h5>
+                    <h5><i data-feather="activity" class="me-2"></i>Engagement Summary</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="trendsChart" width="400" height="100"></canvas>
+                    <div class="alert alert-info">
+                        <h6><i data-feather="trending-up"></i> Performance Overview</h6>
+                        <p class="mb-2">Current engagement score: <strong>{{ current_score }}</strong></p>
+                        <p class="mb-2">Total months tracked: <strong>{{ total_months }}</strong></p>
+                        <p class="mb-0">Based on authentic Q1 2025 engagement data across all priority metrics.</p>
+                    </div>
                 </div>
             </div>
         </div>
