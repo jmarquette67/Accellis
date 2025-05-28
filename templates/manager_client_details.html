@@ -281,61 +281,111 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Performance Trends Chart with fixed hover behavior
-const ctx = document.getElementById('trendsChart').getContext('2d');
-const trendsChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: {{ month_labels | safe }},
-        datasets: [{
-            label: 'Overall Score',
-            data: {{ score_data | safe }},
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 4,
-        interaction: {
-            intersect: false,
-            mode: 'index'
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                ticks: {
-                    callback: function(value) {
-                        return value;
+// Performance Trends Chart - Clean Implementation
+document.addEventListener('DOMContentLoaded', function() {
+    const chartCanvas = document.getElementById('trendsChart');
+    if (chartCanvas) {
+        const ctx = chartCanvas.getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (window.trendsChart instanceof Chart) {
+            window.trendsChart.destroy();
+        }
+        
+        // Create new chart with stable configuration
+        window.trendsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ month_labels | safe }},
+                datasets: [{
+                    label: 'Engagement Score',
+                    data: {{ score_data | safe }},
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            stepSize: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
                     }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: '#0d6efd',
+                        borderWidth: 1,
+                        cornerRadius: 6,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                return `Score: ${context.parsed.y}`;
+                            }
+                        }
+                }
+            },
+            onHover: function(event, activeElements) {
+                if (event.native && event.native.target) {
+                    event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const dataIndex = elements[0].index;
+                    const month = this.data.labels[dataIndex];
+                    const score = this.data.datasets[0].data[dataIndex];
+                    viewScoreDetails(month, score);
                 }
             }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                enabled: true,
-                mode: 'index',
-                intersect: false
-            }
-        },
-        onHover: function(event, activeElements) {
-            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
-        },
-        onClick: function(event, elements) {
-            if (elements.length > 0) {
-                const dataIndex = elements[0].index;
-                const month = this.data.labels[dataIndex];
-                const score = this.data.datasets[0].data[dataIndex];
-                viewScoreDetails(month, score);
-            }
-        }
+        });
     }
 });
 
