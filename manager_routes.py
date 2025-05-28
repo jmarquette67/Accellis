@@ -149,24 +149,97 @@ def client_details(client_id):
     all_scores = Score.query.filter_by(client_id=client_id).all()
     
     if all_scores:
-        # Calculate simple average for current score
-        recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
-        current_score = round(sum(s.value for s in recent_scores) / len(recent_scores))
-        highest_score = max(s.value for s in all_scores)
-        lowest_score = min(s.value for s in all_scores)
+        # Calculate weighted scores using authentic metric priorities
+        from datetime import datetime, timedelta
+        recent_date = datetime.now() - timedelta(days=90)  # Last 3 months
+        
+        # Get recent scores with their metric weights
+        recent_weighted_scores = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client_id,
+            Score.taken_at >= recent_date
+        ).all()
+        
+        if recent_weighted_scores:
+            # Calculate weighted average for current score
+            total_weighted_score = 0
+            total_weight = 0
+            
+            for score, metric in recent_weighted_scores:
+                total_weighted_score += score.value * metric.weight
+                total_weight += metric.weight
+            
+            current_score = round(total_weighted_score / total_weight) if total_weight > 0 else 0
+        else:
+            # Fallback to simple average if no recent weighted data
+            recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
+            current_score = round(sum(s.value for s in recent_scores) / len(recent_scores))
+        
+        # Calculate weighted highest and lowest monthly scores
+        monthly_weighted_scores = []
+        monthly_groups = db.session.query(
+            db.func.date_trunc('month', Score.taken_at).label('month')
+        ).filter(Score.client_id == client_id).group_by(
+            db.func.date_trunc('month', Score.taken_at)
+        ).all()
+        
+        for month_group in monthly_groups:
+            month_scores = db.session.query(Score, Metric).join(Metric).filter(
+                Score.client_id == client_id,
+                db.func.date_trunc('month', Score.taken_at) == month_group.month
+            ).all()
+            
+            if month_scores:
+                month_total_weighted = 0
+                month_total_weight = 0
+                
+                for score, metric in month_scores:
+                    month_total_weighted += score.value * metric.weight
+                    month_total_weight += metric.weight
+                
+                if month_total_weight > 0:
+                    monthly_weighted_scores.append(month_total_weighted / month_total_weight)
+        
+        if monthly_weighted_scores:
+            highest_score = round(max(monthly_weighted_scores))
+            lowest_score = round(min(monthly_weighted_scores))
+        else:
+            highest_score = max(s.value for s in all_scores)
+            lowest_score = min(s.value for s in all_scores)
     else:
         current_score = highest_score = lowest_score = 0
     
     # Get monthly trend data for the last 12 months
     twelve_months_ago = datetime.now() - timedelta(days=365)
     
-    monthly_scores = db.session.query(
-        db.func.date_trunc('month', Score.taken_at).label('month'),
-        db.func.avg(Score.value).label('avg_score')
+    # Calculate weighted monthly scores for trend analysis
+    monthly_groups = db.session.query(
+        db.func.date_trunc('month', Score.taken_at).label('month')
     ).filter(
         Score.client_id == client_id,
         Score.taken_at >= twelve_months_ago
     ).group_by(db.func.date_trunc('month', Score.taken_at)).order_by('month').all()
+    
+    monthly_scores = []
+    for month_group in monthly_groups:
+        month_scores = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client_id,
+            db.func.date_trunc('month', Score.taken_at) == month_group.month
+        ).all()
+        
+        if month_scores:
+            month_total_weighted = 0
+            month_total_weight = 0
+            
+            for score, metric in month_scores:
+                month_total_weighted += score.value * metric.weight
+                month_total_weight += metric.weight
+            
+            if month_total_weight > 0:
+                weighted_avg = month_total_weighted / month_total_weight
+                monthly_scores.append(type('MonthlyScore', (), {
+                    'month': month_group.month,
+                    'avg_score': weighted_avg
+                })())
     
     # Prepare chart data
     month_labels = []
