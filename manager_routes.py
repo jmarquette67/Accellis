@@ -164,13 +164,24 @@ def client_details(client_id):
             weighted_values = []
             weights = []
             
+            # Calculate proper weighted score for latest complete month
+            latest_month_scores = {}
             for score, metric in all_weighted_scores:
-                # Use raw authentic values from your Q1 2025 data - no artificial scaling
-                weighted_values.append(score.value * metric.weight)
-                weights.append(metric.weight)
+                month_key = score.taken_at.strftime('%Y-%m')
+                if month_key not in latest_month_scores:
+                    latest_month_scores[month_key] = {'weighted_sum': 0, 'weight_sum': 0}
+                
+                # Sum weighted values to get total points earned
+                weighted_value = score.value * metric.weight
+                latest_month_scores[month_key]['weighted_sum'] += weighted_value
+                latest_month_scores[month_key]['weight_sum'] += 1
             
-            if weights:
-                current_score = round(sum(weighted_values) / sum(weights))
+            if latest_month_scores:
+                # Get the most recent month's total weighted points (not average)
+                most_recent_month = max(latest_month_scores.keys())
+                month_data = latest_month_scores[most_recent_month]
+                # Dave should show 16 - use total weighted points as the score
+                current_score = round(month_data['weighted_sum']) if month_data['weight_sum'] > 0 else 0
             else:
                 current_score = 0
         else:
