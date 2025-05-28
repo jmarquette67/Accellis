@@ -151,20 +151,19 @@ def client_details(client_id):
     if all_scores:
         # Calculate weighted scores using authentic metric priorities
         from datetime import datetime, timedelta
-        recent_date = datetime.now() - timedelta(days=90)  # Last 3 months
+        recent_date = datetime.now() - timedelta(days=180)  # Last 6 months to capture more data
         
-        # Get recent scores with their metric weights
-        recent_weighted_scores = db.session.query(Score, Metric).join(Metric).filter(
-            Score.client_id == client_id,
-            Score.taken_at >= recent_date
-        ).all()
+        # Get all scores with their metric weights (use actual data available)
+        all_weighted_scores = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client_id
+        ).order_by(Score.taken_at.desc()).limit(50).all()  # Get latest 50 scores
         
-        if recent_weighted_scores:
+        if all_weighted_scores:
             # Calculate weighted average with proper scaling for current score
             total_weighted_score = 0
             total_weight = 0
             
-            for score, metric in recent_weighted_scores:
+            for score, metric in all_weighted_scores:
                 # Scale only binary metrics to 0-100, keep Cross Selling as actual count
                 if "Cross Selling" in metric.name:
                     # Cross Selling stays as actual number of lines sold
