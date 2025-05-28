@@ -271,10 +271,10 @@ def client_details(client_id):
                 month_total_weight += metric.weight
             
             if month_total_weight > 0:
-                weighted_avg = month_total_weighted / month_total_weight
+                # Use total weighted points as the score (not average)
                 monthly_scores.append(type('MonthlyScore', (), {
                     'month': month_group.month,
-                    'avg_score': weighted_avg
+                    'avg_score': round(month_total_weighted)
                 })())
     
     # Prepare chart data
@@ -289,13 +289,15 @@ def client_details(client_id):
         month_labels.append(month_str)
         score_data.append(score)
         
-        # Determine trend
+        # Determine trend with appropriate threshold for weighted scores
         trend = 'stable'
         if i > 0:
             prev_score = score_data[i-1]
-            if score > prev_score + 5:
+            # Use 10% change as threshold for weighted scores
+            threshold = max(3, prev_score * 0.1)
+            if score > prev_score + threshold:
                 trend = 'up'
-            elif score < prev_score - 5:
+            elif score < prev_score - threshold:
                 trend = 'down'
         
         # Determine score color

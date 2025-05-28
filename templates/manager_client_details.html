@@ -384,8 +384,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dataIndex = elements[0].index;
                     const month = this.data.labels[dataIndex];
                     const score = this.data.datasets[0].data[dataIndex];
-                    // Show score details in a simple alert for now
-                    alert(`${month}: Score ${score}`);
+                    // Show score details
+                    showScoreModal(month, score);
                 }
             }
         });
@@ -402,13 +402,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             switch(scoreType) {
                 case 'current':
-                    alert(`Current Month Score: ${scoreValue}`);
+                    showScoreModal('Current Month', scoreValue);
                     break;
                 case 'highest':
-                    alert(`Best Performance Month Score: ${scoreValue}`);
+                    showScoreModal('Best Performance Month', scoreValue);
                     break;
                 case 'lowest':
-                    alert(`Lowest Performance Month Score: ${scoreValue}`);
+                    showScoreModal('Lowest Performance Month', scoreValue);
                     break;
             }
         });
