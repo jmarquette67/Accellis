@@ -20,22 +20,31 @@ def generate_monthly_sample_data():
             print("Error: No clients or metrics found. Please run import first.")
             return
         
-        # Define engagement patterns for different client types
+        # Define engagement patterns for different client types - more realistic distribution
         client_patterns = {
-            'excellent': {'base_range': (70, 95), 'variance': 10, 'trend': 'stable'},
-            'good': {'base_range': (50, 75), 'variance': 15, 'trend': 'improving'},
-            'declining': {'base_range': (40, 70), 'variance': 20, 'trend': 'declining'},
-            'struggling': {'base_range': (20, 50), 'variance': 25, 'trend': 'volatile'},
-            'new_client': {'base_range': (30, 60), 'variance': 30, 'trend': 'onboarding'}
+            'excellent': {'base_range': (80, 95), 'variance': 8, 'trend': 'stable'},
+            'good': {'base_range': (65, 80), 'variance': 12, 'trend': 'improving'},
+            'average': {'base_range': (55, 70), 'variance': 15, 'trend': 'stable'},
+            'declining': {'base_range': (45, 60), 'variance': 18, 'trend': 'declining'},
+            'struggling': {'base_range': (25, 45), 'variance': 20, 'trend': 'volatile'}
         }
         
-        # Assign patterns to clients randomly but consistently
+        # Assign patterns to clients with realistic business distribution
+        # 40% excellent, 30% good, 20% average, 8% declining, 2% struggling
         client_assignments = {}
-        pattern_keys = list(client_patterns.keys())
+        pattern_distribution = [
+            'excellent', 'excellent', 'excellent', 'excellent',  # 40%
+            'good', 'good', 'good',  # 30%
+            'average', 'average',  # 20%
+            'declining',  # 8%
+        ]
         
         for i, client in enumerate(clients):
-            # Distribute clients across patterns
-            pattern = pattern_keys[i % len(pattern_keys)]
+            # Use modulo to cycle through realistic distribution
+            if i < len(clients) * 0.92:  # 92% are doing well or average
+                pattern = pattern_distribution[i % len(pattern_distribution)]
+            else:  # 8% struggling
+                pattern = 'struggling' if i % 10 == 0 else 'declining'
             client_assignments[client.id] = pattern
         
         # Generate data for last 24 months
