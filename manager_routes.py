@@ -468,7 +468,7 @@ def advanced_reports():
     for ranking in client_rankings[:3]:
         top_performers.append({
             'client': ranking['client'].name,
-            'description': f"Authentic engagement score of {ranking['score']}% demonstrates strong client relationship"
+            'description': f"Authentic engagement score of {ranking['score']} demonstrates strong client relationship"
         })
     
     # Improvement opportunities from authentic data
@@ -476,7 +476,7 @@ def advanced_reports():
         if ranking['score'] < 70:
             improvements.append({
                 'client': ranking['client'].name,
-                'description': f"Score of {ranking['score']}% indicates engagement challenges requiring attention"
+                'description': f"Score of {ranking['score']} indicates engagement challenges requiring attention"
             })
     
     insights = {
