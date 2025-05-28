@@ -75,7 +75,6 @@
                         <div>
                             <h4 class="card-title">{{ current_score }}</h4>
                             <p class="card-text">Current Score</p>
-                            <small class="opacity-75">Click to view details</small>
                         </div>
                         <div class="align-self-center">
                             <i data-feather="target" class="icon-large"></i>
@@ -250,8 +249,8 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewScoreDetails('{{ month_data.month }}', {{ month_data.score }})">
-                                            <i data-feather="eye" class="me-1"></i>View Details
+                                        <button class="btn btn-sm btn-outline-primary" onclick="showScoreModal('{{ month_data.month }}', {{ month_data.score }})">
+                                            <i data-feather="eye" class="me-1"></i>Details
                                         </button>
                                     </td>
                                 </tr>
@@ -385,7 +384,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dataIndex = elements[0].index;
                     const month = this.data.labels[dataIndex];
                     const score = this.data.datasets[0].data[dataIndex];
-                    viewScoreDetails(month, score);
+                    // Show score details in a simple alert for now
+                    alert(`${month}: Score ${score}`);
                 }
             }
         });
@@ -402,13 +402,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             switch(scoreType) {
                 case 'current':
-                    viewScoreDetails('Current Month', scoreValue);
+                    alert(`Current Month Score: ${scoreValue}`);
                     break;
                 case 'highest':
-                    viewScoreDetails('Best Performance Month', scoreValue);
+                    alert(`Best Performance Month Score: ${scoreValue}`);
                     break;
                 case 'lowest':
-                    viewScoreDetails('Lowest Performance Month', scoreValue);
+                    alert(`Lowest Performance Month Score: ${scoreValue}`);
                     break;
             }
         });
@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
                 const month = this.dataset.month;
                 const score = this.querySelector('.badge').textContent;
-                viewScoreDetails(month, score);
+                showScoreModal(month, score);
             }
         });
         
