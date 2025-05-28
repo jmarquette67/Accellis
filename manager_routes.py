@@ -165,13 +165,8 @@ def client_details(client_id):
             weights = []
             
             for score, metric in all_weighted_scores:
-                # Scale only binary metrics to 0-100, keep Cross Selling as actual count
-                if "Cross Selling" in metric.name:
-                    scaled_value = score.value * 10  # Cross Selling as actual lines * 10 for scaling
-                else:
-                    scaled_value = score.value * 100  # Binary metrics: 0-1 to 0-100
-                
-                weighted_values.append(scaled_value * metric.weight)
+                # Use raw authentic values from your Q1 2025 data - no artificial scaling
+                weighted_values.append(score.value * metric.weight)
                 weights.append(metric.weight)
             
             if weights:
@@ -183,12 +178,8 @@ def client_details(client_id):
             recent_scores = all_scores[-13:] if len(all_scores) >= 13 else all_scores
             total_scaled = 0
             for score in recent_scores:
-                # Need to get metric info for proper scaling
-                metric = Metric.query.get(score.metric_id)
-                if metric and "Cross Selling" in metric.name:
-                    total_scaled += score.value * 10
-                else:
-                    total_scaled += score.value * 100
+                # Use raw authentic values - no artificial scaling
+                total_scaled += score.value
             current_score = round(total_scaled / len(recent_scores)) if recent_scores else 0
         
         # Calculate weighted highest and lowest monthly scores
@@ -210,12 +201,13 @@ def client_details(client_id):
                 month_total_weight = 0
                 
                 for score, metric in month_scores:
-                    # Scale only binary metrics to 0-100, keep Cross Selling as actual count
+                    # Use raw values with proper weighting - no artificial scaling
                     if "Cross Selling" in metric.name:
-                        # Cross Selling stays as actual number of lines sold
-                        scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                        # Cross Selling: actual number of lines sold
+                        scaled_value = score.value
                     else:
-                        scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                        # Binary metrics: 0 or 1 values
+                        scaled_value = score.value
                     
                     month_total_weighted += scaled_value * metric.weight
                     month_total_weight += metric.weight
@@ -232,15 +224,15 @@ def client_details(client_id):
     else:
         current_score = highest_score = lowest_score = 0
     
-    # Get monthly trend data for the last 12 months
-    twelve_months_ago = datetime.now() - timedelta(days=365)
+    # Get monthly trend data for the last 2 years (24 months)
+    two_years_ago = datetime.now() - timedelta(days=730)
     
     # Calculate weighted monthly scores for trend analysis
     monthly_groups = db.session.query(
         db.func.date_trunc('month', Score.taken_at).label('month')
     ).filter(
         Score.client_id == client_id,
-        Score.taken_at >= twelve_months_ago
+        Score.taken_at >= two_years_ago
     ).group_by(db.func.date_trunc('month', Score.taken_at)).order_by('month').all()
     
     monthly_scores = []
@@ -255,12 +247,13 @@ def client_details(client_id):
             month_total_weight = 0
             
             for score, metric in month_scores:
-                # Scale only binary metrics to 0-100, keep Cross Selling as actual count
+                # Use raw values with proper weighting - no artificial scaling
                 if "Cross Selling" in metric.name:
-                    # Cross Selling stays as actual number of lines sold
-                    scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                    # Cross Selling: actual number of lines sold
+                    scaled_value = score.value
                 else:
-                    scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                    # Binary metrics: 0 or 1 values
+                    scaled_value = score.value
                 
                 month_total_weighted += scaled_value * metric.weight
                 month_total_weight += metric.weight

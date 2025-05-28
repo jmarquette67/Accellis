@@ -446,8 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// View score details function
-function viewScoreDetails(month, score) {
+// Show score details function
+function showScoreModal(month, score) {
     document.getElementById('scoreModalTitle').textContent = `${month} - Detailed Scores`;
     // Show loading state first
     document.getElementById('scoreDetailsContent').innerHTML = `
