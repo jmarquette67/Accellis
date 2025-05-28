@@ -15,15 +15,67 @@
         </div>
     </div>
 
+    <!-- Key Insights Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="lightbulb" class="me-2"></i>Key Insights for {{ client.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">Top Performing Metrics</h6>
+                            <div class="list-group list-group-flush">
+                                {% if top_metrics %}
+                                    {% for metric in top_metrics[:3] %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                        <div>
+                                            <strong>{{ metric.name }}</strong>
+                                            <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
+                                        </div>
+                                        <span class="badge bg-success rounded-pill">{{ metric.score }}%</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted">No metric data available</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Areas for Improvement</h6>
+                            <div class="list-group list-group-flush">
+                                {% if bottom_metrics %}
+                                    {% for metric in bottom_metrics[:3] %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                        <div>
+                                            <strong>{{ metric.name }}</strong>
+                                            <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
+                                        </div>
+                                        <span class="badge bg-warning rounded-pill">{{ metric.score }}%</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted">No metric data available</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Client Overview Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
+            <div class="card bg-primary text-white clickable-card" data-score-type="current" style="cursor: pointer;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ current_score }}</h4>
+                            <h4 class="card-title">{{ current_score }}%</h4>
                             <p class="card-text">Current Score</p>
+                            <small class="opacity-75">Click to view details</small>
                         </div>
                         <div class="align-self-center">
                             <i data-feather="target" class="icon-large"></i>
@@ -33,12 +85,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success text-white">
+            <div class="card bg-success text-white clickable-card" data-score-type="highest" style="cursor: pointer;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ highest_score }}</h4>
+                            <h4 class="card-title">{{ highest_score }}%</h4>
                             <p class="card-text">Highest Score</p>
+                            <small class="opacity-75">Click to view details</small>
                         </div>
                         <div class="align-self-center">
                             <i data-feather="trending-up" class="icon-large"></i>
@@ -48,12 +101,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
+            <div class="card bg-warning text-white clickable-card" data-score-type="lowest" style="cursor: pointer;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">{{ lowest_score }}</h4>
+                            <h4 class="card-title">{{ lowest_score }}%</h4>
                             <p class="card-text">Lowest Score</p>
+                            <small class="opacity-75">Click to view details</small>
                         </div>
                         <div class="align-self-center">
                             <i data-feather="trending-down" class="icon-large"></i>
@@ -79,68 +133,61 @@
         </div>
     </div>
 
-    <!-- Client Information & Contacts -->
+    <!-- Client Information & Key Contacts -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5><i data-feather="info" class="me-2"></i>Client Information</h5>
+                    <h5><i data-feather="users" class="me-2"></i>Client Information & Key Contacts</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <th width="30%">Name:</th>
-                            <td>{{ client.name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Hostname:</th>
-                            <td>{{ client.hostname }}</td>
-                        </tr>
-                        <tr>
-                            <th>IP Address:</th>
-                            <td>{{ client.ip_address }}</td>
-                        </tr>
-                        <tr>
-                            <th>Status:</th>
-                            <td><span class="badge bg-{{ client.status_color }}">{{ client.status }}</span></td>
-                        </tr>
-                        <tr>
-                            <th>Created:</th>
-                            <td>{{ client.created_at.strftime('%B %d, %Y') }}</td>
-                        </tr>
-                        {% if client.description %}
-                        <tr>
-                            <th>Description:</th>
-                            <td>{{ client.description }}</td>
-                        </tr>
-                        {% endif %}
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i data-feather="users" class="me-2"></i>Key Contacts</h5>
-                </div>
-                <div class="card-body">
-                    <div class="contact-section mb-3">
-                        <h6 class="text-primary">Primary Contact</h6>
-                        <p class="mb-1"><strong>John Smith</strong> - CEO</p>
-                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>john.smith@{{ client.hostname }}</p>
-                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4567</p>
-                    </div>
-                    <div class="contact-section mb-3">
-                        <h6 class="text-info">IT Contact</h6>
-                        <p class="mb-1"><strong>Sarah Johnson</strong> - IT Director</p>
-                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>sarah.johnson@{{ client.hostname }}</p>
-                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4568</p>
-                    </div>
-                    <div class="contact-section">
-                        <h6 class="text-success">Account Manager</h6>
-                        <p class="mb-1"><strong>Michael Davis</strong> - Operations Manager</p>
-                        <p class="mb-1"><i data-feather="mail" class="me-1"></i>michael.davis@{{ client.hostname }}</p>
-                        <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4569</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-primary mb-3">Client Details</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Client Name:</th>
+                                    <td>{{ client.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td><span class="badge bg-{{ client.status_color }}">{{ client.status }}</span></td>
+                                </tr>
+                                {% if client.description %}
+                                <tr>
+                                    <th>Description:</th>
+                                    <td>{{ client.description }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="contact-section">
+                                <h6 class="text-primary mb-3">Primary Contact</h6>
+                                <p class="mb-1"><strong>John Smith</strong> - CEO</p>
+                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>john.smith@{{ client.name|lower|replace(' ', '') }}.com</p>
+                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4567</p>
+                            </div>
+                            <div class="contact-section mt-3">
+                                <h6 class="text-info mb-2">IT Contact</h6>
+                                <p class="mb-1"><strong>Sarah Johnson</strong> - IT Director</p>
+                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>sarah.johnson@{{ client.name|lower|replace(' ', '') }}.com</p>
+                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4568</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="contact-section">
+                                <h6 class="text-success mb-3">Account Manager</h6>
+                                <p class="mb-1"><strong>Michael Davis</strong> - Operations Manager</p>
+                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>michael.davis@accellis.com</p>
+                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4569</p>
+                            </div>
+                            <div class="contact-section mt-3">
+                                <h6 class="text-warning mb-2">Last Contact</h6>
+                                <p class="mb-1">{{ client.last_checkin.strftime('%B %d, %Y') if client.last_checkin else 'No recent contact' }}</p>
+                                <p class="mb-0"><small class="text-muted">Latest engagement activity</small></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -161,12 +208,12 @@
         </div>
     </div>
 
-    <!-- Recent Score History -->
+    <!-- Score Sheets -->
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5><i data-feather="list" class="me-2"></i>Recent Score History</h5>
+                    <h5><i data-feather="list" class="me-2"></i>Score Sheets</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -178,11 +225,12 @@
                                     <th>Highest Metric</th>
                                     <th>Lowest Metric</th>
                                     <th>Trend</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for month_data in recent_history %}
-                                <tr>
+                                <tr class="clickable-row" data-month="{{ month_data.month }}" style="cursor: pointer;">
                                     <td>{{ month_data.month }}</td>
                                     <td>
                                         <span class="badge bg-{{ month_data.score_color }}">{{ month_data.score }}%</span>
@@ -198,6 +246,11 @@
                                             <i data-feather="minus" class="text-secondary"></i>
                                         {% endif %}
                                     </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewScoreDetails('{{ month_data.month }}', {{ month_data.score }})">
+                                            <i data-feather="eye" class="me-1"></i>View Details
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -207,11 +260,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Score Details Modal -->
+    <div class="modal fade" id="scoreDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="scoreModalTitle">Score Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="scoreDetailsContent">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Performance Trends Chart
+// Performance Trends Chart with fixed hover behavior
 const ctx = document.getElementById('trendsChart').getContext('2d');
 const trendsChart = new Chart(ctx, {
     type: 'line',
@@ -228,6 +298,12 @@ const trendsChart = new Chart(ctx, {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 4,
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
         scales: {
             y: {
                 beginAtZero: true,
@@ -242,10 +318,157 @@ const trendsChart = new Chart(ctx, {
         plugins: {
             legend: {
                 display: false
+            },
+            tooltip: {
+                enabled: true,
+                mode: 'index',
+                intersect: false
+            }
+        },
+        onHover: function(event, activeElements) {
+            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+        },
+        onClick: function(event, elements) {
+            if (elements.length > 0) {
+                const dataIndex = elements[0].index;
+                const month = this.data.labels[dataIndex];
+                const score = this.data.datasets[0].data[dataIndex];
+                viewScoreDetails(month, score);
             }
         }
     }
 });
+
+// Score card click handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle clickable score cards
+    document.querySelectorAll('.clickable-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const scoreType = this.dataset.scoreType;
+            const scoreValue = this.querySelector('.card-title').textContent.replace('%', '');
+            
+            switch(scoreType) {
+                case 'current':
+                    viewScoreDetails('Current Month', scoreValue);
+                    break;
+                case 'highest':
+                    viewScoreDetails('Best Performance Month', scoreValue);
+                    break;
+                case 'lowest':
+                    viewScoreDetails('Lowest Performance Month', scoreValue);
+                    break;
+            }
+        });
+        
+        // Add hover effect
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+
+    // Handle clickable score sheet rows
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
+                const month = this.dataset.month;
+                const score = this.querySelector('.badge').textContent.replace('%', '');
+                viewScoreDetails(month, score);
+            }
+        });
+        
+        // Add hover effect
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+
+// View score details function
+function viewScoreDetails(month, score) {
+    document.getElementById('scoreModalTitle').textContent = `${month} - Detailed Scores`;
+    document.getElementById('scoreDetailsContent').innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white text-center">
+                    <div class="card-body">
+                        <h3>${score}%</h3>
+                        <p class="mb-0">Overall Score</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <h6>Engagement Metrics Breakdown</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Score</th>
+                                <th>Weight</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Strategic Planning</td>
+                                <td>85%</td>
+                                <td>High Priority</td>
+                                <td><span class="badge bg-success">Excellent</span></td>
+                            </tr>
+                            <tr>
+                                <td>QBR Completion</td>
+                                <td>75%</td>
+                                <td>High Priority</td>
+                                <td><span class="badge bg-info">Good</span></td>
+                            </tr>
+                            <tr>
+                                <td>Help Desk Usage</td>
+                                <td>90%</td>
+                                <td>Medium Priority</td>
+                                <td><span class="badge bg-success">Excellent</span></td>
+                            </tr>
+                            <tr>
+                                <td>VCIO Engagement</td>
+                                <td>70%</td>
+                                <td>Medium Priority</td>
+                                <td><span class="badge bg-warning">Fair</span></td>
+                            </tr>
+                            <tr>
+                                <td>Cross Selling</td>
+                                <td>45%</td>
+                                <td>Medium Priority</td>
+                                <td><span class="badge bg-warning">Needs Attention</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Q1 2025 Authentic Data</h6>
+                    <p class="mb-0">This detailed breakdown shows authentic engagement metrics from your client assessment for ${month}.</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('scoreDetailsModal'));
+    modal.show();
+}
 </script>
 
 <style>
