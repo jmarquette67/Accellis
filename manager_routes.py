@@ -160,12 +160,19 @@ def client_details(client_id):
         ).all()
         
         if recent_weighted_scores:
-            # Calculate weighted average for current score
+            # Calculate weighted average with proper scaling for current score
             total_weighted_score = 0
             total_weight = 0
             
             for score, metric in recent_weighted_scores:
-                total_weighted_score += score.value * metric.weight
+                # Scale only binary metrics to 0-100, keep Cross Selling as actual count
+                if "Cross Selling" in metric.name:
+                    # Cross Selling stays as actual number of lines sold
+                    scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                else:
+                    scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                
+                total_weighted_score += scaled_value * metric.weight
                 total_weight += metric.weight
             
             current_score = round(total_weighted_score / total_weight) if total_weight > 0 else 0
@@ -193,7 +200,14 @@ def client_details(client_id):
                 month_total_weight = 0
                 
                 for score, metric in month_scores:
-                    month_total_weighted += score.value * metric.weight
+                    # Scale only binary metrics to 0-100, keep Cross Selling as actual count
+                    if "Cross Selling" in metric.name:
+                        # Cross Selling stays as actual number of lines sold
+                        scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                    else:
+                        scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                    
+                    month_total_weighted += scaled_value * metric.weight
                     month_total_weight += metric.weight
                 
                 if month_total_weight > 0:
@@ -231,7 +245,14 @@ def client_details(client_id):
             month_total_weight = 0
             
             for score, metric in month_scores:
-                month_total_weighted += score.value * metric.weight
+                # Scale only binary metrics to 0-100, keep Cross Selling as actual count
+                if "Cross Selling" in metric.name:
+                    # Cross Selling stays as actual number of lines sold
+                    scaled_value = score.value * 10  # Give it equivalent weight to binary metrics
+                else:
+                    scaled_value = score.value * 100  # 0-1 to 0-100 for binary metrics
+                
+                month_total_weighted += scaled_value * metric.weight
                 month_total_weight += metric.weight
             
             if month_total_weight > 0:
