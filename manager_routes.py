@@ -135,6 +135,7 @@ def score_history():
     return render_template("score_history.html", scores=recent_scores)
 
 @manager_bp.route("/clients/<int:client_id>/details")
+@manager_bp.route("/client/<int:client_id>")
 @require_login
 def client_details(client_id):
     """View detailed client information and trends"""
