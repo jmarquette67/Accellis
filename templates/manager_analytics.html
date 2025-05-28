@@ -47,22 +47,23 @@
                     </div>
                     <div class="col-md-3">
                         <label for="metric_filter" class="form-label">Focus Metric</label>
-                        <select class="form-select" name="metric_filter" id="metric_filter">
+                        <select class="form-select" name="metric_filter" id="metric_filter" onchange="filterByMetric()">
                             <option value="">All Metrics</option>
                             {% if rows and rows[0] and rows[0].metric_scores %}
                                 {% for metric_name in rows[0].metric_scores.keys() %}
-                                <option value="{{ metric_name }}">{{ metric_name }}</option>
+                                <option value="{{ metric_name }}" {{ 'selected' if request.args.get('metric_filter') == metric_name }}>{{ metric_name }}</option>
                                 {% endfor %}
                             {% endif %}
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="client_filter" class="form-label">Compare Clients</label>
-                        <select class="form-select" name="client_filter" id="client_filter" multiple>
+                        <label for="client_compare" class="form-label">Compare Clients</label>
+                        <select class="form-select" name="client_compare" id="client_compare" multiple size="3" onchange="updateComparison()">
                             {% for row in rows %}
-                            <option value="{{ row.client.id }}">{{ row.client.name }}</option>
+                            <option value="{{ row.client.id }}">{{ row.client.name }} ({{ row.weighted_score }}%)</option>
                             {% endfor %}
                         </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple clients</small>
                     </div>
                 </div>
                 <div class="row mt-3">
@@ -574,6 +575,112 @@ function updateCharts() {
         // Charts would be updated with client-specific authentic data
         // This preserves your Q1 2025 engagement metrics structure
         console.log('Loading data for client:', selectedClient);
+    }
+}
+
+// Filter by specific metric
+function filterByMetric() {
+    const selectedMetric = document.getElementById('metric_filter').value;
+    const tableRows = document.querySelectorAll('#clientTable tbody tr');
+    
+    if (!selectedMetric) {
+        // Show all rows
+        tableRows.forEach(row => {
+            row.style.display = '';
+        });
+        return;
+    }
+    
+    // Filter table to highlight selected metric performance
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            // Add visual emphasis to the metric column
+            cells.forEach(cell => {
+                cell.classList.remove('bg-warning', 'bg-info');
+            });
+            
+            // Highlight metric-related performance
+            const scoreCell = cells[1]; // Assuming score is in second column
+            if (scoreCell) {
+                scoreCell.classList.add('bg-info', 'text-white');
+            }
+        }
+    });
+    
+    // Update charts to focus on selected metric
+    if (metricsChart && selectedMetric) {
+        metricsChart.data.datasets.forEach((dataset, index) => {
+            if (dataset.label.toLowerCase().includes(selectedMetric.toLowerCase())) {
+                dataset.borderWidth = 4;
+                dataset.pointRadius = 8;
+            } else {
+                dataset.borderWidth = 2;
+                dataset.pointRadius = 4;
+            }
+        });
+        metricsChart.update();
+    }
+}
+
+// Update comparison with selected clients
+function updateComparison() {
+    const selectedClients = Array.from(document.getElementById('client_compare').selectedOptions);
+    const comparisonDiv = document.getElementById('clientComparison');
+    
+    if (selectedClients.length === 0) {
+        if (comparisonDiv) {
+            comparisonDiv.innerHTML = '<p class="text-muted">Select clients above to compare their performance</p>';
+        }
+        return;
+    }
+    
+    // Create comparison view
+    let comparisonHTML = `
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i data-feather="users" class="me-2"></i>Client Comparison (${selectedClients.length} selected)</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+    `;
+    
+    selectedClients.forEach(option => {
+        const clientName = option.textContent.split(' (')[0];
+        const clientScore = option.textContent.match(/\((\d+)%\)/)[1];
+        
+        comparisonHTML += `
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <h5>${clientName}</h5>
+                        <h3 class="text-primary">${clientScore}%</h3>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" style="width: ${clientScore}%"></div>
+                        </div>
+                        <small class="text-muted">Overall Engagement</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    comparisonHTML += `
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i data-feather="info" class="me-2"></i>
+                    Comparison based on your authentic Q1 2025 engagement metrics with proper weighting
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (comparisonDiv) {
+        comparisonDiv.innerHTML = comparisonHTML;
+        // Reinitialize feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
     }
 }
 
