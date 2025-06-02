@@ -297,18 +297,26 @@ def score_entry():
         
         if client_id and score_month:
             try:
+                from datetime import datetime, timedelta
                 scores_created = 0
                 metrics = Metric.query.all()
                 
+                # Parse the selected month and create scoresheet timestamp
+                score_date = datetime.strptime(score_month, '%Y-%m')
+                scoresheet_datetime = datetime.now().replace(
+                    year=score_date.year,
+                    month=score_date.month,
+                    day=15,
+                    microsecond=0
+                )
+                
+                # First pass: collect all metric scores for this scoresheet
+                scoresheet_data = []
                 for metric in metrics:
                     metric_field = f'metric_{metric.id}'
                     score_value = request.form.get(metric_field)
                     
                     if score_value and score_value.strip():
-                        # Parse the selected month
-                        from datetime import datetime, timedelta
-                        score_date = datetime.strptime(score_month, '%Y-%m')
-                        
                         # Calculate final score based on metric type
                         final_score = 0
                         if "Help Desk" in metric.name:
@@ -321,34 +329,40 @@ def score_entry():
                                 final_score = 1  # Ideal usage
                             else:
                                 final_score = 0  # High or low usage
+                            
+                            score_notes = f"Tickets/user/month: {score_value} | {notes}" if notes else f"Tickets/user/month: {score_value}"
                         else:
                             # Regular scoring for other metrics
                             final_score = int(float(score_value))
-                        
-                        # Delete existing score for this client/metric/month combination
-                        existing_score = Score.query.filter(
-                            Score.client_id == int(client_id),
-                            Score.metric_id == metric.id,
-                            Score.taken_at >= score_date.replace(day=1),
-                            Score.taken_at < (score_date.replace(day=28) + timedelta(days=4))
-                        ).first()
-                        
-                        if existing_score:
-                            db.session.delete(existing_score)
-                        
-                        # Prepare notes based on metric type
-                        if "Help Desk" in metric.name:
-                            score_notes = f"Tickets/user/month: {score_value} | {notes}" if notes else f"Tickets/user/month: {score_value}"
-                        else:
                             score_notes = f"{notes} (Scored for {score_month})" if notes else f"Scored for {score_month}"
                         
-                        # Create new score for the selected month
+                        scoresheet_data.append({
+                            'metric_id': metric.id,
+                            'value': final_score,
+                            'notes': score_notes
+                        })
+                
+                # If we have any scores, delete existing scores for this month and create complete locked scoresheet
+                if scoresheet_data:
+                    # Delete existing scores for this client/month combination
+                    existing_scores = Score.query.filter(
+                        Score.client_id == int(client_id),
+                        Score.taken_at >= score_date.replace(day=1),
+                        Score.taken_at < (score_date.replace(day=28) + timedelta(days=4))
+                    ).all()
+                    
+                    for existing_score in existing_scores:
+                        db.session.delete(existing_score)
+                    
+                    # Create all scores for this scoresheet with same timestamp and lock them
+                    for score_data in scoresheet_data:
                         score = Score(
                             client_id=int(client_id),
-                            metric_id=metric.id,
-                            value=final_score,
-                            taken_at=score_date.replace(day=15),  # Middle of the month
-                            notes=score_notes
+                            metric_id=score_data['metric_id'],
+                            value=score_data['value'],
+                            taken_at=scoresheet_datetime,
+                            notes=score_data['notes'],
+                            locked=True  # Lock all scores in the complete scoresheet
                         )
                         db.session.add(score)
                         scores_created += 1

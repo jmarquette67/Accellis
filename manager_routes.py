@@ -388,24 +388,28 @@ def client_scoresheet(client_id):
         top_metrics = metric_performance[:3]
         bottom_metrics = metric_performance[-3:]
 
-    # Get ALL scores from the most recent score sheet date
-    latest_score_date = (
-        db.session.query(db.func.date(Score.taken_at))
+    # Get scores from the most complete scoresheet (date with most metrics)
+    most_complete_date = (
+        db.session.query(
+            db.func.date(Score.taken_at).label('score_date'),
+            db.func.count(Score.id).label('metric_count')
+        )
         .filter(Score.client_id == client_id)
-        .order_by(Score.taken_at.desc())
+        .group_by(db.func.date(Score.taken_at))
+        .order_by(db.func.count(Score.id).desc(), db.func.date(Score.taken_at).desc())
         .first()
     )
     
     recent_scores = []
     total_weighted_score = 0
-    if latest_score_date:
-        latest_date = latest_score_date[0]
+    if most_complete_date:
+        complete_date = most_complete_date.score_date
         recent_scores_query = (
             db.session.query(Score, Metric)
             .join(Metric, Score.metric_id == Metric.id)
             .filter(
                 Score.client_id == client_id,
-                db.func.date(Score.taken_at) == latest_date
+                db.func.date(Score.taken_at) == complete_date
             )
             .order_by(Metric.name)  # Order by metric name for consistency
         )
