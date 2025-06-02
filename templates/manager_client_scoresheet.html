@@ -107,9 +107,9 @@
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Recent Score Entries</h5>
-                        {% if recent_scores %}
-                        <small class="text-muted">Total Score: <strong>{{ recent_scores|sum(attribute='weighted_points') }} points</strong> from {{ recent_scores|length }} metrics</small>
+                        <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Most Recent Scoresheet</h6>
+                        {% if scoresheet_date %}
+                        <small class="text-muted">{{ scoresheet_date.strftime('%B %d, %Y') }} | Total Score: <strong>{{ recent_scores|sum(attribute='weighted_points') }} points</strong></small>
                         {% endif %}
                     </div>
                     <div class="btn-group btn-group-sm">
@@ -120,42 +120,52 @@
                 </div>
                 <div class="card-body">
                     {% if recent_scores %}
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm">
-                            <thead class="table-light">
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-borderless mb-0" style="font-size: 0.875rem;">
+                            <thead class="table-light sticky-top">
                                 <tr>
-                                    <th>Metric</th>
-                                    <th>Weighted Score</th>
-                                    <th>Actions</th>
+                                    <th style="font-size: 0.8rem; font-weight: 600;">Metric</th>
+                                    <th style="font-size: 0.8rem; font-weight: 600; width: 80px;">Score</th>
+                                    <th style="font-size: 0.8rem; font-weight: 600; width: 100px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for score in recent_scores %}
-                                <tr class="score-row" data-score-id="{{ score.id }}">
-                                    <td>
+                                <tr class="score-row" data-score-id="{{ score.id if score.has_score else '' }}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 0.5rem;">
                                         <div class="d-flex align-items-center">
                                             <div>
-                                                <strong>{{ score.metric_name }}</strong>
-                                                <br><small class="text-muted">{{ score.value }} × {{ score.weight }}</small>
+                                                <span style="font-size: 0.875rem; font-weight: 500;">{{ score.metric_name }}</span>
+                                                {% if not score.has_score %}
+                                                <br><small class="text-muted" style="font-size: 0.75rem;">Not scored</small>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-{% if score.weighted_points >= 50 %}success{% elif score.weighted_points >= 30 %}warning{% else %}danger{% endif %} fs-6" style="min-width: 60px;">
+                                    <td style="padding: 0.5rem;">
+                                        {% if score.has_score %}
+                                        <span class="badge bg-{% if score.weighted_points >= 4 %}success{% elif score.weighted_points >= 2 %}warning{% else %}danger{% endif %}" style="font-size: 0.75rem; min-width: 45px;">
                                             {{ score.weighted_points }}
                                         </span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark" style="font-size: 0.75rem; min-width: 45px;">--</span>
+                                        {% endif %}
                                     </td>
-                                    <td>
+                                    <td style="padding: 0.5rem;">
+                                        {% if score.has_score %}
                                         <div class="btn-group btn-group-sm">
                                             {% if current_user.role and current_user.role.value == 'ADMIN' %}
-                                            <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }})" title="Edit Score">
-                                                <i class="fas fa-edit"></i> Edit
+                                            <button class="btn btn-outline-primary" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;" onclick="editScore({{ score.id }})" title="Edit">
+                                                <i class="fas fa-edit"></i>
                                             </button>
                                             {% endif %}
-                                            <button class="btn btn-outline-info btn-sm" onclick="viewScoreDetails({{ score.id }})" title="View Details">
-                                                <i class="fas fa-info-circle"></i> Details
+                                            <button class="btn btn-outline-info" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;" onclick="viewScoreDetails({{ score.id }})" title="Details">
+                                                <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
+                                        {% else %}
+                                        <span class="text-muted" style="font-size: 0.75rem;">--</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}

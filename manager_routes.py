@@ -380,7 +380,7 @@ def client_scoresheet(client_id):
             metric_performance.append({
                 'name': metric_data['metric'].name,
                 'score': round(avg_score),
-                'date': metric_data['latest_date']
+                'date': metric_data['latest_date'].strftime('%Y-%m-%d') if metric_data['latest_date'] else ''
             })
         
         # Sort by score and get top/bottom 3
@@ -388,7 +388,7 @@ def client_scoresheet(client_id):
         top_metrics = metric_performance[:3]
         bottom_metrics = metric_performance[-3:]
 
-    # Get scores from the most complete scoresheet (date with most metrics)
+    # Get ALL metrics for the most complete scoresheet date
     most_complete_date = (
         db.session.query(
             db.func.date(Score.taken_at).label('score_date'),
@@ -402,8 +402,17 @@ def client_scoresheet(client_id):
     
     recent_scores = []
     total_weighted_score = 0
+    scoresheet_date = None
+    
     if most_complete_date:
         complete_date = most_complete_date.score_date
+        scoresheet_date = complete_date
+        
+        # Get all metrics, not just those with scores
+        all_metrics = Metric.query.order_by(Metric.name).all()
+        
+        # Get scores for this date
+        scored_metrics = {}
         recent_scores_query = (
             db.session.query(Score, Metric)
             .join(Metric, Score.metric_id == Metric.id)
@@ -411,27 +420,54 @@ def client_scoresheet(client_id):
                 Score.client_id == client_id,
                 db.func.date(Score.taken_at) == complete_date
             )
-            .order_by(Metric.name)  # Order by metric name for consistency
         )
         
         for score_obj, metric_obj in recent_scores_query:
-            weighted_points = score_obj.value * metric_obj.weight
-            total_weighted_score += weighted_points
-            recent_scores.append({
+            scored_metrics[metric_obj.id] = {
                 'id': score_obj.id,
                 'taken_at': score_obj.taken_at,
-                'metric_name': metric_obj.name,
-                'metric_description': metric_obj.description or '',
                 'value': score_obj.value,
-                'weight': metric_obj.weight,
-                'weighted_points': weighted_points,
                 'notes': score_obj.notes or '',
                 'locked': score_obj.locked
-            })
+            }
+        
+        # Build complete list including all metrics
+        for metric_obj in all_metrics:
+            if metric_obj.id in scored_metrics:
+                score_data = scored_metrics[metric_obj.id]
+                weighted_points = score_data['value'] * metric_obj.weight
+                total_weighted_score += weighted_points
+                recent_scores.append({
+                    'id': score_data['id'],
+                    'taken_at': score_data['taken_at'],
+                    'metric_name': metric_obj.name,
+                    'metric_description': metric_obj.description or '',
+                    'value': score_data['value'],
+                    'weight': metric_obj.weight,
+                    'weighted_points': weighted_points,
+                    'notes': score_data['notes'],
+                    'locked': score_data['locked'],
+                    'has_score': True
+                })
+            else:
+                # Show metrics without scores as not scored
+                recent_scores.append({
+                    'id': None,
+                    'taken_at': None,
+                    'metric_name': metric_obj.name,
+                    'metric_description': metric_obj.description or '',
+                    'value': None,
+                    'weight': metric_obj.weight,
+                    'weighted_points': 0,
+                    'notes': '',
+                    'locked': False,
+                    'has_score': False
+                })
 
     import json
     return render_template('manager_client_scoresheet.html',
                          client=client,
+                         scoresheet_date=scoresheet_date,
                          current_score=current_score,
                          highest_score=highest_score,
                          lowest_score=lowest_score,
