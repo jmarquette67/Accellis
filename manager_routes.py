@@ -424,6 +424,59 @@ def client_scoresheet(client_id):
                          top_metrics=top_metrics,
                          bottom_metrics=bottom_metrics)
 
+@manager_bp.route("/api/score/<int:score_id>")
+@require_login
+def get_score_details(score_id):
+    """Get detailed information about a specific score"""
+    require_manager()
+    
+    score_query = (
+        db.session.query(Score, Metric)
+        .join(Metric, Score.metric_id == Metric.id)
+        .filter(Score.id == score_id)
+        .first()
+    )
+    
+    if not score_query:
+        return {"error": "Score not found"}, 404
+    
+    score_obj, metric_obj = score_query
+    
+    return {
+        "id": score_obj.id,
+        "value": score_obj.value,
+        "taken_at": score_obj.taken_at.strftime('%Y-%m-%d'),
+        "notes": score_obj.notes or "",
+        "locked": score_obj.locked,
+        "metric_name": metric_obj.name,
+        "metric_description": metric_obj.description or "",
+        "weight": metric_obj.weight,
+        "weighted_points": score_obj.value * metric_obj.weight
+    }
+
+@manager_bp.route("/score/<int:score_id>/edit", methods=['GET', 'POST'])
+@require_login
+def edit_score(score_id):
+    """Edit a score (admin only)"""
+    require_manager()
+    
+    # Check if user is admin
+    if current_user.role != UserRole.ADMIN:
+        abort(403)
+    
+    score = Score.query.get_or_404(score_id)
+    
+    if request.method == 'POST':
+        score.value = int(request.form.get('value', score.value))
+        score.notes = request.form.get('notes', score.notes)
+        db.session.commit()
+        flash('Score updated successfully', 'success')
+        return redirect(url_for('manager.client_scoresheet', client_id=score.client_id))
+    
+    metrics = Metric.query.all()
+    clients = Client.query.all()
+    return render_template('edit_score.html', score=score, metrics=metrics, clients=clients)
+
 @manager_bp.route("/api/client/<int:client_id>/scores/<month>")
 @require_login
 def get_monthly_scores(client_id, month):
