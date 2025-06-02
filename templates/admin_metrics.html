@@ -151,7 +151,9 @@
                                 <label class="form-label">Maximum Score Points</label>
                                 <input type="number" class="form-control" name="max_score" 
                                        value="{{ metric.max_score }}" min="1" max="20" required>
+                                {% if "Cross Selling" in metric.name %}
                                 <small class="text-muted">Points available for this metric (e.g., 1 for binary, 10 for Cross Selling)</small>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
