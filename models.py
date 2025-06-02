@@ -187,6 +187,16 @@ class Metric(db.Model):
     scoring_criteria = db.Column(db.Text)  # Detailed scoring description
     high_threshold = db.Column(db.Integer, nullable=False)  # >= marks "high"
     low_threshold = db.Column(db.Integer, nullable=False)   # <= marks "low"
+    
+    # Three-range scoring fields for Help Desk Usage
+    too_low_threshold = db.Column(db.Numeric(5,2))
+    too_low_score = db.Column(db.Integer)
+    ideal_min_threshold = db.Column(db.Numeric(5,2))
+    ideal_max_threshold = db.Column(db.Numeric(5,2))
+    ideal_score = db.Column(db.Integer)
+    too_high_threshold = db.Column(db.Numeric(5,2))
+    too_high_score = db.Column(db.Integer)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
