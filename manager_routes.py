@@ -464,7 +464,6 @@ def client_scoresheet(client_id):
                     'has_score': False
                 })
 
-    import json
     return render_template('manager_client_scoresheet.html',
                          client=client,
                          scoresheet_date=scoresheet_date,
@@ -472,8 +471,8 @@ def client_scoresheet(client_id):
                          highest_score=highest_score,
                          lowest_score=lowest_score,
                          total_months=total_months,
-                         month_labels=json.dumps(month_labels),
-                         score_data=json.dumps(score_data),
+                         month_labels=month_labels,
+                         score_data=score_data,
                          recent_scores=recent_scores,
                          top_metrics=top_metrics,
                          bottom_metrics=bottom_metrics)
