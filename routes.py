@@ -309,6 +309,22 @@ def score_entry():
                         from datetime import datetime, timedelta
                         score_date = datetime.strptime(score_month, '%Y-%m')
                         
+                        # Calculate final score based on metric type
+                        final_score = 0
+                        if "Help Desk" in metric.name:
+                            # Use Help Desk scoring logic with thresholds
+                            tickets_per_user = float(score_value)
+                            low_threshold = metric.low_threshold
+                            high_threshold = metric.high_threshold
+                            
+                            if tickets_per_user >= low_threshold and tickets_per_user <= high_threshold:
+                                final_score = 1  # Ideal usage
+                            else:
+                                final_score = 0  # High or low usage
+                        else:
+                            # Regular scoring for other metrics
+                            final_score = int(float(score_value))
+                        
                         # Delete existing score for this client/metric/month combination
                         existing_score = Score.query.filter(
                             Score.client_id == int(client_id),

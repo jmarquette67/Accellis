@@ -78,6 +78,19 @@
                                            data-weight="{{ metric.weight }}"
                                            onchange="calculateTotal()">
                                     <small class="text-muted">0-10 points</small>
+                                    {% elif "Help Desk" in metric.name %}
+                                    <input type="number" 
+                                           class="form-control metric-input" 
+                                           name="metric_{{ metric.id }}" 
+                                           id="metric_{{ metric.id }}"
+                                           min="0" 
+                                           step="0.1" 
+                                           placeholder="0.0"
+                                           data-weight="{{ metric.weight }}"
+                                           data-low-threshold="{{ metric.low_threshold }}"
+                                           data-high-threshold="{{ metric.high_threshold }}"
+                                           onchange="calculateHelpDeskScore(this)">
+                                    <small class="text-muted">Tickets per user per month (decimal)</small>
                                     {% else %}
                                     <select class="form-select metric-input" 
                                             name="metric_{{ metric.id }}" 
@@ -182,22 +195,68 @@ function updateClientSelection() {
     }
 }
 
+function calculateHelpDeskScore(input) {
+    const ticketsPerUser = parseFloat(input.value) || 0;
+    const lowThreshold = parseFloat(input.dataset.lowThreshold) || 0.25;
+    const highThreshold = parseFloat(input.dataset.highThreshold) || 1.0;
+    const weight = parseFloat(input.dataset.weight) || 0;
+    
+    // Calculate score based on thresholds
+    let score = 0;
+    if (ticketsPerUser >= lowThreshold && ticketsPerUser <= highThreshold) {
+        score = 1; // Ideal usage
+    } else {
+        score = 0; // High or low usage
+    }
+    
+    // Set the calculated score as the input value for total calculation
+    input.setAttribute('data-calculated-score', score);
+    
+    // Update the weighted display with category information
+    const weightedDisplay = document.getElementById('weighted_' + input.id.split('_')[1]);
+    if (weightedDisplay) {
+        let category = '';
+        if (ticketsPerUser > highThreshold) {
+            category = 'High Usage';
+        } else if (ticketsPerUser >= lowThreshold) {
+            category = 'Ideal Usage';
+        } else {
+            category = 'Low Usage';
+        }
+        
+        const weightedScore = score * weight;
+        weightedDisplay.innerHTML = `<strong>Score: ${score}</strong><br><small>${category}</small><br>Weighted: ${weightedScore.toFixed(1)}`;
+    }
+    
+    calculateTotal();
+}
+
 function calculateTotal() {
     let totalWeightedScore = 0;
     
     const metricInputs = document.querySelectorAll('.metric-input');
     
     metricInputs.forEach(input => {
-        const baseScore = parseFloat(input.value) || 0;
+        let baseScore = 0;
+        
+        // Check if this is a Help Desk input with calculated score
+        if (input.hasAttribute('data-calculated-score')) {
+            baseScore = parseFloat(input.getAttribute('data-calculated-score'));
+        } else {
+            baseScore = parseFloat(input.value) || 0;
+        }
+        
         const weight = parseFloat(input.dataset.weight) || 0;
-        const weightedScore = baseScore * weight;  // Base score multiplied by weight
+        const weightedScore = baseScore * weight;
         
         totalWeightedScore += weightedScore;
         
-        // Update individual weighted display
-        const weightedDisplay = document.getElementById('weighted_' + input.id.split('_')[1]);
-        if (weightedDisplay) {
-            weightedDisplay.textContent = `Weighted: ${weightedScore.toFixed(1)}`;
+        // Update individual weighted display (skip Help Desk as it's handled separately)
+        if (!input.hasAttribute('data-calculated-score')) {
+            const weightedDisplay = document.getElementById('weighted_' + input.id.split('_')[1]);
+            if (weightedDisplay) {
+                weightedDisplay.textContent = `Weighted: ${weightedScore.toFixed(1)}`;
+            }
         }
     });
     
