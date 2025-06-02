@@ -477,6 +477,61 @@ def edit_score(score_id):
     clients = Client.query.all()
     return render_template('edit_score.html', score=score, metrics=metrics, clients=clients)
 
+@manager_bp.route("/scoresheets")
+@require_login
+def all_scoresheets():
+    """View all score sheets organized by date"""
+    require_manager()
+    
+    # Get all scores with client and metric information, ordered by date
+    all_scores = (
+        db.session.query(Score, Metric, Client)
+        .join(Metric, Score.metric_id == Metric.id)
+        .join(Client, Score.client_id == Client.id)
+        .order_by(Score.taken_at.desc())
+        .all()
+    )
+    
+    # Group scores by date
+    scoresheets_by_date = {}
+    for score_obj, metric_obj, client_obj in all_scores:
+        date_key = score_obj.taken_at.strftime('%Y-%m-%d')
+        if date_key not in scoresheets_by_date:
+            scoresheets_by_date[date_key] = {
+                'date': score_obj.taken_at.date(),
+                'scores': [],
+                'clients': set(),
+                'total_entries': 0,
+                'total_weighted_points': 0
+            }
+        
+        scoresheets_by_date[date_key]['scores'].append({
+            'id': score_obj.id,
+            'client_name': client_obj.name,
+            'client_id': client_obj.id,
+            'metric_name': metric_obj.name,
+            'value': score_obj.value,
+            'weight': metric_obj.weight,
+            'weighted_points': score_obj.value * metric_obj.weight,
+            'notes': score_obj.notes,
+            'locked': score_obj.locked,
+            'time': score_obj.taken_at.strftime('%H:%M')
+        })
+        
+        scoresheets_by_date[date_key]['clients'].add(client_obj.name)
+        scoresheets_by_date[date_key]['total_entries'] += 1
+        scoresheets_by_date[date_key]['total_weighted_points'] += score_obj.value * metric_obj.weight
+    
+    # Convert sets to lists and sort
+    for date_data in scoresheets_by_date.values():
+        date_data['clients'] = sorted(list(date_data['clients']))
+        date_data['scores'].sort(key=lambda x: (x['client_name'], x['metric_name']))
+    
+    # Sort by date (newest first)
+    sorted_scoresheets = sorted(scoresheets_by_date.items(), key=lambda x: x[0], reverse=True)
+    
+    return render_template('manager_all_scoresheets.html', scoresheets=sorted_scoresheets)
+
 @manager_bp.route("/api/client/<int:client_id>/scores/<month>")
 @require_login
 def get_monthly_scores(client_id, month):

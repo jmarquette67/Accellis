@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Score - {{ score.metric.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Edit Score</h1>
+                    <p class="text-muted mb-0">Administrative score editing for {{ score.client.name }}</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{{ url_for('manager.client_scoresheet', client_id=score.client_id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Score Sheet
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Score Details</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Score Information Display -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">Current Information</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="fw-medium" width="40%">Client:</td>
+                                    <td>{{ score.client.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Metric:</td>
+                                    <td>{{ score.metric.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Weight:</td>
+                                    <td><span class="badge bg-info">{{ score.metric.weight }}x</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Date Entered:</td>
+                                    <td>{{ score.taken_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Status:</td>
+                                    <td>
+                                        {% if score.locked %}
+                                            <span class="badge bg-success">Locked</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Draft</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-3">Metric Details</h6>
+                            <p><strong>Description:</strong></p>
+                            <p class="text-muted">{{ score.metric.description or 'No description available' }}</p>
+                            <p><strong>Scoring Criteria:</strong></p>
+                            <p class="text-muted">{{ score.metric.scoring_criteria or 'No criteria specified' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Edit Form -->
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="value" class="form-label fw-medium">Score Value</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="value" 
+                                           name="value" 
+                                           value="{{ score.value }}" 
+                                           min="0" 
+                                           max="{{ score.metric.max_score }}" 
+                                           required>
+                                    <div class="form-text">
+                                        Valid range: 0 - {{ score.metric.max_score }}
+                                        <br>Current weighted points: <strong id="weighted-points">{{ score.value * score.metric.weight }}</strong>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid score between 0 and {{ score.metric.max_score }}.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label fw-medium">Notes</label>
+                                    <textarea class="form-control" 
+                                              id="notes" 
+                                              name="notes" 
+                                              rows="3" 
+                                              placeholder="Optional notes about this score">{{ score.notes or '' }}</textarea>
+                                    <div class="form-text">
+                                        Additional context or explanation for this score
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Changes will be saved immediately and reflected in reports
+                            </div>
+                            <div class="btn-group">
+                                <a href="{{ url_for('manager.client_scoresheet', client_id=score.client_id) }}" 
+                                   class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Warning Card -->
+            <div class="card mt-4 border-warning">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h6 class="mb-0 text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Administrative Edit Warning
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">
+                        You are editing a score as an administrator. This action will:
+                    </p>
+                    <ul class="text-muted mt-2 mb-0">
+                        <li>Update all related performance calculations</li>
+                        <li>Affect client ranking and analytics</li>
+                        <li>Be logged in the system audit trail</li>
+                        <li>Potentially impact historical trend analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const valueInput = document.getElementById('value');
+    const weightedPointsSpan = document.getElementById('weighted-points');
+    const weight = {{ score.metric.weight }};
+    
+    // Update weighted points when value changes
+    valueInput.addEventListener('input', function() {
+        const value = parseFloat(this.value) || 0;
+        const weightedPoints = value * weight;
+        weightedPointsSpan.textContent = weightedPoints.toFixed(0);
+    });
+    
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+});
+</script>
+{% endblock %}
