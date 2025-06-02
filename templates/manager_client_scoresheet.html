@@ -218,7 +218,7 @@
                             <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
                                 <div>
                                     <strong>{{ metric.name }}</strong>
-                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                    <small class="text-muted d-block">{{ metric.date if metric.date else 'Recent' }}</small>
                                 </div>
                                 <span class="badge bg-success rounded-pill" style="min-width: 50px;">{{ metric.score }}</span>
                             </div>
@@ -245,7 +245,7 @@
                             <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
                                 <div>
                                     <strong>{{ metric.name }}</strong>
-                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                    <small class="text-muted d-block">{{ metric.date if metric.date else 'Recent' }}</small>
                                 </div>
                                 <span class="badge bg-warning rounded-pill" style="min-width: 50px;">{{ metric.score }}</span>
                             </div>
