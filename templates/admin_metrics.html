@@ -42,13 +42,17 @@
                                     <td>
                                         <strong>{{ metric.name }}</strong>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-info fs-6">{{ metric.weight }}</span>
-                                        <small class="text-muted d-block">Priority level</small>
+                                    <td class="align-middle">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <span class="badge bg-info fs-6 mb-1">{{ metric.weight }}</span>
+                                            <small class="text-muted">Priority level</small>
+                                        </div>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-primary">{{ metric.max_score }}</span>
-                                        <small class="text-muted d-block">Points possible</small>
+                                    <td class="align-middle">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <span class="badge bg-primary fs-6 mb-1">{{ metric.max_score }}</span>
+                                            <small class="text-muted">Points possible</small>
+                                        </div>
                                     </td>
                                     <td>
                                         <small class="text-muted">{{ metric.scoring_criteria if metric.scoring_criteria else metric.description[:100] if metric.description else 'No criteria available' }}{% if metric.scoring_criteria and metric.scoring_criteria|length > 100 %}...{% endif %}</small>
