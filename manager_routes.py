@@ -267,12 +267,14 @@ def client_scoresheet(client_id):
     else:
         current_score = highest_score = lowest_score = 0
     
-    # Get monthly trend data by grouping scores by date 
+    # Get monthly trend data by grouping scores by date (last 24 months only for chart readability)
+    one_year_ago = datetime.now() - timedelta(days=365)
     monthly_scoresheet_data = db.session.query(
         db.func.date(Score.taken_at).label('scoresheet_date'),
         db.func.sum(Score.value * Metric.weight).label('total_weighted_score')
     ).join(Metric).filter(
-        Score.client_id == client_id
+        Score.client_id == client_id,
+        Score.taken_at >= one_year_ago
     ).group_by(
         db.func.date(Score.taken_at)
     ).order_by('scoresheet_date').all()
@@ -281,7 +283,7 @@ def client_scoresheet(client_id):
     for date_data in monthly_scoresheet_data:
         monthly_scores.append(type('MonthlyScore', (), {
             'month': date_data.scoresheet_date,
-            'avg_score': round(date_data.total_weighted_score)
+            'avg_score': int(date_data.total_weighted_score)
         })())
     
     # Prepare chart data
