@@ -10,14 +10,21 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h2 mb-1">Score Sheet - {{ client.name }}</h1>
-                    <p class="text-muted mb-0">Performance tracking and score management</p>
+                    <p class="text-muted mb-0">
+                        Account Manager: 
+                        {% if client.account_owner %}
+                            <strong>{{ client.account_owner.first_name }} {{ client.account_owner.last_name }}</strong>
+                        {% else %}
+                            <span class="text-warning">Unassigned</span>
+                        {% endif %}
+                        {% if client.primary_contact_email %}
+                            | Contact: <a href="mailto:{{ client.primary_contact_email }}" class="text-decoration-none">{{ client.primary_contact_email }}</a>
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="btn-group">
                     <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Back to Clients
-                    </a>
-                    <a href="{{ url_for('manager.client_scoresheets', client_id=client.id) }}" class="btn btn-outline-info">
-                        <i class="fas fa-list me-1"></i>All Score Sheets
                     </a>
                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
                     <a href="#" class="btn btn-primary" onclick="toggleEditMode()">
@@ -98,60 +105,57 @@
         <!-- Left Column: Score Sheet Table -->
         <div class="col-lg-8 mb-4">
             <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Recent Score Entries</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Recent Score Entries</h5>
+                        {% if recent_scores %}
+                        <small class="text-muted">Total Score: <strong>{{ recent_scores|sum(attribute='weighted_points') }} points</strong> from {{ recent_scores|length }} metrics</small>
+                        {% endif %}
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('manager.client_scoresheets', client_id=client.id) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-history me-1"></i>All Score Sheets
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if recent_scores %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
                                     <th>Metric</th>
-                                    <th>Score</th>
-                                    <th>Weight</th>
-                                    <th>Weighted Points</th>
-                                    <th>Status</th>
+                                    <th>Weighted Score</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for score in recent_scores %}
-                                <tr class="score-row" data-score-id="{{ score.id }}" style="cursor: pointer;" onclick="showScoreDetails({{ score.id }})">
-                                    <td>{{ score.taken_at.strftime('%Y-%m-%d') }}</td>
+                                <tr class="score-row" data-score-id="{{ score.id }}">
                                     <td>
-                                        <strong>{{ score.metric_name }}</strong>
-                                        <br><small class="text-muted">{{ score.metric_description[:40] }}{% if score.metric_description and score.metric_description|length > 40 %}...{% endif %}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <strong>{{ score.metric_name }}</strong>
+                                                <br><small class="text-muted">{{ score.value }} × {{ score.weight }}</small>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{% if score.value >= 50 %}success{% elif score.value >= 30 %}warning{% else %}danger{% endif %}" style="min-width: 50px;">
-                                            {{ score.value }}
+                                        <span class="badge bg-{% if score.weighted_points >= 50 %}success{% elif score.weighted_points >= 30 %}warning{% else %}danger{% endif %} fs-6" style="min-width: 60px;">
+                                            {{ score.weighted_points }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info" style="min-width: 40px;">{{ score.weight }}x</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{ score.weighted_points }}</strong>
-                                    </td>
-                                    <td>
-                                        {% if score.locked %}
-                                            <span class="badge bg-success" style="min-width: 60px;">Locked</span>
-                                        {% else %}
-                                            <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if current_user.role and current_user.role.value == 'ADMIN' %}
-                                        <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }}); event.stopPropagation();">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        {% else %}
-                                        <button class="btn btn-outline-info btn-sm" onclick="viewScore({{ score.id }}); event.stopPropagation();">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        {% endif %}
+                                        <div class="btn-group btn-group-sm">
+                                            {% if current_user.role and current_user.role.value == 'ADMIN' %}
+                                            <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }})" title="Edit Score">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-outline-info btn-sm" onclick="viewScoreDetails({{ score.id }})" title="View Details">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -353,7 +357,7 @@ function editScore(scoreId) {
     window.location.href = `/manager/score/${scoreId}/edit`;
 }
 
-function viewScore(scoreId) {
+function viewScoreDetails(scoreId) {
     showScoreDetails(scoreId);
 }
 

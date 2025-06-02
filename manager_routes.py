@@ -388,7 +388,7 @@ def client_scoresheet(client_id):
         top_metrics = metric_performance[:3]
         bottom_metrics = metric_performance[-3:]
 
-    # Get scores from the most recent score sheet date only
+    # Get ALL scores from the most recent score sheet date
     latest_score_date = (
         db.session.query(db.func.date(Score.taken_at))
         .filter(Score.client_id == client_id)
@@ -397,6 +397,7 @@ def client_scoresheet(client_id):
     )
     
     recent_scores = []
+    total_weighted_score = 0
     if latest_score_date:
         latest_date = latest_score_date[0]
         recent_scores_query = (
@@ -406,10 +407,12 @@ def client_scoresheet(client_id):
                 Score.client_id == client_id,
                 db.func.date(Score.taken_at) == latest_date
             )
-            .order_by(Score.taken_at.desc())
+            .order_by(Metric.name)  # Order by metric name for consistency
         )
         
         for score_obj, metric_obj in recent_scores_query:
+            weighted_points = score_obj.value * metric_obj.weight
+            total_weighted_score += weighted_points
             recent_scores.append({
                 'id': score_obj.id,
                 'taken_at': score_obj.taken_at,
@@ -417,7 +420,7 @@ def client_scoresheet(client_id):
                 'metric_description': metric_obj.description or '',
                 'value': score_obj.value,
                 'weight': metric_obj.weight,
-                'weighted_points': score_obj.value * metric_obj.weight,
+                'weighted_points': weighted_points,
                 'notes': score_obj.notes or '',
                 'locked': score_obj.locked
             })
