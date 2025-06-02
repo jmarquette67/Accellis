@@ -179,6 +179,28 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Scoring Criteria</label>
+                        {% if "Help Desk" in metric.name %}
+                        <div class="p-3 bg-light rounded mb-2">
+                            <h6>Three-Range Scoring System:</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <span class="badge bg-danger">0 points</span>
+                                    <div><strong>Too Low:</strong></div>
+                                    <div>&lt; {{ metric.low_threshold }} tickets/user/month</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-success">1 point</span>
+                                    <div><strong>Ideal Range:</strong></div>
+                                    <div>{{ metric.low_threshold }} - {{ metric.high_threshold }} tickets/user/month</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="badge bg-danger">0 points</span>
+                                    <div><strong>Too High:</strong></div>
+                                    <div>&gt; {{ metric.high_threshold }} tickets/user/month</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         <textarea class="form-control" name="scoring_criteria" rows="3" required>{{ metric.scoring_criteria if metric.scoring_criteria else metric.description }}</textarea>
                         <small class="text-muted">Detailed explanation of how scores are calculated</small>
                     </div>
