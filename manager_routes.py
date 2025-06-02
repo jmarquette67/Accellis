@@ -58,8 +58,39 @@ def client_list():
     """Display all clients for management"""
     require_manager()
     
-    clients = Client.query.order_by(Client.name).all()
-    return render_template('manager_clients.html', clients=clients)
+    # Get clients with their account owners
+    clients = db.session.query(Client).join(User, Client.account_owner_id == User.id, isouter=True).order_by(Client.name).all()
+    
+    # Calculate latest total scores for each client
+    client_scores = {}
+    for client in clients:
+        # Get latest scores for this client
+        latest_scores = db.session.query(Score, Metric).join(Metric).filter(
+            Score.client_id == client.id
+        ).order_by(Score.taken_at.desc()).all()
+        
+        if latest_scores:
+            # Group by metric and get the latest for each
+            metric_scores = {}
+            for score, metric in latest_scores:
+                if metric.id not in metric_scores:
+                    metric_scores[metric.id] = (score, metric)
+            
+            # Calculate weighted total
+            total_weighted_score = 0
+            total_weight = 0
+            for score, metric in metric_scores.values():
+                total_weighted_score += score.value * metric.weight
+                total_weight += metric.weight
+            
+            if total_weight > 0:
+                client_scores[client.id] = round(total_weighted_score / total_weight)
+            else:
+                client_scores[client.id] = 0
+        else:
+            client_scores[client.id] = None
+    
+    return render_template('manager_clients.html', clients=clients, client_scores=client_scores)
 
 @manager_bp.route("/clients/analytics")
 @require_login

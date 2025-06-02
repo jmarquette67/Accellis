@@ -55,12 +55,15 @@ class OAuth(OAuthConsumerMixin, db.Model):
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    account_owner_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=True)
+    primary_contact_email = db.Column(db.String(120), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_checkin = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
     health_checks = db.relationship('HealthCheck', backref='client', lazy=True, cascade='all, delete-orphan')
+    account_owner = db.relationship('User', backref='managed_clients')
     
     @property
     def status(self):
