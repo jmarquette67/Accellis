@@ -136,7 +136,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Priority Weight (1=Highest, 5=Lowest)</label>
+                                <label class="form-label">Priority Weight</label>
                                 <select class="form-select" name="weight" required>
                                     <option value="1" {% if metric.weight == 1 %}selected{% endif %}>1</option>
                                     <option value="2" {% if metric.weight == 2 %}selected{% endif %}>2</option>
@@ -144,6 +144,7 @@
                                     <option value="4" {% if metric.weight == 4 %}selected{% endif %}>4</option>
                                     <option value="5" {% if metric.weight == 5 %}selected{% endif %}>5</option>
                                 </select>
+                                <small class="text-muted">1=Highest, 5=Lowest</small>
                             </div>
                         </div>
                         <div class="col-md-6">
