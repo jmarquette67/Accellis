@@ -430,6 +430,7 @@ def client_scoresheet(client_id):
                 'notes': score_obj.notes or '',
                 'locked': score_obj.locked
             }
+            print(f"DEBUG: Found score for {metric_obj.name}: value={score_obj.value}, weight={metric_obj.weight}")
         
         # Build complete list including all metrics
         for metric_obj in all_metrics:
