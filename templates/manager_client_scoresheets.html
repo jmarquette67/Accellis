@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}All Score Sheets - Accellis{% endblock %}
+{% block title %}{{ client.name }} Score Sheets - Accellis{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,15 +9,18 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h2 mb-1">All Score Sheets</h1>
-                    <p class="text-muted mb-0">Select a score sheet to view detailed metrics and scores</p>
+                    <h1 class="h2 mb-1">{{ client.name }} - All Score Sheets</h1>
+                    <p class="text-muted mb-0">Complete score history for this client organized by date</p>
                 </div>
                 <div class="btn-group">
-                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Clients
+                    <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Score Sheet
                     </a>
-                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    <a href="{{ url_for('manager.all_scoresheets') }}" class="btn btn-outline-info">
+                        <i class="fas fa-list me-1"></i>All Clients
+                    </a>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-users me-1"></i>Client List
                     </a>
                 </div>
             </div>
@@ -33,10 +36,10 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h4 class="mb-1">{{ scoresheets|length }}</h4>
-                            <p class="mb-0">Score Sheets</p>
+                            <p class="mb-0">Score Sheet Days</p>
                         </div>
                         <div class="align-self-center">
-                            <i class="fas fa-clipboard-list fa-2x opacity-75"></i>
+                            <i class="fas fa-calendar fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -47,11 +50,11 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-1">{{ scoresheets|sum(attribute='entry_count') }}</h4>
-                            <p class="mb-0">Total Entries</p>
+                            <h4 class="mb-1">{{ scoresheets|sum(attribute='1.total_entries') }}</h4>
+                            <p class="mb-0">Total Score Entries</p>
                         </div>
                         <div class="align-self-center">
-                            <i class="fas fa-list fa-2x opacity-75"></i>
+                            <i class="fas fa-clipboard-list fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -62,7 +65,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-1">{{ scoresheets|sum(attribute='total_score') }}</h4>
+                            <h4 class="mb-1">{{ scoresheets|sum(attribute='1.total_weighted_points') }}</h4>
                             <p class="mb-0">Total Weighted Points</p>
                         </div>
                         <div class="align-self-center">
@@ -77,7 +80,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-1">{{ "%.1f"|format(scoresheets|sum(attribute='total_score') / scoresheets|sum(attribute='entry_count') if scoresheets|sum(attribute='entry_count') > 0 else 0) }}</h4>
+                            <h4 class="mb-1">{{ "%.1f"|format(scoresheets|sum(attribute='1.total_weighted_points') / scoresheets|sum(attribute='1.total_entries') if scoresheets|sum(attribute='1.total_entries') > 0 else 0) }}</h4>
                             <p class="mb-0">Avg Points per Entry</p>
                         </div>
                         <div class="align-self-center">
@@ -89,57 +92,78 @@
         </div>
     </div>
 
-    <!-- Score Sheets List -->
+    <!-- Score Sheets by Date -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Score Sheets</h5>
+            {% for date_key, date_data in scoresheets %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">{{ date_data.date.strftime('%A, %B %d, %Y') }}</h5>
+                            <small class="text-muted">
+                                {{ date_data.total_entries }} metric entries
+                                | Total weighted points: {{ date_data.total_weighted_points }}
+                                | Average: {{ "%.1f"|format(date_data.total_weighted_points / date_data.total_entries if date_data.total_entries > 0 else 0) }}
+                            </small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="toggleDateSection('{{ date_key }}')">
+                                <i class="fas fa-eye" id="toggle-icon-{{ date_key }}"></i> Toggle View
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body collapse show" id="section-{{ date_key }}">
+                    <!-- Score Entries Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Client</th>
-                                    <th>Account Manager</th>
-                                    <th>Total Score</th>
-                                    <th>Entries</th>
+                                    <th>Time</th>
+                                    <th>Metric</th>
+                                    <th>Score</th>
+                                    <th>Weight</th>
+                                    <th>Weighted Points</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for sheet in scoresheets %}
-                                <tr class="score-sheet-row" data-date="{{ sheet.date_str }}" data-client-id="{{ sheet.client_id }}" style="cursor: pointer;" onclick="viewScoreSheet('{{ sheet.date_str }}', {{ sheet.client_id }})">
+                                {% for score in date_data.scores %}
+                                <tr class="score-entry-row" data-score-id="{{ score.id }}" style="cursor: pointer;" onclick="viewScoreDetails({{ score.id }})">
+                                    <td>{{ score.time }}</td>
                                     <td>
-                                        <strong>{{ sheet.date.strftime('%m/%d/%Y') }}</strong>
-                                        <br>
-                                        <small class="text-muted">{{ sheet.date.strftime('%A') }}</small>
+                                        <strong>{{ score.metric_name }}</strong>
                                     </td>
                                     <td>
-                                        <strong>{{ sheet.client_name }}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark" style="min-width: 80px;">{{ sheet.account_manager }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{% if sheet.total_score >= 300 %}success{% elif sheet.total_score >= 200 %}warning{% else %}danger{% endif %} fs-6" style="min-width: 60px;">
-                                            {{ sheet.total_score }}
+                                        <span class="badge bg-{% if score.value >= 50 %}success{% elif score.value >= 30 %}warning{% else %}danger{% endif %}" style="min-width: 50px;">
+                                            {{ score.value }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info" style="min-width: 50px;">{{ sheet.entry_count }}</span>
+                                        <span class="badge bg-info" style="min-width: 40px;">{{ score.weight }}x</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ score.weighted_points }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if score.locked %}
+                                            <span class="badge bg-success" style="min-width: 60px;">Locked</span>
+                                        {% else %}
+                                            <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-primary btn-sm" onclick="viewScoreSheet('{{ sheet.date_str }}', {{ sheet.client_id }}); event.stopPropagation();" title="View Details">
-                                                <i class="fas fa-eye me-1"></i>View Details
+                                            {% if current_user.role and current_user.role.value == 'ADMIN' %}
+                                            <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }}); event.stopPropagation();" title="Edit Score">
+                                                <i class="fas fa-edit"></i>
                                             </button>
-                                            <a href="{{ url_for('manager.client_scoresheet', client_id=sheet.client_id) }}" 
-                                               class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation();" title="Client Dashboard">
-                                                <i class="fas fa-user"></i>
-                                            </a>
+                                            {% endif %}
+                                            <button class="btn btn-outline-info btn-sm" onclick="viewScoreDetails({{ score.id }}); event.stopPropagation();" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -149,6 +173,7 @@
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -160,9 +185,9 @@
                 <div class="card-body text-center py-5">
                     <i class="fas fa-clipboard-list fa-4x text-muted mb-4"></i>
                     <h5 class="text-muted">No Score Sheets Found</h5>
-                    <p class="text-muted">Start entering client scores to see them organized by date here.</p>
+                    <p class="text-muted">This client doesn't have any score entries yet.</p>
                     <a href="{{ url_for('manager.score_entry') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i>Enter First Score
+                        <i class="fas fa-plus me-1"></i>Enter First Score for {{ client.name }}
                     </a>
                 </div>
             </div>

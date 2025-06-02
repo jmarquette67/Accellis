@@ -16,7 +16,7 @@
                     <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Back to Clients
                     </a>
-                    <a href="{{ url_for('manager.all_scoresheets') }}" class="btn btn-outline-info">
+                    <a href="{{ url_for('manager.client_scoresheets', client_id=client.id) }}" class="btn btn-outline-info">
                         <i class="fas fa-list me-1"></i>All Score Sheets
                     </a>
                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
