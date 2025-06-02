@@ -267,46 +267,22 @@ def client_scoresheet(client_id):
     else:
         current_score = highest_score = lowest_score = 0
     
-    # Get monthly trend data for the last 2 years (24 months)
-    two_years_ago = datetime.now() - timedelta(days=730)
-    
-    # Calculate weighted monthly scores for trend analysis
-    monthly_groups = db.session.query(
-        db.func.date_trunc('month', Score.taken_at).label('month')
-    ).filter(
-        Score.client_id == client_id,
-        Score.taken_at >= two_years_ago
-    ).group_by(db.func.date_trunc('month', Score.taken_at)).order_by('month').all()
+    # Get monthly trend data by grouping scores by date 
+    monthly_scoresheet_data = db.session.query(
+        db.func.date(Score.taken_at).label('scoresheet_date'),
+        db.func.sum(Score.value * Metric.weight).label('total_weighted_score')
+    ).join(Metric).filter(
+        Score.client_id == client_id
+    ).group_by(
+        db.func.date(Score.taken_at)
+    ).order_by('scoresheet_date').all()
     
     monthly_scores = []
-    for month_group in monthly_groups:
-        month_scores = db.session.query(Score, Metric).join(Metric).filter(
-            Score.client_id == client_id,
-            db.func.date_trunc('month', Score.taken_at) == month_group.month
-        ).order_by(Metric.id).all()
-        
-        if month_scores:
-            month_total_weighted = 0
-            month_total_weight = 0
-            
-            for score, metric in month_scores:
-                # Use raw values with proper weighting - no artificial scaling
-                if "Cross Selling" in metric.name:
-                    # Cross Selling: actual number of lines sold
-                    scaled_value = score.value
-                else:
-                    # Binary metrics: 0 or 1 values
-                    scaled_value = score.value
-                
-                month_total_weighted += scaled_value * metric.weight
-                month_total_weight += metric.weight
-            
-            if month_total_weight > 0:
-                # Use total weighted points as the score (not average)
-                monthly_scores.append(type('MonthlyScore', (), {
-                    'month': month_group.month,
-                    'avg_score': round(month_total_weighted)
-                })())
+    for date_data in monthly_scoresheet_data:
+        monthly_scores.append(type('MonthlyScore', (), {
+            'month': date_data.scoresheet_date,
+            'avg_score': round(date_data.total_weighted_score)
+        })())
     
     # Prepare chart data
     month_labels = []
@@ -314,7 +290,7 @@ def client_scoresheet(client_id):
     recent_history = []
     
     for i, month_data in enumerate(monthly_scores):
-        month_str = month_data.month.strftime('%b %Y')
+        month_str = month_data.month.strftime('%b %Y') if hasattr(month_data.month, 'strftime') else str(month_data.month)
         score = round(month_data.avg_score)
         
         month_labels.append(month_str)
