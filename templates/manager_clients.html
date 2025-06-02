@@ -31,9 +31,6 @@
                             <thead>
                                 <tr>
                                     <th>Client Name</th>
-                                    <th>Hostname</th>
-                                    <th>IP Address</th>
-                                    <th>Last Check-in</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -46,30 +43,6 @@
                                         {% if client.description %}
                                         <br>
                                         <small class="text-muted">{{ client.description[:50] }}{% if client.description|length > 50 %}...{% endif %}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <code>{{ client.hostname }}</code>
-                                    </td>
-                                    <td>
-                                        <code>{{ client.ip_address }}</code>
-                                    </td>
-                                    <td>
-                                        {% if client.last_checkin %}
-                                            {{ client.last_checkin.strftime('%Y-%m-%d %H:%M') }}
-                                            <br>
-                                            <small class="text-muted">
-                                                {% set delta = (moment() - client.last_checkin).total_seconds() / 3600 %}
-                                                {% if delta < 1 %}
-                                                    {{ "%.0f"|format(delta * 60) }} min ago
-                                                {% elif delta < 24 %}
-                                                    {{ "%.1f"|format(delta) }} hrs ago
-                                                {% else %}
-                                                    {{ "%.1f"|format(delta / 24) }} days ago
-                                                {% endif %}
-                                            </small>
-                                        {% else %}
-                                            <span class="text-muted">Never</span>
                                         {% endif %}
                                     </td>
                                     <td>
