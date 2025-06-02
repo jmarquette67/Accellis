@@ -55,7 +55,24 @@
                                         </div>
                                     </td>
                                     <td>
+                                        {% if "Help Desk" in metric.name %}
+                                        <div class="small">
+                                            <div class="mb-1">
+                                                <span class="badge bg-danger me-2">0 points</span>
+                                                <strong>Too Low:</strong> &lt; {{ metric.low_threshold }} tickets/user/month
+                                            </div>
+                                            <div class="mb-1">
+                                                <span class="badge bg-success me-2">1 point</span>
+                                                <strong>Ideal:</strong> {{ metric.low_threshold }} - {{ metric.high_threshold }} tickets/user/month
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-danger me-2">0 points</span>
+                                                <strong>Too High:</strong> &gt; {{ metric.high_threshold }} tickets/user/month
+                                            </div>
+                                        </div>
+                                        {% else %}
                                         <small class="text-muted">{{ metric.scoring_criteria if metric.scoring_criteria else metric.description[:100] if metric.description else 'No criteria available' }}{% if metric.scoring_criteria and metric.scoring_criteria|length > 100 %}...{% endif %}</small>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" 
