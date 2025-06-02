@@ -177,30 +177,49 @@
                     </div>
                     {% endif %}
                     </div>
+                    {% if "Help Desk" in metric.name %}
                     <div class="mb-3">
-                        <label class="form-label">Scoring Criteria</label>
-                        {% if "Help Desk" in metric.name %}
-                        <div class="p-3 bg-light rounded mb-2">
-                            <h6>Three-Range Scoring System:</h6>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <span class="badge bg-danger">0 points</span>
-                                    <div><strong>Too Low:</strong></div>
-                                    <div>&lt; {{ metric.low_threshold }} tickets/user/month</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <span class="badge bg-success">1 point</span>
-                                    <div><strong>Ideal Range:</strong></div>
-                                    <div>{{ metric.low_threshold }} - {{ metric.high_threshold }} tickets/user/month</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <span class="badge bg-danger">0 points</span>
-                                    <div><strong>Too High:</strong></div>
-                                    <div>&gt; {{ metric.high_threshold }} tickets/user/month</div>
-                                </div>
+                        <label class="form-label">Range Scoring Configuration</label>
+                        <div class="row mb-2">
+                            <div class="col-md-3">
+                                <label class="form-label small">Too Low Range</label>
+                                <input type="text" class="form-control" name="too_low_range" 
+                                       value="< {{ metric.low_threshold }}" placeholder="< 0.25">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Score</label>
+                                <input type="number" class="form-control" name="too_low_score" 
+                                       value="0" min="0" max="10">
                             </div>
                         </div>
-                        {% endif %}
+                        <div class="row mb-2">
+                            <div class="col-md-3">
+                                <label class="form-label small">Ideal Range</label>
+                                <input type="text" class="form-control" name="ideal_range" 
+                                       value="{{ metric.low_threshold }} - {{ metric.high_threshold }}" placeholder="0.25 - 1.0">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Score</label>
+                                <input type="number" class="form-control" name="ideal_score" 
+                                       value="1" min="0" max="10">
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-3">
+                                <label class="form-label small">Too High Range</label>
+                                <input type="text" class="form-control" name="too_high_range" 
+                                       value="> {{ metric.high_threshold }}" placeholder="> 1.0">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Score</label>
+                                <input type="number" class="form-control" name="too_high_score" 
+                                       value="0" min="0" max="10">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Scoring Criteria</label>
                         <textarea class="form-control" name="scoring_criteria" rows="3" required>{{ metric.scoring_criteria if metric.scoring_criteria else metric.description }}</textarea>
                         <small class="text-muted">Detailed explanation of how scores are calculated</small>
                     </div>
