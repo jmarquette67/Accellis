@@ -44,18 +44,8 @@
                                         <strong>{{ metric.name }}</strong>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">{{ metric.weight }}</span>
-                                        {% if metric.weight == 1 %}
-                                        <small class="text-success d-block">Highest Priority</small>
-                                        {% elif metric.weight == 2 %}
-                                        <small class="text-primary d-block">High Priority</small>
-                                        {% elif metric.weight == 3 %}
-                                        <small class="text-warning d-block">Medium Priority</small>
-                                        {% elif metric.weight == 4 %}
-                                        <small class="text-secondary d-block">Lower Priority</small>
-                                        {% else %}
-                                        <small class="text-muted d-block">Supporting</small>
-                                        {% endif %}
+                                        <span class="badge bg-info fs-6">{{ metric.weight }}</span>
+                                        <small class="text-muted d-block">Priority level</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">{{ metric.max_score }}</span>
@@ -91,13 +81,13 @@
                                 <small class="text-muted d-block">Calculated from authentic Q1 2025 engagement data</small>
                             </div>
                             <div class="col-md-6">
-                                <strong>Weight Distribution:</strong><br>
+                                <strong>Priority Weight Distribution:</strong><br>
                                 <small class="text-muted">
-                                    Weight 1 (Highest): {{ metrics|selectattr("weight", "equalto", 1)|list|length }} metrics<br>
-                                    Weight 2 (High): {{ metrics|selectattr("weight", "equalto", 2)|list|length }} metrics<br>
-                                    Weight 3 (Medium): {{ metrics|selectattr("weight", "equalto", 3)|list|length }} metrics<br>
-                                    Weight 4 (Lower): {{ metrics|selectattr("weight", "equalto", 4)|list|length }} metrics<br>
-                                    Weight 5 (Supporting): {{ metrics|selectattr("weight", "equalto", 5)|list|length }} metrics
+                                    Weight 1: {{ metrics|selectattr("weight", "equalto", 1)|list|length }} metrics<br>
+                                    Weight 2: {{ metrics|selectattr("weight", "equalto", 2)|list|length }} metrics<br>
+                                    Weight 3: {{ metrics|selectattr("weight", "equalto", 3)|list|length }} metrics<br>
+                                    Weight 4: {{ metrics|selectattr("weight", "equalto", 4)|list|length }} metrics<br>
+                                    Weight 5: {{ metrics|selectattr("weight", "equalto", 5)|list|length }} metrics
                                 </small>
                             </div>
                         </div>
