@@ -187,56 +187,14 @@
 </div>
 
 <script>
-function toggleDateSection(dateKey) {
-    const section = document.getElementById('section-' + dateKey);
-    const icon = document.getElementById('toggle-icon-' + dateKey);
-    
-    if (section.classList.contains('show')) {
-        section.classList.remove('show');
-        icon.className = 'fas fa-eye-slash';
-    } else {
-        section.classList.add('show');
-        icon.className = 'fas fa-eye';
-    }
+function viewScoreSheet(date, clientId) {
+    // Navigate to detailed score sheet view
+    window.location.href = `/manager/scoresheet/${date}/${clientId}`;
 }
 
-function viewScoreDetails(scoreId) {
-    // Load score details in modal
-    fetch(`/manager/api/score/${scoreId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('scoreDetailContent').innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Metric Information</h6>
-                        <p><strong>${data.metric_name}</strong></p>
-                        <p class="text-muted">${data.metric_description}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Score Details</h6>
-                        <p>Score: <span class="badge bg-primary">${data.value}</span></p>
-                        <p>Weight: <span class="badge bg-info">${data.weight}x</span></p>
-                        <p>Weighted Points: <strong>${data.weighted_points}</strong></p>
-                        <p>Date: ${data.taken_at}</p>
-                        ${data.notes ? `<p>Notes: ${data.notes}</p>` : ''}
-                    </div>
-                </div>
-            `;
-            new bootstrap.Modal(document.getElementById('scoreDetailModal')).show();
-        })
-        .catch(error => {
-            console.error('Error loading score details:', error);
-        });
-}
-
-function editScore(scoreId) {
-    // Redirect to edit page
-    window.location.href = `/manager/score/${scoreId}/edit`;
-}
-
-// Add hover effects to score rows
+// Add hover effects to score sheet rows
 document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('.score-entry-row');
+    const rows = document.querySelectorAll('.score-sheet-row');
     rows.forEach(row => {
         row.addEventListener('mouseenter', function() {
             this.classList.add('table-active');
