@@ -469,8 +469,13 @@ def admin_update_metric(metric_id):
         
         # Update thresholds for Help Desk Usage metric
         if "Help Desk" in metric.name:
-            metric.low_threshold = float(request.form.get('low_threshold', 0.25))
-            metric.high_threshold = float(request.form.get('high_threshold', 1.0))
+            metric.too_low_threshold = float(request.form.get('too_low_threshold', 0.25))
+            metric.too_low_score = int(request.form.get('too_low_score', 0))
+            metric.ideal_min_threshold = float(request.form.get('ideal_min_threshold', 0.25))
+            metric.ideal_max_threshold = float(request.form.get('ideal_max_threshold', 1.0))
+            metric.ideal_score = int(request.form.get('ideal_score', 1))
+            metric.too_high_threshold = float(request.form.get('too_high_threshold', 1.0))
+            metric.too_high_score = int(request.form.get('too_high_score', 0))
         
         db.session.commit()
         flash(f'Successfully updated metric: {metric.name}', 'success')

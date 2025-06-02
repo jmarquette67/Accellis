@@ -6,25 +6,42 @@ Based on your authentic Q1 2025 engagement specifications
 from app import app, db
 from sqlalchemy import text
 
-def calculate_help_desk_score(tickets_per_user_per_month, low_threshold=0.25, high_threshold=1.0):
+def calculate_help_desk_score(tickets_per_user_per_month, metric_config=None):
     """
-    Calculate weighted score for Help Desk usage based on configurable thresholds
+    Calculate weighted score for Help Desk usage based on three-range configuration
     
     Args:
         tickets_per_user_per_month (float): Number of tickets per end user per month
-        low_threshold (float): Minimum threshold for ideal usage (default 0.25)
-        high_threshold (float): Maximum threshold for ideal usage (default 1.0)
+        metric_config (dict): Configuration with thresholds and scores for each range
         
     Returns:
-        int: Weighted score (0 or 1) based on threshold configuration
+        int: Score based on three-range configuration
     """
     
-    # Ideal Usage: between low and high thresholds (inclusive)
-    if tickets_per_user_per_month >= low_threshold and tickets_per_user_per_month <= high_threshold:
-        return 1
+    if metric_config is None:
+        # Default configuration
+        metric_config = {
+            'too_low_threshold': 0.25,
+            'too_low_score': 0,
+            'ideal_min_threshold': 0.25,
+            'ideal_max_threshold': 1.0,
+            'ideal_score': 1,
+            'too_high_threshold': 1.0,
+            'too_high_score': 0
+        }
+    
+    # Too Low Range: below too_low_threshold
+    if tickets_per_user_per_month < metric_config['too_low_threshold']:
+        return metric_config['too_low_score']
+    
+    # Ideal Range: between ideal_min and ideal_max (inclusive)
+    elif (tickets_per_user_per_month >= metric_config['ideal_min_threshold'] and 
+          tickets_per_user_per_month <= metric_config['ideal_max_threshold']):
+        return metric_config['ideal_score']
+    
+    # Too High Range: above too_high_threshold
     else:
-        # High Usage (>high_threshold) or Low Usage (<low_threshold) both get 0
-        return 0
+        return metric_config['too_high_score']
 
 def get_threshold_description(tickets_per_user_per_month, low_threshold=0.25, high_threshold=1.0):
     """Get description of which threshold range the usage falls into"""
