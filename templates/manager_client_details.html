@@ -4,575 +4,365 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">{{ client.name }}</h1>
+                    <p class="text-muted mb-0">Comprehensive Client Performance Dashboard</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Clients
+                    </a>
+                    <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-bar me-1"></i>Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ current_score if current_score else 'No Data' }}</h4>
+                            <p class="mb-0">Current Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ highest_score if highest_score else 'No Data' }}</h4>
+                            <p class="mb-0">Best Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trophy fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ lowest_score if lowest_score else 'No Data' }}</h4>
+                            <p class="mb-0">Lowest Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ total_months if total_months else 0 }}</h4>
+                            <p class="mb-0">Months Tracked</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
     <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i data-feather="user" class="me-2"></i>{{ client.name }}</h1>
-                <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
-                    <i data-feather="arrow-left" class="me-1"></i>Back to Analytics
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Key Insights Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
+        <!-- Left Column: Client Information & Performance Insights -->
+        <div class="col-lg-6 mb-4">
+            <!-- Client Information -->
+            <div class="card mb-4 h-100">
                 <div class="card-header">
-                    <h5><i data-feather="zap" class="me-2"></i>Key Insights for {{ client.name }}</h5>
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Client Information</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-success">Top Performing Metrics</h6>
-                            <div class="list-group list-group-flush">
-                                {% if top_metrics %}
-                                    {% for metric in top_metrics[:3] %}
-                                    <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                                        <div>
-                                            <strong>{{ metric.name }}</strong>
-                                            <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
-                                        </div>
-                                        <span class="badge bg-success rounded-pill">{{ metric.score }}</span>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <p class="text-muted">No metric data available</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-warning">Areas for Improvement</h6>
-                            <div class="list-group list-group-flush">
-                                {% if bottom_metrics %}
-                                    {% for metric in bottom_metrics[:3] %}
-                                    <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                                        <div>
-                                            <strong>{{ metric.name }}</strong>
-                                            <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') }}</small>
-                                        </div>
-                                        <span class="badge bg-warning rounded-pill">{{ metric.score }}</span>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <p class="text-muted">No metric data available</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Client Overview Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white clickable-card" data-score-type="current" style="cursor: pointer;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">{{ current_score }}</h4>
-                            <p class="card-text">Current Score</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i data-feather="target" class="icon-large"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white clickable-card" data-score-type="highest" style="cursor: pointer;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">{{ highest_score }}</h4>
-                            <p class="card-text">Highest Score</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i data-feather="trending-up" class="icon-large"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white clickable-card" data-score-type="lowest" style="cursor: pointer;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">{{ lowest_score }}</h4>
-                            <p class="card-text">Lowest Score</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i data-feather="trending-down" class="icon-large"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">{{ total_months }}</h4>
-                            <p class="card-text">Months Tracked</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i data-feather="calendar" class="icon-large"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Client Information & Key Contacts -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i data-feather="users" class="me-2"></i>Client Information & Key Contacts</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6 class="text-primary mb-3">Client Details</h6>
-                            <table class="table table-sm">
+                            <h6 class="text-primary mb-3">Basic Details</h6>
+                            <table class="table table-sm table-borderless">
                                 <tr>
-                                    <th width="40%">Client Name:</th>
+                                    <td class="fw-medium" width="40%">Client Name:</td>
                                     <td>{{ client.name }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Status:</th>
-                                    <td><span class="badge bg-{{ client.status_color }}">{{ client.status }}</span></td>
+                                    <td class="fw-medium">Status:</td>
+                                    <td>
+                                        {% if client.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
-                                {% if client.description %}
                                 <tr>
-                                    <th>Description:</th>
-                                    <td>{{ client.description }}</td>
+                                    <td class="fw-medium">Created:</td>
+                                    <td>{{ client.created_at.strftime('%Y-%m-%d') if client.created_at else 'Unknown' }}</td>
                                 </tr>
-                                {% endif %}
+                                <tr>
+                                    <td class="fw-medium">Last Activity:</td>
+                                    <td>
+                                        {% if client.last_checkin %}
+                                            {{ client.last_checkin.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                             </table>
                         </div>
-                        <div class="col-md-4">
-                            <div class="contact-section">
-                                <h6 class="text-primary mb-3">Primary Contact</h6>
-                                <p class="mb-1"><strong>John Smith</strong> - CEO</p>
-                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>john.smith@{{ client.name|lower|replace(' ', '') }}.com</p>
-                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4567</p>
-                            </div>
-                            <div class="contact-section mt-3">
-                                <h6 class="text-info mb-2">IT Contact</h6>
-                                <p class="mb-1"><strong>Sarah Johnson</strong> - IT Director</p>
-                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>sarah.johnson@{{ client.name|lower|replace(' ', '') }}.com</p>
-                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4568</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="contact-section">
-                                <h6 class="text-success mb-3">Account Manager</h6>
-                                <p class="mb-1"><strong>Michael Davis</strong> - Operations Manager</p>
-                                <p class="mb-1"><i data-feather="mail" class="me-1"></i>michael.davis@accellis.com</p>
-                                <p class="mb-1"><i data-feather="phone" class="me-1"></i>(555) 123-4569</p>
-                            </div>
-                            <div class="contact-section mt-3">
-                                <h6 class="text-warning mb-2">Last Contact</h6>
-                                <p class="mb-1">{{ client.last_checkin.strftime('%B %d, %Y') if client.last_checkin else 'No recent contact' }}</p>
-                                <p class="mb-0"><small class="text-muted">Latest engagement activity</small></p>
-                            </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3">Account Management</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="fw-medium" width="40%">Account Owner:</td>
+                                    <td>
+                                        {% if client.account_owner %}
+                                            {{ client.account_owner.first_name }} {{ client.account_owner.last_name }}
+                                            <br><small class="text-muted">{{ client.account_owner.email }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Primary Contact:</td>
+                                    <td>
+                                        {% if client.primary_contact_email %}
+                                            <a href="mailto:{{ client.primary_contact_email }}" class="text-decoration-none">
+                                                {{ client.primary_contact_email }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Engagement Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
+        <!-- Right Column: Performance Trends -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
                 <div class="card-header">
-                    <h5><i data-feather="activity" class="me-2"></i>Engagement Summary</h5>
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Performance Trend</h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
-                        <h6><i data-feather="trending-up"></i> Performance Overview</h6>
-                        <p class="mb-2">Current engagement score: <strong>{{ current_score }}</strong></p>
-                        <p class="mb-2">Total months tracked: <strong>{{ total_months }}</strong></p>
-                        <p class="mb-0">Based on authentic Q1 2025 engagement data across all priority metrics.</p>
+                    {% if month_labels and score_data %}
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No Performance Data Available</h6>
+                        <p class="text-muted">Start tracking metrics to see performance trends.</p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Score Summary Cards -->
+    <!-- Performance Insights Row -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card clickable-card h-100" data-score-type="current" style="cursor: pointer;">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-primary">{{ current_score }}</h3>
-                    <p class="card-text">Current Score</p>
-                    <small class="text-muted">Latest engagement assessment</small>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-success"><i class="fas fa-trophy me-2"></i>Top Performing Metrics</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_metrics %}
+                        <div class="list-group list-group-flush">
+                            {% for metric in top_metrics[:5] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <strong>{{ metric.name }}</strong>
+                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                </div>
+                                <span class="badge bg-success rounded-pill">{{ metric.score }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No metric data available</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card clickable-card h-100" data-score-type="highest" style="cursor: pointer;">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-success">{{ highest_score }}</h3>
-                    <p class="card-text">Best Performance</p>
-                    <small class="text-muted">Peak engagement month</small>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card clickable-card h-100" data-score-type="lowest" style="cursor: pointer;">
-                <div class="card-body text-center">
-                    <h3 class="card-title text-warning">{{ lowest_score }}</h3>
-                    <p class="card-text">Needs Attention</p>
-                    <small class="text-muted">Focus area for improvement</small>
+                <div class="card-body">
+                    {% if bottom_metrics %}
+                        <div class="list-group list-group-flush">
+                            {% for metric in bottom_metrics[:5] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <strong>{{ metric.name }}</strong>
+                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill">{{ metric.score }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No metric data available</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Score Sheets -->
+    <!-- Recent Activity History -->
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5><i data-feather="list" class="me-2"></i>Score Sheets</h5>
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity History</h5>
                 </div>
                 <div class="card-body">
+                    {% if recent_history %}
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Date</th>
-                                    <th>Overall Score</th>
-                                    <th>Highest Metric</th>
-                                    <th>Lowest Metric</th>
-                                    <th>Trend</th>
-                                    <th>Actions</th>
+                                    <th>Metric</th>
+                                    <th>Score</th>
+                                    <th>Weight</th>
+                                    <th>Weighted Points</th>
+                                    <th>Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for month_data in recent_history %}
-                                <tr class="clickable-row" data-month="{{ month_data.month }}" style="cursor: pointer;">
-                                    <td>{{ month_data.month }}</td>
+                                {% for activity in recent_history %}
+                                <tr>
+                                    <td>{{ activity.taken_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
-                                        <span class="badge bg-{{ month_data.score_color }}">{{ month_data.score }}</span>
+                                        <strong>{{ activity.metric.name }}</strong>
+                                        <br><small class="text-muted">{{ activity.metric.description[:50] }}{% if activity.metric.description and activity.metric.description|length > 50 %}...{% endif %}</small>
                                     </td>
-                                    <td>{{ month_data.highest_metric }}</td>
-                                    <td>{{ month_data.lowest_metric }}</td>
                                     <td>
-                                        {% if month_data.trend == 'up' %}
-                                            <i data-feather="trending-up" class="text-success"></i>
-                                        {% elif month_data.trend == 'down' %}
-                                            <i data-feather="trending-down" class="text-danger"></i>
+                                        <span class="badge bg-{% if activity.value >= 50 %}success{% elif activity.value >= 30 %}warning{% else %}danger{% endif %}">
+                                            {{ activity.value }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ activity.metric.weight }}x</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ activity.value * activity.metric.weight }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if activity.notes %}
+                                            <small>{{ activity.notes[:30] }}{% if activity.notes|length > 30 %}...{% endif %}</small>
                                         {% else %}
-                                            <i data-feather="minus" class="text-secondary"></i>
+                                            <span class="text-muted">-</span>
                                         {% endif %}
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="showScoreModal('{{ month_data.month }}', {{ month_data.score }})">
-                                            <i data-feather="eye" class="me-1"></i>Details
-                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Score Details Modal -->
-    <div class="modal fade" id="scoreDetailsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="scoreModalTitle">Score Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="scoreDetailsContent">
-                        <!-- Dynamic content will be loaded here -->
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No Activity History</h6>
+                        <p class="text-muted">Start entering scores to build client activity history.</p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+{% if month_labels and score_data %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Rebuilt Performance Trends Chart 
 document.addEventListener('DOMContentLoaded', function() {
-    const chartCanvas = document.getElementById('trendsChart');
-    if (!chartCanvas) return;
+    const ctx = document.getElementById('performanceChart').getContext('2d');
     
-    // Clean up any existing chart
-    if (window.trendsChart) {
-        try {
-            window.trendsChart.destroy();
-        } catch (e) {
-            console.log('Chart cleanup handled');
-        }
-        window.trendsChart = null;
-    }
-    
-    try {
-        const ctx = chartCanvas.getContext('2d');
-        
-        window.trendsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ month_labels | safe }},
-                datasets: [{
-                    label: 'Engagement Score',
-                    data: {{ score_data | safe }},
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    tension: 0.2,
-                    fill: true
-                }]
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ month_labels|safe }},
+            datasets: [{
+                label: 'Performance Score',
+                data: {{ score_data|safe }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#0d6efd',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'nearest'
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0,0,0,0.1)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(0,0,0,0.1)'
-                        }
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
                     }
                 },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Score: ${context.parsed.y}`;
-                            }
-                        }
-                    }
-                },
-                onClick: function(event, elements) {
-                    if (elements.length > 0) {
-                        const dataIndex = elements[0].index;
-                        const month = this.data.labels[dataIndex];
-                        const score = this.data.datasets[0].data[dataIndex];
-                        showScoreModal(month, score);
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
                     }
                 }
+            },
+            elements: {
+                point: {
+                    hoverRadius: 8
+                }
             }
-        });
-    } catch (error) {
-        console.error('Chart error:', error);
-        chartCanvas.style.display = 'none';
-    }
-});
-
-// Show score details function - DEFINE FIRST
-function showScoreModal(month, score) {
-    document.getElementById('scoreModalTitle').textContent = `${month} - Detailed Scores`;
-    
-    // Show loading state first
-    document.getElementById('scoreDetailsContent').innerHTML = `
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card bg-primary text-white text-center">
-                    <div class="card-body">
-                        <h3>${score}</h3>
-                        <p class="mb-0">Overall Score</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading all authentic metrics for ${month}...</p>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Fetch authentic metric data
-    const clientId = {{ client.id }};
-    fetch(`/manager/api/client/${clientId}/scores/${encodeURIComponent(month)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.scores.length > 0) {
-                // Create table with ALL authentic metrics
-                const metricsTable = data.scores.map(metric => `
-                    <tr>
-                        <td><strong>${metric.metric_name}</strong></td>
-                        <td><span class="badge bg-secondary">${metric.score}</span></td>
-                        <td>${metric.priority}</td>
-                        <td><span class="badge bg-${metric.status_class}">${metric.status}</span></td>
-                    </tr>
-                `).join('');
-                
-                document.getElementById('scoreDetailsContent').innerHTML = `
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white text-center">
-                                <div class="card-body">
-                                    <h3>${score}</h3>
-                                    <p class="mb-0">Overall Score</p>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <div class="card bg-info text-white text-center">
-                                    <div class="card-body">
-                                        <h4>${data.total_metrics}</h4>
-                                        <p class="mb-0">Total Metrics</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Metric</th>
-                                            <th>Score</th>
-                                            <th>Priority Weight</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${metricsTable}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <h6 class="alert-heading">Authentic Q1 2025 Data</h6>
-                                <p class="mb-0">This detailed breakdown shows all ${data.total_metrics} authentic engagement metrics from your client assessment for ${data.month}.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                document.getElementById('scoreDetailsContent').innerHTML = `
-                    <div class="alert alert-warning">
-                        <h6>No Metrics Found</h6>
-                        <p>No authentic engagement data found for ${month}. This month may not have recorded scores yet.</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching metrics:', error);
-            document.getElementById('scoreDetailsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <h6>Error Loading Data</h6>
-                    <p>Unable to load authentic metrics for ${month}. Please try again.</p>
-                </div>
-            `;
-        });
-    
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('scoreDetailsModal'));
-    modal.show();
-}
-
-// Score card click handlers
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle clickable score cards
-    document.querySelectorAll('.clickable-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const scoreType = this.dataset.scoreType;
-            const scoreValue = this.querySelector('.card-title').textContent;
-            
-            switch(scoreType) {
-                case 'current':
-                    showScoreModal('Current Month', scoreValue);
-                    break;
-                case 'highest':
-                    showScoreModal('Best Performance Month', scoreValue);
-                    break;
-                case 'lowest':
-                    showScoreModal('Lowest Performance Month', scoreValue);
-                    break;
-            }
-        });
-        
-        // Add hover effect
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '';
-        });
-    });
-
-    // Handle clickable score sheet rows
-    document.querySelectorAll('.clickable-row').forEach(row => {
-        row.addEventListener('click', function(e) {
-            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
-                const month = this.dataset.month;
-                const score = this.querySelector('.badge').textContent;
-                showScoreModal(month, score);
-            }
-        });
-        
-        // Add hover effect
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
-        });
-        
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
+        }
     });
 });
 </script>
-
-<style>
-.icon-large {
-    width: 3rem;
-    height: 3rem;
-}
-.contact-section {
-    border-left: 3px solid #e9ecef;
-    padding-left: 15px;
-}
-</style>
+{% endif %}
 {% endblock %}
