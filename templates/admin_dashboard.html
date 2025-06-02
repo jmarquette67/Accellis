@@ -19,76 +19,84 @@
     </div>
 
     <!-- Admin Navigation Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body">
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
                     <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">Metrics Management</h5>
-                    <p class="card-text">Manage engagement metrics, weights, and scoring criteria</p>
-                    <a href="{{ url_for('admin_metrics') }}" class="btn btn-primary">Manage Metrics</a>
+                    <h5 class="card-title fw-medium">Metrics Management</h5>
+                    <p class="card-text flex-grow-1">Manage engagement metrics, weights, and scoring criteria</p>
+                    <a href="{{ url_for('admin_metrics') }}" class="btn btn-primary btn-lg mt-auto">Manage Metrics</a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
                     <i class="fas fa-users fa-3x text-success mb-3"></i>
-                    <h5 class="card-title">User Management</h5>
-                    <p class="card-text">Control user roles, permissions, and access levels</p>
-                    <a href="{{ url_for('admin_users') }}" class="btn btn-success">Manage Users</a>
+                    <h5 class="card-title fw-medium">User Management</h5>
+                    <p class="card-text flex-grow-1">Control user roles, permissions, and access levels</p>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-success btn-lg mt-auto">Manage Users</a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
                     <i class="fas fa-building fa-3x text-info mb-3"></i>
-                    <h5 class="card-title">Client Management</h5>
-                    <p class="card-text">Add, edit, and organize client accounts and data</p>
-                    <a href="{{ url_for('admin_clients') }}" class="btn btn-info">Manage Clients</a>
+                    <h5 class="card-title fw-medium">Client Management</h5>
+                    <p class="card-text flex-grow-1">Add, edit, and organize client accounts and data</p>
+                    <a href="{{ url_for('admin_clients') }}" class="btn btn-info btn-lg mt-auto">Manage Clients</a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
                     <i class="fas fa-database fa-3x text-warning mb-3"></i>
-                    <h5 class="card-title">Data Management</h5>
-                    <p class="card-text">Import/export data, backup, and system maintenance</p>
-                    <a href="{{ url_for('admin_data') }}" class="btn btn-warning">Manage Data</a>
+                    <h5 class="card-title fw-medium">Data Management</h5>
+                    <p class="card-text flex-grow-1">Import/export data, backup, and system maintenance</p>
+                    <a href="{{ url_for('admin_data') }}" class="btn btn-warning btn-lg mt-auto">Manage Data</a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- System Overview -->
-    <div class="row">
+    <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">System Overview</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-medium">System Overview</h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            <h3 class="text-primary">{{ stats.total_users }}</h3>
-                            <p class="text-muted">Total Users</p>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <h3 class="text-primary fw-bold mb-2">{{ stats.total_users }}</h3>
+                                <p class="text-muted mb-0 small fw-medium">Total Users</p>
+                            </div>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <h3 class="text-success">{{ stats.total_clients }}</h3>
-                            <p class="text-muted">Active Clients</p>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <h3 class="text-success fw-bold mb-2">{{ stats.total_clients }}</h3>
+                                <p class="text-muted mb-0 small fw-medium">Active Clients</p>
+                            </div>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <h3 class="text-info">{{ stats.total_metrics }}</h3>
-                            <p class="text-muted">Metrics Configured</p>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="text-center p-3 bg-info bg-opacity-10 rounded">
+                                <h3 class="text-info fw-bold mb-2">{{ stats.total_metrics }}</h3>
+                                <p class="text-muted mb-0 small fw-medium">Metrics Configured</p>
+                            </div>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <h3 class="text-warning">{{ stats.total_scores }}</h3>
-                            <p class="text-muted">Scores Recorded</p>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                <h3 class="text-warning fw-bold mb-2">{{ stats.total_scores }}</h3>
+                                <p class="text-muted mb-0 small fw-medium">Scores Recorded</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -96,23 +104,27 @@
         </div>
         
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Quick Actions</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-medium">Quick Actions</h5>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('admin_backup') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-download"></i> Backup System
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('admin_backup') }}" class="btn btn-outline-primary btn-lg d-flex align-items-center">
+                            <i class="fas fa-download me-2"></i> 
+                            <span>Backup System</span>
                         </a>
-                        <a href="{{ url_for('admin_import') }}" class="btn btn-outline-success">
-                            <i class="fas fa-upload"></i> Import Data
+                        <a href="{{ url_for('admin_import') }}" class="btn btn-outline-success btn-lg d-flex align-items-center">
+                            <i class="fas fa-upload me-2"></i> 
+                            <span>Import Data</span>
                         </a>
-                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info">
-                            <i class="fas fa-file-alt"></i> Generate Reports
+                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info btn-lg d-flex align-items-center">
+                            <i class="fas fa-file-alt me-2"></i> 
+                            <span>Generate Reports</span>
                         </a>
-                        <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-warning">
-                            <i class="fas fa-cog"></i> System Settings
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-warning btn-lg d-flex align-items-center">
+                            <i class="fas fa-cog me-2"></i> 
+                            <span>System Settings</span>
                         </a>
                     </div>
                 </div>
@@ -123,30 +135,30 @@
     <!-- Recent Activity -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Administrative Activity</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-medium">Recent Administrative Activity</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>User</th>
-                                    <th>Details</th>
+                                    <th class="col-2">Date</th>
+                                    <th class="col-3">Action</th>
+                                    <th class="col-3">User</th>
+                                    <th class="col-4">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for activity in recent_activity %}
                                 <tr>
-                                    <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td class="small fw-medium">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
-                                        <span class="badge bg-{{ activity.type_color }}">{{ activity.action }}</span>
+                                        <span class="badge bg-{{ activity.type_color }} fs-6 px-3">{{ activity.action }}</span>
                                     </td>
-                                    <td>{{ activity.user_email or 'System' }}</td>
-                                    <td>{{ activity.details }}</td>
+                                    <td class="small">{{ activity.user_email or 'System' }}</td>
+                                    <td class="small text-muted">{{ activity.details }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
