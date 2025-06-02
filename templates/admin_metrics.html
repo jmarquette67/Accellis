@@ -31,9 +31,9 @@
                             <thead>
                                 <tr>
                                     <th>Metric Name</th>
-                                    <th>Weight</th>
-                                    <th>Max Score</th>
-                                    <th>Description</th>
+                                    <th>Priority Weight</th>
+                                    <th>Max Score Points</th>
+                                    <th>Scoring Criteria</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -58,14 +58,11 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if "Cross Selling" in metric.name %}
-                                        <span class="badge bg-warning">0-10</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">0-1</span>
-                                        {% endif %}
+                                        <span class="badge bg-primary">{{ metric.max_score }}</span>
+                                        <small class="text-muted d-block">Points possible</small>
                                     </td>
                                     <td>
-                                        <small class="text-muted">{{ metric.description[:100] if metric.description else 'No description available' }}{% if metric.description and metric.description|length > 100 %}...{% endif %}</small>
+                                        <small class="text-muted">{{ metric.scoring_criteria if metric.scoring_criteria else metric.description[:100] if metric.description else 'No criteria available' }}{% if metric.scoring_criteria and metric.scoring_criteria|length > 100 %}...{% endif %}</small>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" 
@@ -86,15 +83,12 @@
                             <div class="col-md-6">
                                 <strong>Total Metrics:</strong> {{ metrics|length }}<br>
                                 <strong>Maximum Possible Score:</strong> 
-                                {% set max_score = 0 %}
+                                {% set total_max_score = 0 %}
                                 {% for metric in metrics %}
-                                    {% if "Cross Selling" in metric.name %}
-                                        {% set max_score = max_score + (10 * metric.weight) %}
-                                    {% else %}
-                                        {% set max_score = max_score + (1 * metric.weight) %}
-                                    {% endif %}
+                                    {% set total_max_score = total_max_score + (metric.max_score * metric.weight) %}
                                 {% endfor %}
-                                {{ max_score }} points
+                                {{ total_max_score }} points
+                                <small class="text-muted d-block">Calculated from authentic Q1 2025 engagement data</small>
                             </div>
                             <div class="col-md-6">
                                 <strong>Weight Distribution:</strong><br>
@@ -129,19 +123,37 @@
                         <label class="form-label">Metric Name</label>
                         <input type="text" class="form-control" name="name" value="{{ metric.name }}" required>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Priority Weight (1=Highest, 5=Supporting)</label>
+                                <select class="form-select" name="weight" required>
+                                    <option value="1" {% if metric.weight == 1 %}selected{% endif %}>1 - Highest Priority</option>
+                                    <option value="2" {% if metric.weight == 2 %}selected{% endif %}>2 - High Priority</option>
+                                    <option value="3" {% if metric.weight == 3 %}selected{% endif %}>3 - Medium Priority</option>
+                                    <option value="4" {% if metric.weight == 4 %}selected{% endif %}>4 - Lower Priority</option>
+                                    <option value="5" {% if metric.weight == 5 %}selected{% endif %}>5 - Supporting</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Maximum Score Points</label>
+                                <input type="number" class="form-control" name="max_score" 
+                                       value="{{ metric.max_score }}" min="1" max="20" required>
+                                <small class="text-muted">Points available for this metric (e.g., 1 for binary, 10 for Cross Selling)</small>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-3">
-                        <label class="form-label">Weight (1=Highest, 5=Supporting)</label>
-                        <select class="form-select" name="weight" required>
-                            <option value="1" {% if metric.weight == 1 %}selected{% endif %}>1 - Highest Priority</option>
-                            <option value="2" {% if metric.weight == 2 %}selected{% endif %}>2 - High Priority</option>
-                            <option value="3" {% if metric.weight == 3 %}selected{% endif %}>3 - Medium Priority</option>
-                            <option value="4" {% if metric.weight == 4 %}selected{% endif %}>4 - Lower Priority</option>
-                            <option value="5" {% if metric.weight == 5 %}selected{% endif %}>5 - Supporting</option>
-                        </select>
+                        <label class="form-label">Scoring Criteria</label>
+                        <textarea class="form-control" name="scoring_criteria" rows="3" required>{{ metric.scoring_criteria if metric.scoring_criteria else metric.description }}</textarea>
+                        <small class="text-muted">Detailed explanation of how scores are calculated</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="4" required>{{ metric.description }}</textarea>
+                        <textarea class="form-control" name="description" rows="2">{{ metric.description }}</textarea>
+                        <small class="text-muted">General description of the metric</small>
                     </div>
                 </div>
                 <div class="modal-footer">

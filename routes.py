@@ -455,6 +455,8 @@ def admin_update_metric(metric_id):
     try:
         metric.name = request.form.get('name')
         metric.weight = int(request.form.get('weight'))
+        metric.max_score = int(request.form.get('max_score'))
+        metric.scoring_criteria = request.form.get('scoring_criteria')
         metric.description = request.form.get('description')
         
         db.session.commit()
