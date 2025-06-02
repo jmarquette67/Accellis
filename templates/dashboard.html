@@ -18,57 +18,57 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Client Engagement</h5>
-                    <p class="card-text flex-grow-1">Manage client information and engagement tracking</p>
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-medium text-nowrap">Client Engagement</h5>
+                    <p class="card-text flex-grow-1 small">Manage client information and engagement tracking</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="/manager/clients" class="btn btn-primary mt-auto">Manage Clients</a>
+                        <a href="/manager/clients" class="btn btn-primary btn-sm mt-auto">Manage Clients</a>
                     {% else %}
-                        <a href="/clients" class="btn btn-primary mt-auto">View Clients</a>
+                        <a href="/clients" class="btn btn-primary btn-sm mt-auto">View Clients</a>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Score Entry</h5>
-                    <p class="card-text flex-grow-1">Enter engagement scores for your clients</p>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-medium text-nowrap">Score Entry</h5>
+                    <p class="card-text flex-grow-1 small">Enter engagement scores for your clients</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER', 'VCIO', 'TAM'] %}
-                        <a href="/scores/new" class="btn btn-success mt-auto">Enter Scores</a>
+                        <a href="/scores/new" class="btn btn-success btn-sm mt-auto">Enter Scores</a>
                     {% else %}
-                        <span class="text-muted mt-auto">Access Required</span>
+                        <span class="text-muted small mt-auto">Access Required</span>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Analytics</h5>
-                    <p class="card-text flex-grow-1">View client engagement analytics and trends</p>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-medium text-nowrap">Analytics</h5>
+                    <p class="card-text flex-grow-1 small">View client engagement analytics and trends</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-info mt-auto">View Analytics</a>
+                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-info btn-sm mt-auto">View Analytics</a>
                     {% else %}
-                        <a href="/scores/" class="btn btn-info mt-auto">View Scores</a>
+                        <a href="/scores/" class="btn btn-info btn-sm mt-auto">View Scores</a>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Administration</h5>
-                    <p class="card-text flex-grow-1">Configure metrics and system settings</p>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-medium text-nowrap">Administration</h5>
+                    <p class="card-text flex-grow-1 small">Configure metrics and system settings</p>
                     {% if user.role and user.role.value == 'ADMIN' %}
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning mt-auto">Admin Console</a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning btn-sm mt-auto">Admin Console</a>
                     {% elif user.role and user.role.value == 'MANAGER' %}
-                        <a href="#" class="btn btn-secondary mt-auto">Manager Tools</a>
+                        <a href="#" class="btn btn-secondary btn-sm mt-auto">Manager Tools</a>
                     {% else %}
-                        <span class="text-muted mt-auto">Admin Access Required</span>
+                        <span class="text-muted small mt-auto">Admin Access Required</span>
                     {% endif %}
                 </div>
             </div>
@@ -77,27 +77,27 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Quick Actions</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-medium">Quick Actions</h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <h6>For TAMs & VCIOs</h6>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-medium text-primary mb-3">For TAMs & VCIOs</h6>
                             <ul class="list-unstyled">
-                                <li><a href="/scores/new" class="text-decoration-none">📊 Enter Client Engagement Scores</a></li>
-                                <li><a href="/scores/" class="text-decoration-none">📈 View Engagement History</a></li>
-                                <li><a href="/clients" class="text-decoration-none">👥 My Client Portfolio</a></li>
+                                <li class="mb-2"><a href="/scores/new" class="text-decoration-none d-flex align-items-center"><i class="fas fa-chart-bar me-2 text-muted"></i> Enter Client Engagement Scores</a></li>
+                                <li class="mb-2"><a href="/scores/" class="text-decoration-none d-flex align-items-center"><i class="fas fa-chart-line me-2 text-muted"></i> View Engagement History</a></li>
+                                <li class="mb-2"><a href="/clients" class="text-decoration-none d-flex align-items-center"><i class="fas fa-users me-2 text-muted"></i> My Client Portfolio</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6">
                             {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                            <h6>Management Tools</h6>
+                            <h6 class="fw-medium text-success mb-3">Management Tools</h6>
                             <ul class="list-unstyled">
-                                <li><a href="{{ url_for('manager.dashboard') }}" class="text-decoration-none">📊 Management Dashboard</a></li>
-                                <li><a href="{{ url_for('manager.client_list') }}" class="text-decoration-none">🏢 Client Management</a></li>
-                                <li><a href="{{ url_for('manager.client_table') }}" class="text-decoration-none">📈 Performance Analytics</a></li>
+                                <li class="mb-2"><a href="{{ url_for('manager.dashboard') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-tachometer-alt me-2 text-muted"></i> Management Dashboard</a></li>
+                                <li class="mb-2"><a href="{{ url_for('manager.client_list') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-building me-2 text-muted"></i> Client Management</a></li>
+                                <li class="mb-2"><a href="{{ url_for('manager.client_table') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-analytics me-2 text-muted"></i> Performance Analytics</a></li>
                                 <li><a href="{{ url_for('manager.alert_management') }}" class="text-decoration-none">⚠️ Alert Management</a></li>
                                 {% if user.role and user.role.value == 'ADMIN' %}
                                 <li><a href="{{ url_for('manager.user_management') }}" class="text-decoration-none">👤 User Management</a></li>
