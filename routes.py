@@ -336,25 +336,17 @@ def score_entry():
                         if existing_score:
                             db.session.delete(existing_score)
                         
-                        # Apply sophisticated weighting for Help Desk metric
-                        if metric.name == "1. Help Desk Usage":
-                            # Convert numerical input to weighted score using your Q1 2025 thresholds
-                            tickets_per_user = float(score_value)
-                            if tickets_per_user >= 0.25 and tickets_per_user <= 1.0:
-                                weighted_value = 1  # Ideal Usage
-                            else:
-                                weighted_value = 0  # High or Low Usage
-                            score_notes = f"Tickets/user/month: {tickets_per_user} | {notes}" if notes else f"Tickets/user/month: {tickets_per_user}"
+                        # Prepare notes based on metric type
+                        if "Help Desk" in metric.name:
+                            score_notes = f"Tickets/user/month: {score_value} | {notes}" if notes else f"Tickets/user/month: {score_value}"
                         else:
-                            # Regular scoring for other metrics
-                            weighted_value = int(float(score_value))
                             score_notes = f"{notes} (Scored for {score_month})" if notes else f"Scored for {score_month}"
                         
                         # Create new score for the selected month
                         score = Score(
                             client_id=int(client_id),
                             metric_id=metric.id,
-                            value=weighted_value,
+                            value=final_score,
                             taken_at=score_date.replace(day=15),  # Middle of the month
                             notes=score_notes
                         )
@@ -474,6 +466,11 @@ def admin_update_metric(metric_id):
         metric.max_score = int(request.form.get('max_score'))
         metric.scoring_criteria = request.form.get('scoring_criteria')
         metric.description = request.form.get('description')
+        
+        # Update thresholds for Help Desk Usage metric
+        if "Help Desk" in metric.name:
+            metric.low_threshold = float(request.form.get('low_threshold', 0.25))
+            metric.high_threshold = float(request.form.get('high_threshold', 1.0))
         
         db.session.commit()
         flash(f'Successfully updated metric: {metric.name}', 'success')

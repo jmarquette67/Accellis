@@ -138,6 +138,28 @@
                             </div>
                         </div>
                     </div>
+                    
+                    {% if "Help Desk" in metric.name %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Low Threshold</label>
+                                <input type="number" step="0.01" class="form-control" name="low_threshold" 
+                                       value="{{ metric.low_threshold }}" min="0" max="10" required>
+                                <small class="text-muted">Minimum tickets per user per month for ideal usage (score = 1)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">High Threshold</label>
+                                <input type="number" step="0.01" class="form-control" name="high_threshold" 
+                                       value="{{ metric.high_threshold }}" min="0" max="10" required>
+                                <small class="text-muted">Maximum tickets per user per month for ideal usage (score = 1)</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Scoring Criteria</label>
                         <textarea class="form-control" name="scoring_criteria" rows="3" required>{{ metric.scoring_criteria if metric.scoring_criteria else metric.description }}</textarea>
