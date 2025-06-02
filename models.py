@@ -182,7 +182,9 @@ class Metric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
-    weight = db.Column(db.Integer, nullable=False)  # 1-100
+    weight = db.Column(db.Integer, nullable=False)  # Priority weight (1-5)
+    max_score = db.Column(db.Integer, nullable=False)  # Maximum possible points for this metric
+    scoring_criteria = db.Column(db.Text)  # Detailed scoring description
     high_threshold = db.Column(db.Integer, nullable=False)  # >= marks "high"
     low_threshold = db.Column(db.Integer, nullable=False)   # <= marks "low"
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -196,6 +198,8 @@ class Metric(db.Model):
             'name': self.name,
             'description': self.description,
             'weight': self.weight,
+            'max_score': self.max_score,
+            'scoring_criteria': self.scoring_criteria,
             'high_threshold': self.high_threshold,
             'low_threshold': self.low_threshold,
             'created_at': self.created_at.isoformat()
