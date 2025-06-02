@@ -166,10 +166,10 @@ def score_history():
     recent_scores = Score.query.order_by(Score.taken_at.desc()).limit(20).all()
     return render_template("score_history.html", scores=recent_scores)
 
-@manager_bp.route("/clients/<int:client_id>/details")
+@manager_bp.route("/clients/<int:client_id>/scoresheet")
 @manager_bp.route("/client/<int:client_id>")
 @require_login
-def client_details(client_id):
+def client_scoresheet(client_id):
     """View detailed client information and trends"""
     require_manager()
     
@@ -388,8 +388,31 @@ def client_details(client_id):
         top_metrics = metric_performance[:3]
         bottom_metrics = metric_performance[-3:]
 
+    # Get recent scores for the scoresheet table
+    recent_scores_query = (
+        db.session.query(Score, Metric)
+        .join(Metric, Score.metric_id == Metric.id)
+        .filter(Score.client_id == client_id)
+        .order_by(Score.taken_at.desc())
+        .limit(15)
+    )
+    
+    recent_scores = []
+    for score_obj, metric_obj in recent_scores_query:
+        recent_scores.append({
+            'id': score_obj.id,
+            'taken_at': score_obj.taken_at,
+            'metric_name': metric_obj.name,
+            'metric_description': metric_obj.description or '',
+            'value': score_obj.value,
+            'weight': metric_obj.weight,
+            'weighted_points': score_obj.value * metric_obj.weight,
+            'notes': score_obj.notes or '',
+            'locked': score_obj.locked
+        })
+
     import json
-    return render_template('manager_client_details.html',
+    return render_template('manager_client_scoresheet.html',
                          client=client,
                          current_score=current_score,
                          highest_score=highest_score,
@@ -397,7 +420,7 @@ def client_details(client_id):
                          total_months=total_months,
                          month_labels=json.dumps(month_labels),
                          score_data=json.dumps(score_data),
-                         recent_history=list(reversed(recent_history[-6:])),
+                         recent_scores=recent_scores,
                          top_metrics=top_metrics,
                          bottom_metrics=bottom_metrics)
 

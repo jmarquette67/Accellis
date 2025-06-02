@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Score Sheet - {{ client.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Score Sheet - {{ client.name }}</h1>
+                    <p class="text-muted mb-0">Performance tracking and score management</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Clients
+                    </a>
+                    {% if current_user.role and current_user.role.value == 'ADMIN' %}
+                    <a href="#" class="btn btn-primary" onclick="toggleEditMode()">
+                        <i class="fas fa-edit me-1"></i>Edit Scores
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ current_score if current_score else 'No Data' }}</h4>
+                            <p class="mb-0">Current Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ highest_score if highest_score else 'No Data' }}</h4>
+                            <p class="mb-0">Best Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trophy fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ lowest_score if lowest_score else 'No Data' }}</h4>
+                            <p class="mb-0">Lowest Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ total_months if total_months else 0 }}</h4>
+                            <p class="mb-0">Months Tracked</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Left Column: Score Sheet Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Recent Score Entries</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_scores %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Metric</th>
+                                    <th>Score</th>
+                                    <th>Weight</th>
+                                    <th>Weighted Points</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in recent_scores %}
+                                <tr class="score-row" data-score-id="{{ score.id }}" style="cursor: pointer;" onclick="showScoreDetails({{ score.id }})">
+                                    <td>{{ score.taken_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <strong>{{ score.metric_name }}</strong>
+                                        <br><small class="text-muted">{{ score.metric_description[:40] }}{% if score.metric_description and score.metric_description|length > 40 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if score.value >= 50 %}success{% elif score.value >= 30 %}warning{% else %}danger{% endif %}" style="min-width: 50px;">
+                                            {{ score.value }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" style="min-width: 40px;">{{ score.weight }}x</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ score.weighted_points }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if score.locked %}
+                                            <span class="badge bg-success" style="min-width: 60px;">Locked</span>
+                                        {% else %}
+                                            <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if current_user.role and current_user.role.value == 'ADMIN' %}
+                                        <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }}); event.stopPropagation();">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-outline-info btn-sm" onclick="viewScore({{ score.id }}); event.stopPropagation();">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No Score Entries</h6>
+                        <p class="text-muted">Start entering scores to build client performance history.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Performance Trends Chart -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Performance Trend</h5>
+                </div>
+                <div class="card-body">
+                    {% if month_labels and score_data %}
+                    <canvas id="performanceChart" width="400" height="300"></canvas>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No Performance Data</h6>
+                        <p class="text-muted">Score entries will generate trend charts.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Insights Row -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-success"><i class="fas fa-trophy me-2"></i>Top Performing Metrics</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_metrics %}
+                        <div class="list-group list-group-flush">
+                            {% for metric in top_metrics %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <strong>{{ metric.name }}</strong>
+                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                </div>
+                                <span class="badge bg-success rounded-pill" style="min-width: 50px;">{{ metric.score }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No metric data available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h5>
+                </div>
+                <div class="card-body">
+                    {% if bottom_metrics %}
+                        <div class="list-group list-group-flush">
+                            {% for metric in bottom_metrics %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <strong>{{ metric.name }}</strong>
+                                    <small class="text-muted d-block">{{ metric.date.strftime('%B %Y') if metric.date else 'Recent' }}</small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill" style="min-width: 50px;">{{ metric.score }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No metric data available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Score Detail Modal -->
+<div class="modal fade" id="scoreDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Score Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="scoreDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if month_labels and score_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ month_labels|safe }},
+            datasets: [{
+                label: 'Performance Score',
+                data: {{ score_data|safe }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#0d6efd',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+
+<script>
+function showScoreDetails(scoreId) {
+    // Load score details in modal
+    fetch(`/manager/api/score/${scoreId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('scoreDetailContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Metric Information</h6>
+                        <p><strong>${data.metric_name}</strong></p>
+                        <p class="text-muted">${data.metric_description}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Score Details</h6>
+                        <p>Score: <span class="badge bg-primary">${data.value}</span></p>
+                        <p>Weight: <span class="badge bg-info">${data.weight}x</span></p>
+                        <p>Weighted Points: <strong>${data.weighted_points}</strong></p>
+                        <p>Date: ${data.taken_at}</p>
+                        ${data.notes ? `<p>Notes: ${data.notes}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('scoreDetailModal')).show();
+        });
+}
+
+function editScore(scoreId) {
+    // Redirect to edit page
+    window.location.href = `/manager/score/${scoreId}/edit`;
+}
+
+function viewScore(scoreId) {
+    showScoreDetails(scoreId);
+}
+
+function toggleEditMode() {
+    // Toggle edit mode for admin users
+    const rows = document.querySelectorAll('.score-row');
+    rows.forEach(row => {
+        row.classList.toggle('table-warning');
+    });
+}
+</script>
+{% endblock %}
