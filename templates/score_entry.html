@@ -44,7 +44,7 @@
                                     <select class="form-select" id="metric_id" name="metric_id" required>
                                         <option value="">Select a metric...</option>
                                         {% for metric in metrics %}
-                                        <option value="{{ metric.id }}">{{ metric.name }} (Weight: {{ metric.weight }})</option>
+                                        <option value="{{ metric.id }}">{{ metric.name }} (Priority: {{ metric.weight }})</option>
                                         {% endfor %}
                                     </select>
                                 </div>
