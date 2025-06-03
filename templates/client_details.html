@@ -40,30 +40,37 @@
             </div>
             <div class="card-body">
                 <dl class="row">
-                    <dt class="col-sm-4">Hostname:</dt>
-                    <dd class="col-sm-8"><code>{{ client.hostname }}</code></dd>
-                    
-                    <dt class="col-sm-4">IP Address:</dt>
-                    <dd class="col-sm-8"><code>{{ client.ip_address }}</code></dd>
-                    
-                    <dt class="col-sm-4">Status:</dt>
+                    <dt class="col-sm-4">Account Manager:</dt>
                     <dd class="col-sm-8">
-                        <span class="badge bg-{{ client.status_color }}">{{ client.status.title() }}</span>
-                    </dd>
-                    
-                    <dt class="col-sm-4">Registered:</dt>
-                    <dd class="col-sm-8">{{ client.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
-                    
-                    <dt class="col-sm-4">Last Check-in:</dt>
-                    <dd class="col-sm-8">
-                        {% if client.last_checkin %}
-                            <span class="time-ago" data-time="{{ client.last_checkin.isoformat() }}">
-                                {{ client.last_checkin.strftime('%Y-%m-%d %H:%M:%S') }}
-                            </span>
+                        {% if client.account_owner %}
+                            {{ client.account_owner.first_name }} {{ client.account_owner.last_name }}
                         {% else %}
-                            <span class="text-muted">Never</span>
+                            <span class="text-muted">Not assigned</span>
                         {% endif %}
                     </dd>
+                    
+                    <dt class="col-sm-4">Industry:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-secondary">{{ client.industry.title() if client.industry else 'Not specified' }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Primary Contact:</dt>
+                    <dd class="col-sm-8">{{ client.contact_name or 'Not provided' }}</dd>
+                    
+                    <dt class="col-sm-4">Phone:</dt>
+                    <dd class="col-sm-8">{{ client.contact_phone or 'Not provided' }}</dd>
+                    
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">
+                        {% if client.contact_email %}
+                            <a href="mailto:{{ client.contact_email }}">{{ client.contact_email }}</a>
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-4">Client Since:</dt>
+                    <dd class="col-sm-8">{{ client.created_at.strftime('%B %Y') }}</dd>
                 </dl>
             </div>
         </div>
@@ -73,124 +80,82 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="activity" class="me-2"></i>
-                    Current Metrics
+                    <i data-feather="trending-up" class="me-2"></i>
+                    Performance Summary
                 </h5>
             </div>
             <div class="card-body">
-                {% if recent_checks %}
-                    {% set latest = recent_checks[0] %}
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="metric-card">
-                                <h3 class="text-{{ 'danger' if latest.cpu_usage > 90 else 'warning' if latest.cpu_usage > 75 else 'success' }}">
-                                    {{ "%.1f"|format(latest.cpu_usage) }}%
-                                </h3>
-                                <small class="text-muted">CPU Usage</small>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="metric-card">
-                                <h3 class="text-{{ 'danger' if latest.memory_usage > 95 else 'warning' if latest.memory_usage > 85 else 'success' }}">
-                                    {{ "%.1f"|format(latest.memory_usage) }}%
-                                </h3>
-                                <small class="text-muted">Memory</small>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="metric-card">
-                                <h3 class="text-{{ 'danger' if latest.disk_usage > 95 else 'warning' if latest.disk_usage > 85 else 'success' }}">
-                                    {{ "%.1f"|format(latest.disk_usage) }}%
-                                </h3>
-                                <small class="text-muted">Disk Usage</small>
-                            </div>
+                <div class="text-center mb-3">
+                    <h2 class="text-primary">
+                        <span id="client-score">--</span><small class="text-muted">/68</small>
+                    </h2>
+                    <small class="text-muted">Current Score</small>
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="metric-card">
+                            <h4 class="text-success" id="monthly-trend">--</h4>
+                            <small class="text-muted">Monthly Trend</small>
                         </div>
                     </div>
-                    
-                    <hr>
-                    
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Uptime:</dt>
-                        <dd class="col-sm-8">
-                            {% set days = latest.uptime // 86400 %}
-                            {% set hours = (latest.uptime % 86400) // 3600 %}
-                            {% set minutes = (latest.uptime % 3600) // 60 %}
-                            {{ days }}d {{ hours }}h {{ minutes }}m
-                        </dd>
-                        
-                        {% if latest.load_average %}
-                        <dt class="col-sm-4">Load Average:</dt>
-                        <dd class="col-sm-8">{{ "%.2f"|format(latest.load_average) }}</dd>
-                        {% endif %}
-                    </dl>
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i data-feather="database" style="width: 48px; height: 48px;" class="mb-2"></i>
-                        <p>No metrics available</p>
+                    <div class="col-6">
+                        <div class="metric-card">
+                            <h4 class="text-info" id="performance-grade">--</h4>
+                            <small class="text-muted">Grade</small>
+                        </div>
                     </div>
-                {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('manager_bp.client_scoresheet', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i data-feather="clipboard" class="me-1"></i>
+                        View Detailed Scoresheet
+                    </a>
+                    <a href="{{ url_for('manager_bp.score_entry') }}?client_id={{ client.id }}" class="btn btn-primary btn-sm">
+                        <i data-feather="plus" class="me-1"></i>
+                        Add New Score
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Metrics Charts -->
-{% if recent_checks %}
+<!-- Performance Timeline -->
 <div class="row mb-4">
     <div class="col">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="trending-up" class="me-2"></i>
-                    Metrics Timeline (Last 24 Hours)
+                    <i data-feather="bar-chart-2" class="me-2"></i>
+                    Performance Timeline (Last 6 Months)
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="metricsChart" width="800" height="300"></canvas>
+                <canvas id="performanceChart" width="800" height="300"></canvas>
             </div>
         </div>
     </div>
 </div>
-{% endif %}
 
-<!-- Alerts and Recent Activity -->
+<!-- Performance Insights -->
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="alert-triangle" class="me-2"></i>
-                    Client Alerts
+                    <i data-feather="trending-down" class="me-2"></i>
+                    Performance Alerts
                 </h5>
             </div>
             <div class="card-body">
-                {% if alerts %}
-                    <div style="max-height: 300px; overflow-y: auto;">
-                        {% for alert in alerts %}
-                        <div class="alert alert-{{ 'danger' if alert.severity == 'critical' else 'warning' }} alert-sm mb-2">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <strong>{{ alert.alert_type.title() }} Alert</strong>
-                                    <br>
-                                    {{ alert.message }}
-                                    <br>
-                                    <small class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-                                </div>
-                                {% if alert.is_active %}
-                                <button class="btn btn-sm btn-outline-secondary" onclick="resolveAlert({{ alert.id }})">
-                                    <i data-feather="check" style="width: 14px; height: 14px;"></i>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
+                <div id="performance-alerts">
                     <div class="text-center text-muted">
-                        <i data-feather="check-circle" style="width: 48px; height: 48px;" class="mb-2"></i>
-                        <p>No alerts for this client</p>
+                        <i data-feather="activity" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>Analyzing performance trends...</p>
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -200,33 +165,32 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i data-feather="clock" class="me-2"></i>
-                    Recent Check-ins
+                    Recent Scoring Activity
                 </h5>
             </div>
             <div class="card-body">
-                {% if recent_checks %}
+                {% if latest_scores %}
                     <div style="max-height: 300px; overflow-y: auto;">
-                        {% for check in recent_checks[:10] %}
+                        {% for score in latest_scores[:10] %}
                         <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                             <div>
-                                <strong>{{ check.timestamp.strftime('%H:%M:%S') }}</strong>
+                                <strong>{{ score.metric.name }}</strong>
                                 <br>
                                 <small class="text-muted">
-                                    CPU: {{ "%.1f"|format(check.cpu_usage) }}% | 
-                                    Mem: {{ "%.1f"|format(check.memory_usage) }}% | 
-                                    Disk: {{ "%.1f"|format(check.disk_usage) }}%
+                                    {{ score.date.strftime('%B %Y') }} | 
+                                    Score: {{ score.score }}/{{ score.metric.max_score }}
                                 </small>
                             </div>
-                            <span class="badge bg-{{ 'danger' if check.cpu_usage > 90 or check.memory_usage > 95 or check.disk_usage > 95 else 'warning' if check.cpu_usage > 75 or check.memory_usage > 85 or check.disk_usage > 85 else 'success' }}">
-                                {{ 'Critical' if check.cpu_usage > 90 or check.memory_usage > 95 or check.disk_usage > 95 else 'Warning' if check.cpu_usage > 75 or check.memory_usage > 85 or check.disk_usage > 85 else 'OK' }}
+                            <span class="badge bg-{{ 'success' if score.score >= score.metric.max_score * 0.8 else 'warning' if score.score >= score.metric.max_score * 0.6 else 'danger' }}">
+                                {{ ((score.score / score.metric.max_score) * 100)|round }}%
                             </span>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="text-center text-muted">
-                        <i data-feather="database" style="width: 48px; height: 48px;" class="mb-2"></i>
-                        <p>No check-ins recorded</p>
+                        <i data-feather="clipboard" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>No scores recorded yet</p>
                     </div>
                 {% endif %}
             </div>
@@ -237,50 +201,50 @@
 
 {% block scripts %}
 <script>
-    {% if recent_checks %}
-    // Prepare chart data
-    const chartData = {
-        labels: [{% for check in recent_checks|reverse %}'{{ check.timestamp.strftime("%H:%M") }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [
-            {
-                label: 'CPU Usage (%)',
-                data: [{% for check in recent_checks|reverse %}{{ check.cpu_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Memory Usage (%)',
-                data: [{% for check in recent_checks|reverse %}{{ check.memory_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Disk Usage (%)',
-                data: [{% for check in recent_checks|reverse %}{{ check.disk_usage }}{% if not loop.last %},{% endif %}{% endfor %}],
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                tension: 0.4
-            }
-        ]
+    // Update performance summary with actual data
+    document.getElementById('client-score').textContent = '{{ current_total or 0 }}';
+    
+    // Calculate performance grade
+    const currentScore = {{ current_total or 0 }};
+    const maxScore = 68;
+    const percentage = Math.round((currentScore / maxScore) * 100);
+    let grade = 'F';
+    if (percentage >= 90) grade = 'A';
+    else if (percentage >= 80) grade = 'B';
+    else if (percentage >= 70) grade = 'C';
+    else if (percentage >= 60) grade = 'D';
+    
+    document.getElementById('performance-grade').textContent = grade;
+    
+    // Prepare performance chart data
+    {% if monthly_data %}
+    const performanceData = {
+        labels: [{% for data in monthly_data %}'{{ data.month.strftime("%b %Y") }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Total Score',
+            data: [{% for data in monthly_data %}{{ data.total_score or 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
     };
     
-    // Create metrics chart
-    const ctx = document.getElementById('metricsChart').getContext('2d');
-    const metricsChart = new Chart(ctx, {
+    // Create performance chart
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
         type: 'line',
-        data: chartData,
+        data: performanceData,
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    max: 68,
                     ticks: {
                         callback: function(value) {
-                            return value + '%';
+                            return value + ' pts';
                         }
                     }
                 }
@@ -294,62 +258,42 @@
     });
     {% endif %}
     
-    // Update time ago indicators
-    function updateTimeAgo() {
-        document.querySelectorAll('.time-ago').forEach(element => {
-            const timeStr = element.getAttribute('data-time');
-            if (timeStr) {
-                const time = new Date(timeStr);
-                const now = new Date();
-                const diff = now - time;
-                const minutes = Math.floor(diff / 60000);
-                
-                if (minutes < 1) {
-                    element.textContent = 'Just now';
-                } else if (minutes < 60) {
-                    element.textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-                } else if (minutes < 1440) {
-                    const hours = Math.floor(minutes / 60);
-                    element.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
-                } else {
-                    const days = Math.floor(minutes / 1440);
-                    element.textContent = `${days} day${days > 1 ? 's' : ''} ago`;
-                }
-            }
-        });
+    // Generate performance alerts
+    {% if monthly_data and monthly_data|length > 1 %}
+    const alertsContainer = document.getElementById('performance-alerts');
+    const latestScore = {{ monthly_data[-1].total_score or 0 }};
+    const previousScore = {{ monthly_data[-2].total_score or 0 if monthly_data|length > 1 else 0 }};
+    const trend = latestScore - previousScore;
+    
+    let alertsHTML = '';
+    
+    if (trend < -5) {
+        alertsHTML += '<div class="alert alert-warning alert-sm mb-2"><strong>Declining Performance</strong><br>Score decreased by ' + Math.abs(trend) + ' points this month.</div>';
+    } else if (trend > 5) {
+        alertsHTML += '<div class="alert alert-success alert-sm mb-2"><strong>Improving Performance</strong><br>Score increased by ' + trend + ' points this month.</div>';
     }
     
-    setInterval(updateTimeAgo, 60000);
-    updateTimeAgo();
+    if (latestScore < 40) {
+        alertsHTML += '<div class="alert alert-danger alert-sm mb-2"><strong>Low Performance</strong><br>Client needs immediate attention and intervention.</div>';
+    }
+    
+    if (alertsHTML === '') {
+        alertsHTML = '<div class="text-center text-muted"><i data-feather="check-circle" style="width: 48px; height: 48px;" class="mb-2"></i><p>No performance concerns</p></div>';
+    }
+    
+    alertsContainer.innerHTML = alertsHTML;
+    document.getElementById('monthly-trend').textContent = trend > 0 ? '+' + trend : trend.toString();
+    {% else %}
+    document.getElementById('performance-alerts').innerHTML = '<div class="text-center text-muted"><i data-feather="info" style="width: 48px; height: 48px;" class="mb-2"></i><p>Insufficient data for trend analysis</p></div>';
+    document.getElementById('monthly-trend').textContent = 'N/A';
+    {% endif %}
     
     // Refresh client data
     function refreshClientData() {
         location.reload();
     }
     
-    // Resolve alert
-    function resolveAlert(alertId) {
-        fetch(`/api/alert/${alertId}/resolve`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                location.reload();
-            } else {
-                alert('Failed to resolve alert');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error resolving alert');
-        });
-    }
-    
-    // Auto-refresh every 2 minutes
-    setInterval(refreshClientData, 120000);
+    // Auto-refresh every 5 minutes for performance data
+    setInterval(refreshClientData, 300000);
 </script>
 {% endblock %}

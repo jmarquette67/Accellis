@@ -104,20 +104,37 @@ def client_details(client_id):
     """View detailed information about a specific client"""
     client = Client.query.get_or_404(client_id)
     
-    # Get recent health checks (last 24 hours)
-    since = datetime.utcnow() - timedelta(hours=24)
-    recent_checks = HealthCheck.query.filter(
-        HealthCheck.client_id == client_id,
-        HealthCheck.timestamp >= since
-    ).order_by(desc(HealthCheck.timestamp)).limit(100).all()
+    # Get recent performance scores (last 6 months)
+    from models import Score, Metric
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
     
-    # Get client alerts
-    client_alerts = Alert.query.filter_by(client_id=client_id).order_by(desc(Alert.created_at)).limit(20).all()
+    six_months_ago = datetime.utcnow() - timedelta(days=180)
+    
+    # Get latest scores for performance summary
+    latest_scores = db.session.query(Score).filter(
+        Score.client_id == client_id,
+        Score.date >= six_months_ago
+    ).join(Metric).order_by(Score.date.desc()).limit(50).all()
+    
+    # Calculate current total score
+    current_month_scores = [s for s in latest_scores if s.date.month == datetime.utcnow().month and s.date.year == datetime.utcnow().year]
+    current_total = sum(s.score for s in current_month_scores) if current_month_scores else 0
+    
+    # Get monthly performance data for chart
+    monthly_data = db.session.query(
+        func.date_trunc('month', Score.date).label('month'),
+        func.sum(Score.score).label('total_score')
+    ).filter(
+        Score.client_id == client_id,
+        Score.date >= six_months_ago
+    ).group_by(func.date_trunc('month', Score.date)).order_by('month').all()
     
     return render_template('client_details.html', 
                          client=client, 
-                         recent_checks=recent_checks,
-                         alerts=client_alerts)
+                         current_total=current_total,
+                         monthly_data=monthly_data,
+                         latest_scores=latest_scores)
 
 # API Endpoints
 
