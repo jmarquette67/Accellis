@@ -30,21 +30,36 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Client Name</th>
-                                    <th>Account Owner</th>
-                                    <th>Primary Contact</th>
-                                    <th>Last Total Score</th>
-                                    <th>Status</th>
+                                    <th class="sortable" data-column="name">
+                                        Client Name 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
+                                    <th class="sortable" data-column="owner">
+                                        Account Owner 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
+                                    <th class="sortable" data-column="contact">
+                                        Primary Contact 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
+                                    <th class="sortable" data-column="score">
+                                        Last Total Score 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
+                                    <th class="sortable" data-column="status">
+                                        Status 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for client in clients %}
                                 <tr>
-                                    <td>
+                                    <td data-value="{{ client.name }}">
                                         <strong>{{ client.name }}</strong>
                                     </td>
-                                    <td>
+                                    <td data-value="{% if client.account_owner %}{{ client.account_owner.first_name }} {{ client.account_owner.last_name }}{% else %}Unassigned{% endif %}">
                                         {% if client.account_owner %}
                                             {{ client.account_owner.first_name }} {{ client.account_owner.last_name }}
                                             <br><small class="text-muted">{{ client.account_owner.email }}</small>
@@ -52,7 +67,7 @@
                                             <span class="text-muted">Unassigned</span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td data-value="{% if client.primary_contact_email %}{{ client.primary_contact_email }}{% else %}Not set{% endif %}">
                                         {% if client.primary_contact_email %}
                                             <a href="mailto:{{ client.primary_contact_email }}" class="text-decoration-none">
                                                 {{ client.primary_contact_email }}
@@ -61,7 +76,7 @@
                                             <span class="text-muted">Not set</span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td data-value="{% if client_scores[client.id] is not none %}{{ client_scores[client.id] }}{% else %}0{% endif %}">
                                         {% if client_scores[client.id] is not none %}
                                             <span class="badge bg-{% if client_scores[client.id] >= 50 %}success{% elif client_scores[client.id] >= 30 %}warning{% else %}danger{% endif %}">
                                                 {{ client_scores[client.id] }}
@@ -70,7 +85,7 @@
                                             <span class="text-muted">No scores</span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td data-value="Active">
                                         <span class="badge bg-success">
                                             Active
                                         </span>
@@ -79,11 +94,11 @@
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ url_for('client_details', client_id=client.id) }}" 
                                                class="btn btn-outline-primary btn-sm">
-                                                View Details
+                                                Client Details
                                             </a>
                                             <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" 
                                                class="btn btn-outline-info btn-sm">
-                                                View Scoresheet
+                                                Scoresheets
                                             </a>
                                         </div>
                                     </td>
@@ -140,7 +155,98 @@
     {% endif %}
 </div>
 
+<style>
+.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.sortable:hover {
+    background-color: var(--bs-secondary-bg);
+}
+
+.sortable i {
+    margin-left: 5px;
+    transition: transform 0.2s;
+}
+</style>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.table');
+    const headers = document.querySelectorAll('.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+
+    headers.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Determine sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            currentSort.column = column;
+            
+            // Update icons
+            headers.forEach(h => {
+                const icon = h.querySelector('i');
+                icon.className = 'fas fa-sort text-muted';
+            });
+            
+            const currentIcon = this.querySelector('i');
+            currentIcon.className = currentSort.direction === 'asc' ? 'fas fa-sort-up text-primary' : 'fas fa-sort-down text-primary';
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(column) {
+                    case 'name':
+                        aVal = a.querySelector('td:nth-child(1)').dataset.value.toLowerCase();
+                        bVal = b.querySelector('td:nth-child(1)').dataset.value.toLowerCase();
+                        break;
+                    case 'owner':
+                        aVal = a.querySelector('td:nth-child(2)').dataset.value.toLowerCase();
+                        bVal = b.querySelector('td:nth-child(2)').dataset.value.toLowerCase();
+                        break;
+                    case 'contact':
+                        aVal = a.querySelector('td:nth-child(3)').dataset.value.toLowerCase();
+                        bVal = b.querySelector('td:nth-child(3)').dataset.value.toLowerCase();
+                        break;
+                    case 'score':
+                        aVal = parseInt(a.querySelector('td:nth-child(4)').dataset.value) || 0;
+                        bVal = parseInt(b.querySelector('td:nth-child(4)').dataset.value) || 0;
+                        break;
+                    case 'status':
+                        aVal = a.querySelector('td:nth-child(5)').dataset.value.toLowerCase();
+                        bVal = b.querySelector('td:nth-child(5)').dataset.value.toLowerCase();
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (typeof aVal === 'string') {
+                    return currentSort.direction === 'asc' 
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                } else {
+                    return currentSort.direction === 'asc' 
+                        ? aVal - bVal
+                        : bVal - aVal;
+                }
+            });
+            
+            // Rebuild tbody
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+});
+
 // Auto-refresh page every 30 seconds to show latest client status
 setTimeout(function() {
     location.reload();
