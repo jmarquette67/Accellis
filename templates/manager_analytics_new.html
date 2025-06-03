@@ -171,7 +171,7 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="progress mb-1" style="height: 20px;" 
-                                             title="{% if metric.name == 'Cross Selling' %}Cross Selling: {{ metric.average_score }}/10 scale → {{ metric.performance_percentage }}% (normalized for fair comparison){% else %}{{ metric.name }}: {{ metric.average_score }}/1 scale → {{ metric.performance_percentage }}% (0-1 scale metrics){% endif %}"
+                                             title="{% if metric.name == 'Cross Selling' %}Cross Selling: {{ metric.average_score }}/5 actual max → {{ metric.performance_percentage }}% (relative to highest score achieved){% else %}{{ metric.name }}: {{ metric.average_score }}/1 scale → {{ metric.performance_percentage }}% (0-1 scale metrics){% endif %}"
                                              data-bs-toggle="tooltip" data-bs-placement="top">
                                             <div class="progress-bar bg-{{ metric.color }}" 
                                                  role="progressbar" 
@@ -197,7 +197,7 @@
                                     </td>
                                     <td class="text-center">
                                         <span class="badge bg-{{ metric.color }}" 
-                                              title="Relative ranking (normalized): All metrics compared on 0-1 scale. {% if metric.relative_performance == 'Our Strength' %}Top 33% performers{% elif metric.relative_performance == 'Moderate Performance' %}Middle 33% - steady performance{% else %}Bottom 33% - improvement needed{% endif %}. Cross Selling normalized: score÷10, others already 0-1."
+                                              title="Relative ranking (normalized): All metrics compared on 0-1 scale. {% if metric.relative_performance == 'Our Strength' %}Top 33% performers{% elif metric.relative_performance == 'Moderate Performance' %}Middle 33% - steady performance{% else %}Bottom 33% - improvement needed{% endif %}. Cross Selling: score÷5 (actual max), others: 0-1 scale."
                                               data-bs-toggle="tooltip" data-bs-placement="top">
                                             {{ metric.relative_performance }}
                                         </span>

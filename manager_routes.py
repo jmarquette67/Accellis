@@ -257,9 +257,11 @@ def analyze_account_owner_performance(all_scores):
         if scoresheet_key not in owner_scoresheets[owner_id]:
             owner_scoresheets[owner_id][scoresheet_key] = 0
         
-        # Use normalized scoring for balanced scoresheet totals
+        # Use relative scoring for balanced scoresheet totals
         if metric.name == 'Cross Selling':
-            owner_scoresheets[owner_id][scoresheet_key] += score.value * metric.weight * 0.33
+            # Cross Selling: normalize against actual maximum (5) not theoretical (10)
+            cross_selling_factor = score.value / 5  # Actual max is 5
+            owner_scoresheets[owner_id][scoresheet_key] += cross_selling_factor * metric.weight
         else:
             owner_scoresheets[owner_id][scoresheet_key] += score.value * metric.weight
         
