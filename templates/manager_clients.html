@@ -33,7 +33,6 @@
                                     <th>Client Name</th>
                                     <th>Account Owner</th>
                                     <th>Primary Contact</th>
-                                    <th>Last Check-in</th>
                                     <th>Last Total Score</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -63,14 +62,6 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if client.last_checkin %}
-                                            {{ client.last_checkin.strftime('%Y-%m-%d') }}
-                                            <br><small class="text-muted">{{ client.last_checkin.strftime('%H:%M') }}</small>
-                                        {% else %}
-                                            <span class="text-muted">Never</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
                                         {% if client_scores[client.id] is not none %}
                                             <span class="badge bg-{% if client_scores[client.id] >= 50 %}success{% elif client_scores[client.id] >= 30 %}warning{% else %}danger{% endif %}">
                                                 {{ client_scores[client.id] }}
@@ -87,14 +78,12 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ url_for('client_details', client_id=client.id) }}" 
-                                               class="btn btn-outline-primary" 
-                                               title="View Client Details">
-                                                <i class="fas fa-eye"></i>
+                                               class="btn btn-outline-primary btn-sm">
+                                                View Details
                                             </a>
                                             <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" 
-                                               class="btn btn-outline-info"
-                                               title="View Score Sheet">
-                                                <i class="fas fa-clipboard-list"></i>
+                                               class="btn btn-outline-info btn-sm">
+                                                View Scoresheet
                                             </a>
                                         </div>
                                     </td>

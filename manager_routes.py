@@ -76,17 +76,12 @@ def client_list():
                 if metric.id not in metric_scores:
                     metric_scores[metric.id] = (score, metric)
             
-            # Calculate weighted total
+            # Calculate weighted total (sum of score * weight for each metric)
             total_weighted_score = 0
-            total_weight = 0
             for score, metric in metric_scores.values():
                 total_weighted_score += score.value * metric.weight
-                total_weight += metric.weight
             
-            if total_weight > 0:
-                client_scores[client.id] = round(total_weighted_score / total_weight)
-            else:
-                client_scores[client.id] = 0
+            client_scores[client.id] = total_weighted_score
         else:
             client_scores[client.id] = None
     
@@ -286,14 +281,32 @@ def client_scoresheet(client_id):
             'avg_score': int(date_data.total_weighted_score)
         })())
     
-    # Prepare chart data
+    # Prepare chart data - ensure we have simple arrays for the chart
     month_labels = []
     score_data = []
     recent_history = []
     
     for i, month_data in enumerate(monthly_scores):
-        month_str = month_data.month.strftime('%b %Y') if hasattr(month_data.month, 'strftime') else str(month_data.month)
-        score = round(month_data.avg_score)
+        # Extract date and score from the database result
+        scoresheet_date = month_data.month
+        total_score = month_data.avg_score
+        
+        # Format date properly
+        try:
+            if hasattr(scoresheet_date, 'strftime'):
+                month_str = scoresheet_date.strftime('%b %Y')
+            else:
+                # Parse date string and format
+                from datetime import datetime
+                if isinstance(scoresheet_date, str):
+                    date_obj = datetime.strptime(scoresheet_date, '%Y-%m-%d')
+                    month_str = date_obj.strftime('%b %Y')
+                else:
+                    month_str = str(scoresheet_date)
+        except:
+            month_str = str(scoresheet_date)
+        
+        score = int(total_score) if total_score else 0
         
         month_labels.append(month_str)
         score_data.append(score)
