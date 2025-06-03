@@ -569,13 +569,101 @@ def client_trend(client_id):
     
     return render_template("client_trend.html", client=client, data=data)
 
-@manager_bp.route("/scores/new")
+@manager_bp.route("/scores/new", methods=['GET', 'POST'])
 @require_login
 def score_entry():
-    """Score entry form for all users"""
+    """Comprehensive scoresheet entry form for all users"""
+    from datetime import datetime
+    import uuid
+    
+    if request.method == 'POST':
+        client_id = request.form.get('client_id')
+        scoresheet_date = request.form.get('scoresheet_date')
+        save_type = request.form.get('save_type', 'final')
+        overall_notes = request.form.get('overall_notes', '')
+        
+        if not client_id or not scoresheet_date:
+            flash('Client and assessment date are required.', 'error')
+            clients = Client.query.order_by(Client.name).all()
+            metrics = Metric.query.order_by(Metric.name).all()
+            return render_template("score_entry.html", clients=clients, metrics=metrics, user=current_user, today=datetime.now().strftime('%Y-%m-%d'))
+        
+        # Generate unique scoresheet ID for grouping scores
+        scoresheet_id = f"{client_id}_{scoresheet_date}_{uuid.uuid4().hex[:8]}"
+        
+        # Get all metrics
+        metrics = Metric.query.all()
+        scores_saved = 0
+        
+        try:
+            # Delete existing scores for this client/date if saving as final
+            if save_type == 'final':
+                existing_scores = Score.query.filter(
+                    Score.client_id == client_id,
+                    db.func.date(Score.taken_at) == scoresheet_date
+                ).all()
+                for score in existing_scores:
+                    db.session.delete(score)
+            
+            # Save scores for each metric
+            for metric in metrics:
+                score_value = request.form.get(f'metric_{metric.id}')
+                metric_notes = request.form.get(f'notes_{metric.id}', '')
+                
+                if score_value and score_value.strip():
+                    try:
+                        # Convert to float and validate range
+                        score_float = float(score_value)
+                        max_value = metric.max_value if hasattr(metric, 'max_value') and metric.max_value else 10
+                        
+                        if 0 <= score_float <= max_value:
+                            # Create new score entry
+                            new_score = Score(
+                                client_id=int(client_id),
+                                metric_id=metric.id,
+                                value=round(score_float, 1),
+                                taken_at=datetime.strptime(scoresheet_date, '%Y-%m-%d'),
+                                notes=f"{metric_notes}\n\nOverall Notes: {overall_notes}".strip(),
+                                status=save_type,
+                                scoresheet_id=scoresheet_id,
+                                locked=(save_type == 'final')
+                            )
+                            db.session.add(new_score)
+                            scores_saved += 1
+                    except ValueError:
+                        continue  # Skip invalid values
+            
+            if scores_saved > 0:
+                db.session.commit()
+                client = Client.query.get(client_id)
+                client_name = client.name if client else 'Unknown'
+                
+                if save_type == 'draft':
+                    flash(f'Draft scoresheet saved for {client_name} with {scores_saved} metrics. You can edit this later.', 'success')
+                else:
+                    flash(f'Final scoresheet completed for {client_name} with {scores_saved} metrics. This will be included in performance reports.', 'success')
+                
+                return redirect(url_for('manager.score_entry'))
+            else:
+                flash('No valid scores were entered. Please enter at least one metric score.', 'warning')
+                
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error saving scoresheet: {str(e)}', 'error')
+    
+    # GET request - show form
     clients = Client.query.order_by(Client.name).all()
     metrics = Metric.query.order_by(Metric.name).all()
-    return render_template("score_entry.html", clients=clients, metrics=metrics, user=current_user)
+    
+    # Calculate max possible points for display
+    max_points = 68  # Based on authentic Q1 2025 specifications
+    
+    return render_template("score_entry.html", 
+                         clients=clients, 
+                         metrics=metrics, 
+                         user=current_user,
+                         today=datetime.now().strftime('%Y-%m-%d'),
+                         max_points=max_points)
 
 @manager_bp.route("/scores/")
 @require_login  
@@ -583,6 +671,12 @@ def score_history():
     """View score history"""
     recent_scores = Score.query.order_by(Score.taken_at.desc()).limit(20).all()
     return render_template("score_history.html", scores=recent_scores)
+
+@manager_bp.route("/user-manual")
+@require_login
+def user_manual():
+    """Display comprehensive user manual"""
+    return render_template("user_manual.html")
 
 @manager_bp.route("/clients/<int:client_id>/scoresheet")
 @manager_bp.route("/client/<int:client_id>")

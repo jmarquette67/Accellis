@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Score Entry - Accellis{% endblock %}
+{% block title %}Scoresheet Entry - Accellis{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -8,8 +8,8 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>Score Entry</h2>
-                    <p class="text-muted">Enter performance scores for your clients</p>
+                    <h2><i class="fas fa-clipboard-list me-2"></i>Complete Scoresheet Entry</h2>
+                    <p class="text-muted">Enter all metric scores for a comprehensive client performance assessment</p>
                 </div>
                 <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -19,17 +19,19 @@
     </div>
 
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Enter Client Performance Score</h5>
+                    <h5 class="mb-0">Client Performance Scoresheet</h5>
+                    <small class="text-muted">Complete all metrics for comprehensive performance tracking</small>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
-                        <div class="row">
+                    <form method="POST" id="scoresheetForm">
+                        <!-- Client Selection -->
+                        <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client</label>
+                                    <label for="client_id" class="form-label fw-bold">Client <span class="text-danger">*</span></label>
                                     <select class="form-select" id="client_id" name="client_id" required>
                                         <option value="">Select a client...</option>
                                         {% for client in clients %}
@@ -40,60 +42,192 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="metric_id" class="form-label">Metric</label>
-                                    <select class="form-select" id="metric_id" name="metric_id" required>
-                                        <option value="">Select a metric...</option>
-                                        {% for metric in metrics %}
-                                        <option value="{{ metric.id }}">{{ metric.name }} (Priority: {{ metric.weight }})</option>
-                                        {% endfor %}
-                                    </select>
+                                    <label for="scoresheet_date" class="form-label fw-bold">Assessment Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="scoresheet_date" name="scoresheet_date" 
+                                           value="{{ today }}" required>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- All Metrics Section -->
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="value" class="form-label">Score (0-100)</label>
-                                    <input type="number" class="form-control" id="value" name="value" 
-                                           min="0" max="100" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="notes" class="form-label">Notes (Optional)</label>
-                                    <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                            <div class="col-12">
+                                <h6 class="fw-bold mb-3">Performance Metrics Assessment</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 25%;">Metric</th>
+                                                <th style="width: 15%;">Weight</th>
+                                                <th style="width: 20%;">Score (0-{{ max_points }})</th>
+                                                <th style="width: 15%;">Weighted Points</th>
+                                                <th style="width: 25%;">Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for metric in metrics %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ metric.name }}</strong>
+                                                    {% if metric.description %}
+                                                    <small class="d-block text-muted">{{ metric.description }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary">{{ metric.weight }}</span>
+                                                </td>
+                                                <td>
+                                                    <input type="number" 
+                                                           class="form-control metric-score" 
+                                                           name="metric_{{ metric.id }}" 
+                                                           id="metric_{{ metric.id }}"
+                                                           min="0" 
+                                                           max="{{ metric.max_value or 10 }}" 
+                                                           step="0.1"
+                                                           data-weight="{{ metric.weight }}"
+                                                           data-max="{{ metric.max_value or 10 }}"
+                                                           placeholder="0-{{ metric.max_value or 10 }}">
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="weighted-points fw-bold" id="weighted_{{ metric.id }}">0.0</span>
+                                                </td>
+                                                <td>
+                                                    <textarea class="form-control" 
+                                                              name="notes_{{ metric.id }}" 
+                                                              rows="2" 
+                                                              placeholder="Optional notes for {{ metric.name }}..."></textarea>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot class="table-dark">
+                                            <tr>
+                                                <th colspan="3" class="text-end">Total Scoresheet Points:</th>
+                                                <th class="text-center">
+                                                    <span id="totalPoints" class="fs-5">0.0</span> / 68
+                                                </th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Save Score
-                        </button>
+
+                        <!-- Overall Notes Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="overall_notes" class="form-label fw-bold">Overall Assessment Notes</label>
+                                    <textarea class="form-control" id="overall_notes" name="overall_notes" rows="4" 
+                                              placeholder="Enter comprehensive notes about the client's overall performance, key strengths, areas for improvement, and any action items..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Options -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Draft scoresheets can be edited later. Final scoresheets are included in performance reports.
+                                        </small>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button type="submit" name="save_type" value="draft" class="btn btn-outline-primary">
+                                            <i class="fas fa-save me-1"></i>Save as Draft
+                                        </button>
+                                        <button type="submit" name="save_type" value="final" class="btn btn-success">
+                                            <i class="fas fa-check-circle me-1"></i>Save as Final
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
+    </div>
+
+    <!-- Scoring Guide -->
+    <div class="row mt-4">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Quick Actions</h5>
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Scoring Guide</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="/scores/" class="btn btn-outline-primary">
-                            <i class="fas fa-history"></i> View Score History
-                        </a>
-                        {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-info">
-                            <i class="fas fa-chart-bar"></i> Performance Analytics
-                        </a>
-                        {% endif %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Performance Levels:</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-success me-2">Excellent</span>90-100% of maximum points</li>
+                                <li><span class="badge bg-warning me-2">Good</span>70-89% of maximum points</li>
+                                <li><span class="badge bg-danger me-2">Needs Improvement</span>Below 70% of maximum points</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Maximum Scoresheet Total: 68 Points</h6>
+                            <small class="text-muted">Each metric contributes differently based on its weight and maximum value. Cross Selling has a maximum of 5 points, while other metrics typically have 10 points maximum.</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Real-time calculation of weighted points and total
+document.addEventListener('DOMContentLoaded', function() {
+    const metricInputs = document.querySelectorAll('.metric-score');
+    
+    function calculateWeightedPoints() {
+        let total = 0;
+        
+        metricInputs.forEach(input => {
+            const score = parseFloat(input.value) || 0;
+            const weight = parseFloat(input.dataset.weight) || 1;
+            const maxValue = parseFloat(input.dataset.max) || 10;
+            
+            // Calculate weighted points
+            const weightedPoints = (score / maxValue) * weight;
+            total += weightedPoints;
+            
+            // Update the weighted points display
+            const weightedSpan = document.getElementById('weighted_' + input.id.split('_')[1]);
+            if (weightedSpan) {
+                weightedSpan.textContent = weightedPoints.toFixed(1);
+            }
+        });
+        
+        // Update total
+        document.getElementById('totalPoints').textContent = total.toFixed(1);
+        
+        // Update total color based on performance
+        const totalElement = document.getElementById('totalPoints');
+        const percentage = (total / 68) * 100;
+        
+        totalElement.className = 'fs-5';
+        if (percentage >= 90) {
+            totalElement.classList.add('text-success');
+        } else if (percentage >= 70) {
+            totalElement.classList.add('text-warning');
+        } else {
+            totalElement.classList.add('text-danger');
+        }
+    }
+    
+    // Add event listeners to all metric inputs
+    metricInputs.forEach(input => {
+        input.addEventListener('input', calculateWeightedPoints);
+    });
+    
+    // Initial calculation
+    calculateWeightedPoints();
+});
+</script>
 {% endblock %}

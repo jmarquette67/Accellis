@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block title %}User Manual - Accellis Client Engagement Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-book me-2"></i>User Manual</h1>
+                    <p class="text-muted">Complete guide to the Accellis Client Engagement Platform</p>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <!-- Table of Contents -->
+            <div class="card position-sticky" style="top: 20px;">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Table of Contents</h6>
+                </div>
+                <div class="card-body">
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="#overview">Platform Overview</a>
+                        <a class="nav-link" href="#getting-started">Getting Started</a>
+                        <a class="nav-link" href="#scoresheet-entry">Scoresheet Entry</a>
+                        <a class="nav-link" href="#draft-vs-final">Draft vs Final Scoresheets</a>
+                        <a class="nav-link" href="#client-management">Client Management</a>
+                        <a class="nav-link" href="#performance-analytics">Performance Analytics</a>
+                        <a class="nav-link" href="#scoring-system">Scoring System</a>
+                        <a class="nav-link" href="#user-roles">User Roles</a>
+                        <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <!-- Platform Overview -->
+            <section id="overview" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Platform Overview</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>The Accellis Client Engagement Platform is a comprehensive performance tracking system designed to evaluate and improve client relationships across multiple key metrics.</p>
+                        
+                        <h5>Key Features:</h5>
+                        <ul>
+                            <li><strong>Comprehensive Scoring:</strong> Track 8 key performance metrics with weighted scoring</li>
+                            <li><strong>Draft & Final Scoresheets:</strong> Save work in progress or finalize assessments</li>
+                            <li><strong>Advanced Analytics:</strong> Multi-dimensional performance analysis</li>
+                            <li><strong>Role-based Access:</strong> Different permissions for Admin, Manager, VCIO, and TAM roles</li>
+                            <li><strong>Client Management:</strong> Complete client information and contact management</li>
+                        </ul>
+
+                        <div class="alert alert-info">
+                            <strong>Maximum Scoresheet Total:</strong> 68 points based on authentic Q1 2025 engagement specifications
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started -->
+            <section id="getting-started" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Getting Started</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>First Login</h5>
+                        <ol>
+                            <li>Access the platform through your assigned Replit authentication</li>
+                            <li>Your role (Admin, Manager, VCIO, TAM) determines available features</li>
+                            <li>The dashboard provides quick access to all main functions</li>
+                        </ol>
+
+                        <h5>Dashboard Navigation</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Main Functions:</h6>
+                                <ul>
+                                    <li><strong>Score Entry:</strong> Create comprehensive client scoresheets</li>
+                                    <li><strong>Client List:</strong> View and manage all clients</li>
+                                    <li><strong>Performance Analytics:</strong> Advanced reporting (Manager+)</li>
+                                    <li><strong>Admin Console:</strong> System management (Admin only)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Quick Actions:</h6>
+                                <ul>
+                                    <li>Recent scoresheet entries</li>
+                                    <li>Client performance summaries</li>
+                                    <li>System alerts and notifications</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scoresheet Entry -->
+            <section id="scoresheet-entry" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Scoresheet Entry</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>Complete Scoresheet Process</h5>
+                        <p>The scoresheet entry form displays all 8 metrics on one page for comprehensive assessment:</p>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Weight</th>
+                                        <th>Max Score</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Customer Service</td><td>10</td><td>10</td><td>Overall service quality and responsiveness</td></tr>
+                                    <tr><td>Technical Competency</td><td>8</td><td>10</td><td>Technical skills and problem-solving ability</td></tr>
+                                    <tr><td>Communication</td><td>8</td><td>10</td><td>Clarity, frequency, and effectiveness of communication</td></tr>
+                                    <tr><td>Strategic Consultation</td><td>7</td><td>10</td><td>Business-focused advice and planning</td></tr>
+                                    <tr><td>Project Management</td><td>6</td><td>10</td><td>Project delivery and timeline management</td></tr>
+                                    <tr><td>Documentation</td><td>5</td><td>10</td><td>Quality and completeness of documentation</td></tr>
+                                    <tr><td>Help Desk</td><td>9</td><td>10</td><td>Help desk responsiveness and resolution</td></tr>
+                                    <tr><td>Cross Selling</td><td>5</td><td>5</td><td>Additional service recommendations and sales</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h5>Step-by-Step Process</h5>
+                        <ol>
+                            <li><strong>Select Client:</strong> Choose from the dropdown list</li>
+                            <li><strong>Set Assessment Date:</strong> Usually the current date</li>
+                            <li><strong>Score All Metrics:</strong> Enter scores for each metric (0 to max value)</li>
+                            <li><strong>Add Notes:</strong> Include specific notes for each metric</li>
+                            <li><strong>Overall Assessment:</strong> Add comprehensive notes about the client's performance</li>
+                            <li><strong>Choose Save Type:</strong> Draft (can edit later) or Final (included in reports)</li>
+                        </ol>
+
+                        <div class="alert alert-success">
+                            <strong>Real-time Calculation:</strong> The system automatically calculates weighted points and total scoresheet value as you enter scores.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Draft vs Final -->
+            <section id="draft-vs-final" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Draft vs Final Scoresheets</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-save text-primary me-2"></i>Draft Scoresheets</h5>
+                                <ul>
+                                    <li>Can be edited and updated later</li>
+                                    <li>Useful for work-in-progress assessments</li>
+                                    <li>Not included in performance reports</li>
+                                    <li>Can be converted to final when complete</li>
+                                    <li>Allows collaborative input</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-check-circle text-success me-2"></i>Final Scoresheets</h5>
+                                <ul>
+                                    <li>Locked from further editing</li>
+                                    <li>Included in all performance reports</li>
+                                    <li>Used for analytics and trends</li>
+                                    <li>Official record of client performance</li>
+                                    <li>Required for compliance reporting</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <strong>Important:</strong> Only final scoresheets are included in performance analytics and management reports. Ensure all assessments are finalized for accurate reporting.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Management -->
+            <section id="client-management" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Client Management</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>Adding New Clients</h5>
+                        <p>From the Client List page, use the "Add New Client" button to register new clients with:</p>
+                        <ul>
+                            <li>Basic information (name, industry, description)</li>
+                            <li>Account manager assignment</li>
+                            <li>Primary contact details</li>
+                            <li>Service parameters</li>
+                        </ul>
+
+                        <h5>Client Information</h5>
+                        <p>The client details page provides:</p>
+                        <ul>
+                            <li>Business information and contact details</li>
+                            <li>Account manager and industry classification</li>
+                            <li>Links to scoring and analytics pages</li>
+                            <li>Recent performance summaries</li>
+                        </ul>
+
+                        <h5>Viewing Client Performance</h5>
+                        <p>Access comprehensive client analytics through:</p>
+                        <ul>
+                            <li>Individual client scoresheet history</li>
+                            <li>Performance trend analysis</li>
+                            <li>Metric-specific breakdowns</li>
+                            <li>Comparative analysis with other clients</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance Analytics -->
+            <section id="performance-analytics" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Performance Analytics</h2>
+                    </div>
+                    <div class="card-body">
+                        <p><em>Available to Manager, VCIO, and Admin roles</em></p>
+
+                        <h5>Analytics Dashboard Features</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Company-Wide Analysis</h6>
+                                <ul>
+                                    <li>Metric performance across all clients</li>
+                                    <li>Trend analysis and improvement areas</li>
+                                    <li>Performance level distribution</li>
+                                    <li>Relative metric comparisons</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Account Manager Performance</h6>
+                                <ul>
+                                    <li>Individual manager scoresheet averages</li>
+                                    <li>Client portfolio performance</li>
+                                    <li>Strengths and focus areas</li>
+                                    <li>Normalized metric breakdowns</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h5>AI-Driven Insights</h5>
+                        <p>The system provides intelligent analysis including:</p>
+                        <ul>
+                            <li>Performance trend identification</li>
+                            <li>Risk assessment and early warning indicators</li>
+                            <li>Improvement opportunity recommendations</li>
+                            <li>Comparative benchmarking</li>
+                        </ul>
+
+                        <h5>Filtering and Date Ranges</h5>
+                        <p>Customize analysis with:</p>
+                        <ul>
+                            <li>Specific date range selection</li>
+                            <li>Individual client focus</li>
+                            <li>Metric-specific analysis</li>
+                            <li>Account manager filtering</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scoring System -->
+            <section id="scoring-system" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Scoring System</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>Performance Levels</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <span class="badge bg-success fs-6 mb-2">Excellent</span>
+                                        <p class="mb-0">90-100% of maximum points</p>
+                                        <small class="text-muted">Exceeds expectations</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-warning">
+                                    <div class="card-body text-center">
+                                        <span class="badge bg-warning fs-6 mb-2">Good</span>
+                                        <p class="mb-0">70-89% of maximum points</p>
+                                        <small class="text-muted">Meets expectations</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-danger">
+                                    <div class="card-body text-center">
+                                        <span class="badge bg-danger fs-6 mb-2">Needs Improvement</span>
+                                        <p class="mb-0">Below 70% of maximum points</p>
+                                        <small class="text-muted">Requires attention</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Weighted Scoring Calculation</h5>
+                        <p>Each metric contributes to the total scoresheet based on:</p>
+                        <div class="bg-light p-3 rounded">
+                            <code>Weighted Points = (Score ÷ Max Value) × Weight</code>
+                        </div>
+                        <p class="mt-2">Example: Customer Service score of 8/10 with weight 10 = (8÷10) × 10 = 8.0 points</p>
+
+                        <h5>Cross Selling Special Calculation</h5>
+                        <p>Cross Selling uses a different scale (0-5 instead of 0-10) to reflect its specialized nature in relationship development and additional service recommendations.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Roles -->
+            <section id="user-roles" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">User Roles and Permissions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th>TAM</th>
+                                        <th>VCIO</th>
+                                        <th>Manager</th>
+                                        <th>Admin</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Enter Scoresheets</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>View Client List</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>View Client Details</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>Performance Analytics</td><td>-</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>Add/Edit Clients</td><td>-</td><td>-</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>Edit Final Scoresheets</td><td>-</td><td>-</td><td>✓</td><td>✓</td></tr>
+                                    <tr><td>User Management</td><td>-</td><td>-</td><td>-</td><td>✓</td></tr>
+                                    <tr><td>System Settings</td><td>-</td><td>-</td><td>-</td><td>✓</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section id="troubleshooting" class="mb-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Troubleshooting</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>Common Issues and Solutions</h5>
+                        
+                        <div class="accordion" id="troubleshootingAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#issue1">
+                                        Scoresheet Not Saving
+                                    </button>
+                                </h2>
+                                <div id="issue1" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Ensure client and assessment date are selected</li>
+                                            <li>Enter at least one metric score</li>
+                                            <li>Check that scores are within valid ranges</li>
+                                            <li>Verify your role has scoresheet entry permissions</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#issue2">
+                                        Analytics Not Loading
+                                    </button>
+                                </h2>
+                                <div id="issue2" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Verify your role has analytics access (Manager, VCIO, or Admin)</li>
+                                            <li>Check that final scoresheets exist for the selected period</li>
+                                            <li>Try adjusting the date range to include more data</li>
+                                            <li>Refresh the page and try again</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#issue3">
+                                        Can't Edit Scoresheet
+                                    </button>
+                                </h2>
+                                <div id="issue3" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Final scoresheets are locked and can only be edited by Managers or Admins</li>
+                                            <li>Draft scoresheets can be edited by the original creator</li>
+                                            <li>Contact a Manager or Admin for assistance with final scoresheet changes</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#issue4">
+                                        Missing Client in Dropdown
+                                    </button>
+                                </h2>
+                                <div id="issue4" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Contact a Manager or Admin to add the new client</li>
+                                            <li>Verify the client hasn't been deactivated</li>
+                                            <li>Check spelling and try using the search function</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <strong>Need Additional Help?</strong> Contact your system administrator or refer to the platform documentation for advanced features and configuration options.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scrolling for table of contents
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+{% endblock %}

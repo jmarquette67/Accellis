@@ -238,6 +238,8 @@ class Score(db.Model):
     taken_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     locked = db.Column(db.Boolean, default=True)
     notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default='final')  # 'draft' or 'final'
+    scoresheet_id = db.Column(db.String(100))  # Groups scores from same assessment
     
     # Relationships
     client = db.relationship('Client', backref='scores')
