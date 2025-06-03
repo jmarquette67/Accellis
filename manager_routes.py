@@ -1149,7 +1149,20 @@ def admin_settings():
     # Get current logo setting
     logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
     
-    return render_template('admin_settings.html', logo_setting=logo_setting)
+    # Calculate platform statistics
+    total_users = User.query.count()
+    active_clients = Client.query.filter_by(is_active=True).count()
+    total_scores = Score.query.filter_by(status='final').count()
+    total_metrics = Metric.query.count()
+    
+    stats = {
+        'total_users': total_users,
+        'active_clients': active_clients,
+        'total_scores': total_scores,
+        'total_metrics': total_metrics
+    }
+    
+    return render_template('admin_settings.html', logo_setting=logo_setting, stats=stats)
 
 @manager_bp.route("/admin/upload-logo", methods=["POST"])
 @require_login
