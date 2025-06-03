@@ -159,16 +159,18 @@ def analyze_company_performance(all_scores):
         avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
         weighted_avg = data['total_weighted'] / data['count'] if data['count'] > 0 else 0
         
-        # Determine performance level based on percentage of maximum possible (68 points)
-        percentage_of_max = (weighted_avg / 68) * 100 if weighted_avg > 0 else 0
+        # Determine performance level based on actual data distribution
+        # Top 15% (85th percentile+): 39+ points = High Performance
+        # Top 50% (median+): 32-38 points = Medium Performance  
+        # Bottom 50%: Below 32 points = Low Performance
         
-        if percentage_of_max >= 80:  # 54.4+ points out of 68
+        if weighted_avg >= 39:  # Top 15% performers
             performance_level = 'High Performance'
             color = 'success'
-        elif percentage_of_max >= 60:  # 40.8+ points out of 68
+        elif weighted_avg >= 32:  # Above median performers
             performance_level = 'Medium Performance'
             color = 'warning'
-        else:  # Below 40.8 points out of 68
+        else:  # Below median performers
             performance_level = 'Low Performance'
             color = 'danger'
         
@@ -285,26 +287,26 @@ def generate_ai_trend_insights(all_scores):
         avg_scoresheet_total = sum(scoresheet_totals.values()) / len(scoresheet_totals)
         performance_percentage = (avg_scoresheet_total / 68) * 100
         
-        # Trend 1: Overall performance assessment based on scoresheet totals
-        if performance_percentage >= 80:  # 54.4+ points out of 68
+        # Trend 1: Overall performance assessment based on actual data distribution
+        if avg_scoresheet_total >= 39:  # Top 15% performers (85th percentile)
             insights.append({
                 'type': 'success',
-                'title': 'High Performance Across Scoresheets',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) indicates strong client engagement.',
+                'title': 'Top-Tier Scoresheet Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points places performance in top 15% of all scoresheets (39+ points).',
                 'confidence': 85
             })
-        elif performance_percentage >= 60:  # 40.8+ points out of 68
+        elif avg_scoresheet_total >= 32:  # Above median performers
             insights.append({
-                'type': 'warning',
-                'title': 'Medium Performance Range',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) shows room for improvement.',
+                'type': 'info',
+                'title': 'Above-Average Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is above the median of 32 points but below top-tier (39+ points).',
                 'confidence': 80
             })
-        else:  # Below 40.8 points out of 68
+        else:  # Below median performers
             insights.append({
-                'type': 'danger',
-                'title': 'Low Performance Requiring Attention',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) indicates significant improvement needed.',
+                'type': 'warning',
+                'title': 'Below-Median Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is below the median of 32 points. Focus on improvement opportunities.',
                 'confidence': 90
             })
     
@@ -339,25 +341,34 @@ def generate_ai_trend_insights(all_scores):
     
     if client_scoresheet_totals:
         client_averages = [sum(totals)/len(totals) for totals in client_scoresheet_totals.values()]
-        high_performing_clients = len([avg for avg in client_averages if avg >= 54.4])  # 80% of 68
+        top_tier_clients = len([avg for avg in client_averages if avg >= 39])  # Top 15% (85th percentile)
+        above_median_clients = len([avg for avg in client_averages if avg >= 32])  # Above median
         total_clients = len(client_averages)
         
         if total_clients > 0:
-            high_client_percentage = (high_performing_clients / total_clients) * 100
+            top_tier_percentage = (top_tier_clients / total_clients) * 100
+            above_median_percentage = (above_median_clients / total_clients) * 100
             
-            if high_client_percentage >= 70:
+            if top_tier_percentage >= 25:
                 insights.append({
                     'type': 'success',
-                    'title': 'Majority High-Performing Clients',
-                    'description': f'{high_client_percentage:.0f}% of clients achieve high scoresheet totals (54.4+ points). Strong retention likelihood.',
+                    'title': 'Strong Client Performance Distribution',
+                    'description': f'{top_tier_percentage:.0f}% of clients achieve top-tier performance (39+ points). Excellent retention indicators.',
                     'confidence': 85
                 })
-            elif high_client_percentage <= 30:
+            elif above_median_percentage >= 60:
                 insights.append({
-                    'type': 'danger',
-                    'title': 'Client Satisfaction Risk',
-                    'description': f'Only {high_client_percentage:.0f}% of clients achieve high scoresheet totals. Immediate intervention recommended.',
-                    'confidence': 90
+                    'type': 'info',
+                    'title': 'Solid Client Performance Base',
+                    'description': f'{above_median_percentage:.0f}% of clients perform above median (32+ points), with {top_tier_percentage:.0f}% in top tier.',
+                    'confidence': 80
+                })
+            else:
+                insights.append({
+                    'type': 'warning',
+                    'title': 'Client Performance Concentration Risk',
+                    'description': f'Only {above_median_percentage:.0f}% of clients perform above median. Focus on elevating underperforming accounts.',
+                    'confidence': 85
                 })
     
     # Trend 4: Temporal pattern analysis using scoresheet monthly averages
