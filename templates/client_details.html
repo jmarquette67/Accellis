@@ -81,40 +81,28 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i data-feather="trending-up" class="me-2"></i>
-                    Performance Summary
+                    Performance Management
                 </h5>
             </div>
             <div class="card-body">
-                <div class="text-center mb-3">
-                    <h2 class="text-primary">
-                        <span id="client-score">--</span><small class="text-muted">/68</small>
-                    </h2>
-                    <small class="text-muted">Current Score</small>
-                </div>
-                
-                <div class="row text-center mb-3">
-                    <div class="col-6">
-                        <div class="metric-card">
-                            <h4 class="text-success" id="monthly-trend">--</h4>
-                            <small class="text-muted">Monthly Trend</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="metric-card">
-                            <h4 class="text-info" id="performance-grade">--</h4>
-                            <small class="text-muted">Grade</small>
-                        </div>
-                    </div>
+                <div class="text-center mb-4">
+                    <i data-feather="bar-chart-2" style="width: 64px; height: 64px;" class="text-primary mb-3"></i>
+                    <h5>Client Performance Tracking</h5>
+                    <p class="text-muted mb-4">View comprehensive scoring and performance analytics for this client.</p>
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
-                        <i data-feather="clipboard" class="me-1"></i>
-                        View Detailed Scoresheet
+                    <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" class="btn btn-primary">
+                        <i data-feather="clipboard" class="me-2"></i>
+                        View Performance Summary
                     </a>
-                    <a href="{{ url_for('manager.score_entry') }}?client_id={{ client.id }}" class="btn btn-primary btn-sm">
-                        <i data-feather="plus" class="me-1"></i>
+                    <a href="{{ url_for('manager.score_entry') }}?client_id={{ client.id }}" class="btn btn-outline-primary">
+                        <i data-feather="plus" class="me-2"></i>
                         Add New Score
+                    </a>
+                    <a href="{{ url_for('manager.client_trend', client_id=client.id) }}" class="btn btn-outline-secondary">
+                        <i data-feather="trending-up" class="me-2"></i>
+                        Trend Analysis
                     </a>
                 </div>
             </div>
@@ -122,39 +110,55 @@
     </div>
 </div>
 
-<!-- Performance Timeline -->
+<!-- Client Notes -->
 <div class="row mb-4">
     <div class="col">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="bar-chart-2" class="me-2"></i>
-                    Performance Timeline (Last 6 Months)
+                    <i data-feather="file-text" class="me-2"></i>
+                    Client Notes & Description
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="performanceChart" width="800" height="300"></canvas>
+                {% if client.description %}
+                    <p>{{ client.description }}</p>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i data-feather="edit" style="width: 48px; height: 48px;" class="mb-2"></i>
+                        <p>No client notes available</p>
+                        <small>Contact information and performance tracking can be managed through the dedicated scoring system.</small>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Performance Insights -->
+<!-- Quick Actions -->
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="trending-down" class="me-2"></i>
-                    Performance Alerts
+                    <i data-feather="settings" class="me-2"></i>
+                    Quick Actions
                 </h5>
             </div>
             <div class="card-body">
-                <div id="performance-alerts">
-                    <div class="text-center text-muted">
-                        <i data-feather="activity" style="width: 48px; height: 48px;" class="mb-2"></i>
-                        <p>Analyzing performance trends...</p>
-                    </div>
+                <div class="d-grid gap-2">
+                    <a href="mailto:{{ client.contact_email }}" class="btn btn-outline-primary btn-sm{% if not client.contact_email %} disabled{% endif %}">
+                        <i data-feather="mail" class="me-2"></i>
+                        Email Primary Contact
+                    </a>
+                    <a href="tel:{{ client.contact_phone }}" class="btn btn-outline-success btn-sm{% if not client.contact_phone %} disabled{% endif %}">
+                        <i data-feather="phone" class="me-2"></i>
+                        Call Primary Contact
+                    </a>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary btn-sm">
+                        <i data-feather="arrow-left" class="me-2"></i>
+                        Back to Client List
+                    </a>
                 </div>
             </div>
         </div>
@@ -164,35 +168,23 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="clock" class="me-2"></i>
-                    Recent Scoring Activity
+                    <i data-feather="info" class="me-2"></i>
+                    Client Status
                 </h5>
             </div>
             <div class="card-body">
-                {% if latest_scores %}
-                    <div style="max-height: 300px; overflow-y: auto;">
-                        {% for score in latest_scores[:10] %}
-                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                            <div>
-                                <strong>{{ score.metric.name }}</strong>
-                                <br>
-                                <small class="text-muted">
-                                    {{ score.taken_at.strftime('%B %Y') }} | 
-                                    Score: {{ score.value }}/{{ score.metric.max_score }}
-                                </small>
-                            </div>
-                            <span class="badge bg-{{ 'success' if score.value >= score.metric.max_score * 0.8 else 'warning' if score.value >= score.metric.max_score * 0.6 else 'danger' }}">
-                                {{ ((score.value / score.metric.max_score) * 100)|round }}%
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i data-feather="clipboard" style="width: 48px; height: 48px;" class="mb-2"></i>
-                        <p>No scores recorded yet</p>
-                    </div>
-                {% endif %}
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Status:</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-success">Active</span>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Last Updated:</dt>
+                    <dd class="col-sm-7">{{ client.created_at.strftime('%B %d, %Y') }}</dd>
+                    
+                    <dt class="col-sm-5">Client ID:</dt>
+                    <dd class="col-sm-7">#{{ client.id }}</dd>
+                </dl>
             </div>
         </div>
     </div>
@@ -201,99 +193,10 @@
 
 {% block scripts %}
 <script>
-    // Update performance summary with actual data
-    document.getElementById('client-score').textContent = '{{ current_total or 0 }}';
-    
-    // Calculate performance grade
-    const currentScore = {{ current_total or 0 }};
-    const maxScore = 68;
-    const percentage = Math.round((currentScore / maxScore) * 100);
-    let grade = 'F';
-    if (percentage >= 90) grade = 'A';
-    else if (percentage >= 80) grade = 'B';
-    else if (percentage >= 70) grade = 'C';
-    else if (percentage >= 60) grade = 'D';
-    
-    document.getElementById('performance-grade').textContent = grade;
-    
-    // Prepare performance chart data
-    {% if monthly_data %}
-    const performanceData = {
-        labels: [{% for data in monthly_data %}'{{ data.month.strftime("%b %Y") }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Total Score',
-            data: [{% for data in monthly_data %}{{ data.total_score or 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    };
-    
-    // Create performance chart
-    const ctx = document.getElementById('performanceChart').getContext('2d');
-    const performanceChart = new Chart(ctx, {
-        type: 'line',
-        data: performanceData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 68,
-                    ticks: {
-                        callback: function(value) {
-                            return value + ' pts';
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top'
-                }
-            }
-        }
+    // Simple client details functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize feather icons
+        feather.replace();
     });
-    {% endif %}
-    
-    // Generate performance alerts
-    {% if monthly_data and monthly_data|length > 1 %}
-    const alertsContainer = document.getElementById('performance-alerts');
-    const latestScore = {{ monthly_data[-1].total_score or 0 }};
-    const previousScore = {{ monthly_data[-2].total_score or 0 if monthly_data|length > 1 else 0 }};
-    const trend = latestScore - previousScore;
-    
-    let alertsHTML = '';
-    
-    if (trend < -5) {
-        alertsHTML += '<div class="alert alert-warning alert-sm mb-2"><strong>Declining Performance</strong><br>Score decreased by ' + Math.abs(trend) + ' points this month.</div>';
-    } else if (trend > 5) {
-        alertsHTML += '<div class="alert alert-success alert-sm mb-2"><strong>Improving Performance</strong><br>Score increased by ' + trend + ' points this month.</div>';
-    }
-    
-    if (latestScore < 40) {
-        alertsHTML += '<div class="alert alert-danger alert-sm mb-2"><strong>Low Performance</strong><br>Client needs immediate attention and intervention.</div>';
-    }
-    
-    if (alertsHTML === '') {
-        alertsHTML = '<div class="text-center text-muted"><i data-feather="check-circle" style="width: 48px; height: 48px;" class="mb-2"></i><p>No performance concerns</p></div>';
-    }
-    
-    alertsContainer.innerHTML = alertsHTML;
-    document.getElementById('monthly-trend').textContent = trend > 0 ? '+' + trend : trend.toString();
-    {% else %}
-    document.getElementById('performance-alerts').innerHTML = '<div class="text-center text-muted"><i data-feather="info" style="width: 48px; height: 48px;" class="mb-2"></i><p>Insufficient data for trend analysis</p></div>';
-    document.getElementById('monthly-trend').textContent = 'N/A';
-    {% endif %}
-    
-    // Refresh client data
-    function refreshClientData() {
-        location.reload();
-    }
-    
-    // Auto-refresh every 5 minutes for performance data
-    setInterval(refreshClientData, 300000);
 </script>
 {% endblock %}
