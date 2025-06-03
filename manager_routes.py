@@ -343,33 +343,33 @@ def generate_ai_trend_insights(all_scores):
     
     if client_scoresheet_totals:
         client_averages = [sum(totals)/len(totals) for totals in client_scoresheet_totals.values()]
-        top_tier_clients = len([avg for avg in client_averages if avg >= 39])  # Top 15% (85th percentile)
-        above_median_clients = len([avg for avg in client_averages if avg >= 32])  # Above median
+        top_tier_clients = len([avg for avg in client_averages if avg >= 25])  # Top performers (normalized)
+        good_performance_clients = len([avg for avg in client_averages if avg >= 18])  # Above average (normalized)
         total_clients = len(client_averages)
         
         if total_clients > 0:
             top_tier_percentage = (top_tier_clients / total_clients) * 100
-            above_median_percentage = (above_median_clients / total_clients) * 100
+            good_performance_percentage = (good_performance_clients / total_clients) * 100
             
             if top_tier_percentage >= 25:
                 insights.append({
                     'type': 'success',
-                    'title': 'Strong Client Performance Distribution',
-                    'description': f'{top_tier_percentage:.0f}% of clients achieve top-tier performance (39+ points). Excellent retention indicators.',
+                    'title': 'Excellent Normalized Client Distribution',
+                    'description': f'{top_tier_percentage:.0f}% of clients achieve excellent normalized performance (25+ points). Strong balanced engagement.',
                     'confidence': 85
                 })
-            elif above_median_percentage >= 60:
+            elif good_performance_percentage >= 60:
                 insights.append({
                     'type': 'info',
-                    'title': 'Solid Client Performance Base',
-                    'description': f'{above_median_percentage:.0f}% of clients perform above median (32+ points), with {top_tier_percentage:.0f}% in top tier.',
+                    'title': 'Good Balanced Client Performance',
+                    'description': f'{good_performance_percentage:.0f}% of clients show good normalized performance (18+ points), with {top_tier_percentage:.0f}% excellent.',
                     'confidence': 80
                 })
             else:
                 insights.append({
                     'type': 'warning',
-                    'title': 'Client Performance Concentration Risk',
-                    'description': f'Only {above_median_percentage:.0f}% of clients perform above median. Focus on elevating underperforming accounts.',
+                    'title': 'Client Engagement Balance Needed',
+                    'description': f'Only {good_performance_percentage:.0f}% of clients achieve good normalized performance. Focus on improving metric balance.',
                     'confidence': 85
                 })
     
