@@ -371,7 +371,7 @@ new Chart(metricCtx, {
     data: {
         labels: {{ chart_data.metric_distribution.labels | tojson }},
         datasets: [{
-            label: 'Average Score',
+            label: 'Average Scoresheet Total',
             data: {{ chart_data.metric_distribution.data | tojson }},
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
