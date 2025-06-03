@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Settings - Client Engagement{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-cog me-2"></i>Admin Settings</h1>
+                    <p class="text-muted">Manage site configuration and branding</p>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo Management Section -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0 text-light">
+                        <i class="fas fa-image me-2"></i>Header Logo Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-medium mb-3">Current Logo</h6>
+                            {% if logo_setting and logo_setting.value %}
+                                <div class="text-center p-3 border rounded bg-light">
+                                    <img src="{{ url_for('static', filename=logo_setting.value) }}" 
+                                         alt="Current Logo" 
+                                         class="img-fluid" 
+                                         style="max-height: 60px;">
+                                </div>
+                                <p class="text-muted small mt-2">
+                                    <strong>File:</strong> {{ logo_setting.value }}<br>
+                                    <strong>Last Updated:</strong> {{ logo_setting.updated_at.strftime('%Y-%m-%d %H:%M') if logo_setting.updated_at else 'Unknown' }}
+                                </p>
+                            {% else %}
+                                <div class="text-center p-4 border rounded bg-light text-muted">
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <p>Using default Accellis logo</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="fw-medium mb-3">Upload New Logo</h6>
+                            <form action="{{ url_for('manager.upload_logo') }}" method="post" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="logo" class="form-label">Choose Logo File</label>
+                                    <input type="file" class="form-control" id="logo" name="logo" 
+                                           accept=".png,.jpg,.jpeg,.gif,.svg" required>
+                                    <div class="form-text">
+                                        Supported formats: PNG, JPG, JPEG, GIF, SVG<br>
+                                        Recommended size: 200x50px or similar aspect ratio
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload me-1"></i>Upload Logo
+                                </button>
+                            </form>
+                            
+                            <div class="alert alert-info mt-3">
+                                <small>
+                                    <strong>Note:</strong> The new logo will appear in the header immediately after upload. 
+                                    Logo files are automatically timestamped to prevent caching issues.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info">
+                    <h6 class="mb-0 text-light">
+                        <i class="fas fa-info-circle me-2"></i>Logo Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Dimensions:</strong> 200x50px ideal
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Background:</strong> Transparent PNG preferred
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Colors:</strong> Should work on dark backgrounds
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>File Size:</strong> Under 500KB recommended
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Format:</strong> PNG, JPG, JPEG, GIF, or SVG
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

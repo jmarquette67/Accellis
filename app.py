@@ -37,5 +37,17 @@ with app.app_context():
     
     db.create_all()
 
+# Context processor to make site settings available in all templates
+@app.context_processor
+def inject_site_settings():
+    from models import SiteSetting
+    try:
+        logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
+        logo_path = logo_setting.value if logo_setting else 'images/accellis-logo.png'
+        return dict(site_logo=logo_path)
+    except:
+        # Fallback if database not available
+        return dict(site_logo='images/accellis-logo.png')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

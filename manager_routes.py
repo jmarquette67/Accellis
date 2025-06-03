@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
 from app import db
-from models import Client, HealthCheck, Alert, User, UserRole, Metric, Score
+from models import Client, HealthCheck, Alert, User, UserRole, Metric, Score, SiteSetting
+import os
+from werkzeug.utils import secure_filename
 from replit_auth import require_login
 from flask_login import current_user
 from datetime import datetime, timedelta
@@ -595,6 +597,75 @@ def all_scoresheets():
     scoresheet_list = sorted(scoresheets.values(), key=lambda x: x['taken_at'], reverse=True)
     
     return render_template('manager_all_scoresheets.html', scoresheets=scoresheet_list)
+
+@manager_bp.route("/admin/settings")
+@require_login
+def admin_settings():
+    """Admin settings management including logo upload"""
+    user = require_manager()
+    
+    # Only admins can access settings
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    # Get current logo setting
+    logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
+    
+    return render_template('admin_settings.html', logo_setting=logo_setting)
+
+@manager_bp.route("/admin/upload-logo", methods=["POST"])
+@require_login
+def upload_logo():
+    """Upload new header logo"""
+    user = require_manager()
+    
+    # Only admins can upload logos
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    if 'logo' not in request.files:
+        flash('No logo file selected', 'error')
+        return redirect(url_for('manager.admin_settings'))
+    
+    file = request.files['logo']
+    if file.filename == '':
+        flash('No logo file selected', 'error')
+        return redirect(url_for('manager.admin_settings'))
+    
+    # Check file type
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
+    if not (file.filename and '.' in file.filename and 
+            file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+        flash('Invalid file type. Please upload PNG, JPG, JPEG, GIF, or SVG files only.', 'error')
+        return redirect(url_for('manager.admin_settings'))
+    
+    # Secure filename and save
+    filename = secure_filename(file.filename)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"logo_{timestamp}_{filename}"
+    
+    # Ensure directory exists
+    os.makedirs('static/images', exist_ok=True)
+    filepath = os.path.join('static/images', filename)
+    file.save(filepath)
+    
+    # Update or create logo setting
+    logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
+    if not logo_setting:
+        logo_setting = SiteSetting(
+            key='header_logo',
+            description='Header logo image path'
+        )
+        db.session.add(logo_setting)
+    
+    logo_setting.value = f"images/{filename}"
+    logo_setting.updated_by = user.id
+    logo_setting.updated_at = datetime.utcnow()
+    
+    db.session.commit()
+    flash('Logo uploaded successfully!', 'success')
+    
+    return redirect(url_for('manager.admin_settings'))
 
 @manager_bp.route("/scoresheet/<date>/<int:client_id>")
 @require_login
