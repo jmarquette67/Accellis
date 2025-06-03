@@ -108,11 +108,11 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('manager_bp.client_scoresheet', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
                         <i data-feather="clipboard" class="me-1"></i>
                         View Detailed Scoresheet
                     </a>
-                    <a href="{{ url_for('manager_bp.score_entry') }}?client_id={{ client.id }}" class="btn btn-primary btn-sm">
+                    <a href="{{ url_for('manager.score_entry') }}?client_id={{ client.id }}" class="btn btn-primary btn-sm">
                         <i data-feather="plus" class="me-1"></i>
                         Add New Score
                     </a>
@@ -177,12 +177,12 @@
                                 <strong>{{ score.metric.name }}</strong>
                                 <br>
                                 <small class="text-muted">
-                                    {{ score.date.strftime('%B %Y') }} | 
-                                    Score: {{ score.score }}/{{ score.metric.max_score }}
+                                    {{ score.taken_at.strftime('%B %Y') }} | 
+                                    Score: {{ score.value }}/{{ score.metric.max_score }}
                                 </small>
                             </div>
-                            <span class="badge bg-{{ 'success' if score.score >= score.metric.max_score * 0.8 else 'warning' if score.score >= score.metric.max_score * 0.6 else 'danger' }}">
-                                {{ ((score.score / score.metric.max_score) * 100)|round }}%
+                            <span class="badge bg-{{ 'success' if score.value >= score.metric.max_score * 0.8 else 'warning' if score.value >= score.metric.max_score * 0.6 else 'danger' }}">
+                                {{ ((score.value / score.metric.max_score) * 100)|round }}%
                             </span>
                         </div>
                         {% endfor %}

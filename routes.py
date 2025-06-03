@@ -114,21 +114,21 @@ def client_details(client_id):
     # Get latest scores for performance summary
     latest_scores = db.session.query(Score).filter(
         Score.client_id == client_id,
-        Score.date >= six_months_ago
-    ).join(Metric).order_by(Score.date.desc()).limit(50).all()
+        Score.taken_at >= six_months_ago
+    ).join(Metric).order_by(Score.taken_at.desc()).limit(50).all()
     
     # Calculate current total score
-    current_month_scores = [s for s in latest_scores if s.date.month == datetime.utcnow().month and s.date.year == datetime.utcnow().year]
-    current_total = sum(s.score for s in current_month_scores) if current_month_scores else 0
+    current_month_scores = [s for s in latest_scores if s.taken_at.month == datetime.utcnow().month and s.taken_at.year == datetime.utcnow().year]
+    current_total = sum(s.value for s in current_month_scores) if current_month_scores else 0
     
     # Get monthly performance data for chart
     monthly_data = db.session.query(
-        func.date_trunc('month', Score.date).label('month'),
-        func.sum(Score.score).label('total_score')
+        func.date_trunc('month', Score.taken_at).label('month'),
+        func.sum(Score.value).label('total_score')
     ).filter(
         Score.client_id == client_id,
-        Score.date >= six_months_ago
-    ).group_by(func.date_trunc('month', Score.date)).order_by('month').all()
+        Score.taken_at >= six_months_ago
+    ).group_by(func.date_trunc('month', Score.taken_at)).order_by('month').all()
     
     return render_template('client_details.html', 
                          client=client, 
