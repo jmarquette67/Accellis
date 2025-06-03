@@ -225,7 +225,12 @@ def analyze_account_owner_performance(all_scores):
     owner_analysis = []
     for owner_id, data in owner_performance.items():
         if data['total_weight'] > 0:
-            overall_avg = data['total_weighted_score'] / data['total_weight']
+            # Calculate weighted total score (not average)
+            overall_weighted_total = data['total_weighted_score']
+            # Calculate percentage of maximum possible (68 points per complete scoresheet)
+            estimated_scoresheets = data['total_weight'] / 41  # Sum of all metric weights = 41
+            max_possible_for_owner = estimated_scoresheets * 68
+            performance_percentage = (overall_weighted_total / max_possible_for_owner * 100) if max_possible_for_owner > 0 else 0
             
             # Find strongest and weakest metrics
             metric_averages = {}
@@ -238,7 +243,7 @@ def analyze_account_owner_performance(all_scores):
             owner_analysis.append({
                 'name': data['name'],
                 'owner_id': owner_id,
-                'overall_average': round(overall_avg, 1),
+                'overall_average': round(performance_percentage, 1),
                 'client_count': len(data['client_count']),
                 'total_scores': len(data['scores']),
                 'strongest_metric': strongest_metric[0],
@@ -248,7 +253,7 @@ def analyze_account_owner_performance(all_scores):
                 'metric_breakdown': {k: round(sum(v)/len(v), 1) for k, v in data['metric_performance'].items()}
             })
     
-    # Sort by overall average
+    # Sort by performance percentage (highest to lowest)
     owner_analysis.sort(key=lambda x: x['overall_average'], reverse=True)
     
     return owner_analysis
@@ -265,102 +270,125 @@ def generate_ai_trend_insights(all_scores):
             'confidence': 0
         }]
     
-    # Analyze score distribution patterns
-    all_values = [score.value for score, _, _, _ in all_scores]
-    avg_score = sum(all_values) / len(all_values)
-    
-    # Trend 1: Overall performance assessment
-    if avg_score >= 75:
-        insights.append({
-            'type': 'success',
-            'title': 'Strong Overall Performance',
-            'description': f'Company average of {avg_score:.1f} indicates excellent client engagement across all metrics.',
-            'confidence': 85
-        })
-    elif avg_score <= 60:
-        insights.append({
-            'type': 'warning',
-            'title': 'Performance Improvement Needed',
-            'description': f'Company average of {avg_score:.1f} suggests systematic improvements are needed across multiple areas.',
-            'confidence': 90
-        })
-    
-    # Trend 2: Consistency analysis
-    import statistics
-    score_std = statistics.stdev(all_values) if len(all_values) > 1 else 0
-    
-    if score_std < 10:
-        insights.append({
-            'type': 'info',
-            'title': 'Consistent Performance Pattern',
-            'description': f'Low variation (σ={score_std:.1f}) indicates standardized service delivery across clients.',
-            'confidence': 75
-        })
-    elif score_std > 20:
-        insights.append({
-            'type': 'warning',
-            'title': 'High Performance Variability',
-            'description': f'High variation (σ={score_std:.1f}) suggests inconsistent service quality. Consider standardizing processes.',
-            'confidence': 80
-        })
-    
-    # Trend 3: Client distribution analysis
-    client_scores = {}
-    for score, _, client, _ in all_scores:
-        if client.id not in client_scores:
-            client_scores[client.id] = []
-        client_scores[client.id].append(score.value)
-    
-    client_averages = [sum(scores)/len(scores) for scores in client_scores.values()]
-    top_performing_clients = len([avg for avg in client_averages if avg >= 80])
-    total_clients = len(client_averages)
-    
-    if total_clients > 0:
-        top_client_percentage = (top_performing_clients / total_clients) * 100
+    # Calculate weighted scoresheet totals instead of individual score averages
+    scoresheet_totals = {}
+    for score, metric, client, user in all_scores:
+        date_key = score.taken_at.strftime('%Y-%m-%d')
+        sheet_key = f"{date_key}_{client.id}"
         
-        if top_client_percentage >= 70:
+        if sheet_key not in scoresheet_totals:
+            scoresheet_totals[sheet_key] = 0
+        scoresheet_totals[sheet_key] += score.value * metric.weight
+    
+    # Analyze scoresheet totals against maximum possible (68 points)
+    if scoresheet_totals:
+        avg_scoresheet_total = sum(scoresheet_totals.values()) / len(scoresheet_totals)
+        performance_percentage = (avg_scoresheet_total / 68) * 100
+        
+        # Trend 1: Overall performance assessment based on scoresheet totals
+        if performance_percentage >= 80:  # 54.4+ points out of 68
             insights.append({
                 'type': 'success',
-                'title': 'Majority High-Performing Clients',
-                'description': f'{top_client_percentage:.0f}% of clients score above 80. Strong retention likelihood.',
+                'title': 'High Performance Across Scoresheets',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) indicates strong client engagement.',
                 'confidence': 85
             })
-        elif top_client_percentage <= 30:
+        elif performance_percentage >= 60:  # 40.8+ points out of 68
+            insights.append({
+                'type': 'warning',
+                'title': 'Medium Performance Range',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) shows room for improvement.',
+                'confidence': 80
+            })
+        else:  # Below 40.8 points out of 68
             insights.append({
                 'type': 'danger',
-                'title': 'Client Satisfaction Risk',
-                'description': f'Only {top_client_percentage:.0f}% of clients score above 80. Immediate intervention recommended.',
+                'title': 'Low Performance Requiring Attention',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points ({performance_percentage:.1f}% of maximum 68) indicates significant improvement needed.',
                 'confidence': 90
             })
     
-    # Trend 4: Temporal pattern analysis
-    monthly_averages = {}
-    for score, _, _, _ in all_scores:
-        month_key = score.taken_at.strftime('%Y-%m')
-        if month_key not in monthly_averages:
-            monthly_averages[month_key] = []
-        monthly_averages[month_key].append(score.value)
-    
-    if len(monthly_averages) >= 3:
-        monthly_trends = []
-        for month, scores in sorted(monthly_averages.items()):
-            monthly_trends.append(sum(scores) / len(scores))
+    # Trend 2: Consistency analysis using scoresheet totals
+    if scoresheet_totals:
+        import statistics
+        scoresheet_values = list(scoresheet_totals.values())
+        scoresheet_std = statistics.stdev(scoresheet_values) if len(scoresheet_values) > 1 else 0
         
-        # Check for trend direction
+        if scoresheet_std < 8:  # Low variation in scoresheet totals
+            insights.append({
+                'type': 'info',
+                'title': 'Consistent Scoresheet Performance',
+                'description': f'Low variation in scoresheet totals (σ={scoresheet_std:.1f}) indicates standardized service delivery across clients.',
+                'confidence': 75
+            })
+        elif scoresheet_std > 15:  # High variation in scoresheet totals
+            insights.append({
+                'type': 'warning',
+                'title': 'High Scoresheet Variability',
+                'description': f'High variation in scoresheet totals (σ={scoresheet_std:.1f}) suggests inconsistent service quality. Consider standardizing processes.',
+                'confidence': 80
+            })
+    
+    # Trend 3: Client distribution analysis using scoresheet totals
+    client_scoresheet_totals = {}
+    for sheet_key, total in scoresheet_totals.items():
+        client_id = int(sheet_key.split('_')[1])
+        if client_id not in client_scoresheet_totals:
+            client_scoresheet_totals[client_id] = []
+        client_scoresheet_totals[client_id].append(total)
+    
+    if client_scoresheet_totals:
+        client_averages = [sum(totals)/len(totals) for totals in client_scoresheet_totals.values()]
+        high_performing_clients = len([avg for avg in client_averages if avg >= 54.4])  # 80% of 68
+        total_clients = len(client_averages)
+        
+        if total_clients > 0:
+            high_client_percentage = (high_performing_clients / total_clients) * 100
+            
+            if high_client_percentage >= 70:
+                insights.append({
+                    'type': 'success',
+                    'title': 'Majority High-Performing Clients',
+                    'description': f'{high_client_percentage:.0f}% of clients achieve high scoresheet totals (54.4+ points). Strong retention likelihood.',
+                    'confidence': 85
+                })
+            elif high_client_percentage <= 30:
+                insights.append({
+                    'type': 'danger',
+                    'title': 'Client Satisfaction Risk',
+                    'description': f'Only {high_client_percentage:.0f}% of clients achieve high scoresheet totals. Immediate intervention recommended.',
+                    'confidence': 90
+                })
+    
+    # Trend 4: Temporal pattern analysis using scoresheet monthly averages
+    monthly_scoresheet_averages = {}
+    for sheet_key, total in scoresheet_totals.items():
+        date_str = sheet_key.split('_')[0]
+        month_key = date_str[:7]  # YYYY-MM format
+        if month_key not in monthly_scoresheet_averages:
+            monthly_scoresheet_averages[month_key] = []
+        monthly_scoresheet_averages[month_key].append(total)
+    
+    if len(monthly_scoresheet_averages) >= 3:
+        monthly_trends = []
+        for month, totals in sorted(monthly_scoresheet_averages.items()):
+            monthly_trends.append(sum(totals) / len(totals))
+        
+        # Check for trend direction in scoresheet totals
         recent_trend = monthly_trends[-3:]  # Last 3 months
         if len(recent_trend) >= 2:
             if all(recent_trend[i] <= recent_trend[i+1] for i in range(len(recent_trend)-1)):
                 insights.append({
                     'type': 'success',
-                    'title': 'Positive Trend Detected',
-                    'description': 'Scores show consistent improvement over the last 3 months.',
+                    'title': 'Improving Scoresheet Performance',
+                    'description': 'Scoresheet totals show consistent improvement over the last 3 months.',
                     'confidence': 75
                 })
             elif all(recent_trend[i] >= recent_trend[i+1] for i in range(len(recent_trend)-1)):
                 insights.append({
                     'type': 'warning',
-                    'title': 'Declining Trend Alert',
-                    'description': 'Scores show consistent decline over the last 3 months. Intervention needed.',
+                    'title': 'Declining Scoresheet Performance',
+                    'description': 'Scoresheet totals show consistent decline over the last 3 months. Intervention needed.',
                     'confidence': 80
                 })
     
