@@ -169,10 +169,11 @@ def analyze_company_performance(all_scores):
         
         # Calculate performance percentage for display
         if metric_name == 'Cross Selling':
-            # Cross Selling: 0-10 scale, convert to percentage
-            performance_percentage = (avg_score / 10) * 100
+            # Cross Selling: Use actual maximum score (5) not theoretical (10)
+            cross_selling_max = 5  # Based on actual data range 1-5
+            performance_percentage = (avg_score / cross_selling_max) * 100
             # Store normalized score for relative ranking (0-1 scale)
-            normalized_scores[metric_name] = avg_score / 10
+            normalized_scores[metric_name] = avg_score / cross_selling_max
         else:
             # Other metrics: 0-1 scale, convert to percentage  
             performance_percentage = avg_score * 100
@@ -297,10 +298,11 @@ def analyze_account_owner_performance(all_scores):
                     
                 avg_score = sum(scores) / len(scores)
                 if metric_name == 'Cross Selling':
-                    # Display percentage: 0-10 scale to percentage
-                    normalized_metrics[metric_name] = (avg_score / 10) * 100
+                    # Display percentage: Use actual maximum score (5) not theoretical (10)
+                    cross_selling_max = 5  # Based on actual data range 1-5
+                    normalized_metrics[metric_name] = (avg_score / cross_selling_max) * 100
                     # Ranking comparison: normalize to 0-1 scale
-                    normalized_for_ranking[metric_name] = avg_score / 10
+                    normalized_for_ranking[metric_name] = avg_score / cross_selling_max
                 else:
                     # Display percentage: 0-1 scale to percentage
                     normalized_metrics[metric_name] = avg_score * 100
