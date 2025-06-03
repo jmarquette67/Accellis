@@ -65,6 +65,38 @@
         </div>
     </div>
 
+    <!-- Scoring System Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="fw-bold mb-2"><i class="fas fa-calculator me-2"></i>Scoresheet Scoring System</h6>
+                        <p class="mb-0">Maximum possible scoresheet total: <strong>68 points</strong></p>
+                        <small class="text-muted">Based on weighted metrics with Cross Selling contributing up to 30 points (3 weight × 10 max score)</small>
+                    </div>
+                    <div class="col-md-8">
+                        <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-2"></i>Performance Grade Ranges</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <span class="badge bg-success me-2">High Performance</span>
+                                <small>80%+ (54.4+ points)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="badge bg-warning me-2">Medium Performance</span>
+                                <small>60-79% (40.8-54.3 points)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="badge bg-danger me-2">Low Performance</span>
+                                <small>Below 60% (Under 40.8 points)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Section -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -216,9 +248,10 @@
                                 <tr>
                                     <td><strong>{{ owner.name }}</strong></td>
                                     <td>
-                                        <span class="badge bg-{% if owner.overall_average >= 80 %}success{% elif owner.overall_average >= 70 %}info{% elif owner.overall_average >= 60 %}warning{% else %}danger{% endif %} fs-6">
-                                            {{ owner.overall_average }}
+                                        <span class="badge bg-{% if owner.overall_average >= 80 %}success{% elif owner.overall_average >= 60 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ owner.overall_average }}%
                                         </span>
+                                        <small class="d-block text-muted">of max 68 pts</small>
                                     </td>
                                     <td>{{ owner.client_count }}</td>
                                     <td>{{ owner.total_scores }}</td>
