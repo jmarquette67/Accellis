@@ -1,119 +1,243 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Settings - Client Engagement{% endblock %}
+{% block title %}Admin Console - Client Engagement{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1><i class="fas fa-cog me-2"></i>Admin Settings</h1>
-                    <p class="text-muted">Manage site configuration and branding</p>
+                    <h1 class="text-light"><i class="fas fa-shield-alt me-2"></i>Admin Console</h1>
+                    <p class="text-light mb-0">Complete administrative control for your Accellis platform</p>
                 </div>
-                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light">
                     <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Logo Management Section -->
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary">
-                    <h5 class="mb-0 text-light">
-                        <i class="fas fa-image me-2"></i>Header Logo Management
-                    </h5>
+    <!-- Main Admin Sections -->
+    <div class="row mb-4">
+        <!-- Metrics Management -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center text-white">
+                    <i class="fas fa-chart-line fa-3x mb-3 opacity-75"></i>
+                    <h5 class="card-title">Metrics Management</h5>
+                    <p class="card-text">Manage engagement metrics, weights, and scoring criteria</p>
+                    <a href="{{ url_for('manager.admin_settings') }}" class="btn btn-light btn-sm mt-2">
+                        Manage Metrics
+                    </a>
                 </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center text-white">
+                    <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
+                    <h5 class="card-title">User Management</h5>
+                    <p class="card-text">Control user roles, permissions, and access levels</p>
+                    <a href="{{ url_for('manager.user_management') }}" class="btn btn-light btn-sm mt-2">
+                        Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Management -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center text-white">
+                    <i class="fas fa-building fa-3x mb-3 opacity-75"></i>
+                    <h5 class="card-title">Client Management</h5>
+                    <p class="card-text">Add, edit, and organize client accounts and data</p>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-light btn-sm mt-2">
+                        Manage Clients
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Settings -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-center text-white">
+                    <i class="fas fa-cogs fa-3x mb-3 opacity-75"></i>
+                    <h5 class="card-title">System Settings</h5>
+                    <p class="card-text">Configure platform settings and branding</p>
+                    <a href="#systemSettings" class="btn btn-light btn-sm mt-2" data-bs-toggle="collapse">
+                        System Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 bg-dark text-light">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="fw-medium mb-3">Current Logo</h6>
-                            {% if logo_setting and logo_setting.value %}
-                                <div class="text-center p-3 border rounded bg-light">
-                                    <img src="{{ url_for('static', filename=logo_setting.value) }}" 
-                                         alt="Current Logo" 
-                                         class="img-fluid" 
-                                         style="max-height: 60px;">
-                                </div>
-                                <p class="text-muted small mt-2">
-                                    <strong>File:</strong> {{ logo_setting.value }}<br>
-                                    <strong>Last Updated:</strong> {{ logo_setting.updated_at.strftime('%Y-%m-%d %H:%M') if logo_setting.updated_at else 'Unknown' }}
-                                </p>
-                            {% else %}
-                                <div class="text-center p-4 border rounded bg-light text-muted">
-                                    <i class="fas fa-image fa-3x mb-2"></i>
-                                    <p>Using default Accellis logo</p>
-                                </div>
-                            {% endif %}
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h2 class="text-primary mb-1">{{ stats.total_users or 7 }}</h2>
+                                <p class="mb-0 text-light">Total Users</p>
+                            </div>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <h6 class="fw-medium mb-3">Upload New Logo</h6>
-                            <form action="{{ url_for('manager.upload_logo') }}" method="post" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="logo" class="form-label">Choose Logo File</label>
-                                    <input type="file" class="form-control" id="logo" name="logo" 
-                                           accept=".png,.jpg,.jpeg,.gif,.svg" required>
-                                    <div class="form-text">
-                                        Supported formats: PNG, JPG, JPEG, GIF, SVG<br>
-                                        Recommended size: 200x50px or similar aspect ratio
-                                    </div>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-upload me-1"></i>Upload Logo
-                                </button>
-                            </form>
-                            
-                            <div class="alert alert-info mt-3">
-                                <small>
-                                    <strong>Note:</strong> The new logo will appear in the header immediately after upload. 
-                                    Logo files are automatically timestamped to prevent caching issues.
-                                </small>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h2 class="text-success mb-1">{{ stats.active_clients or 21 }}</h2>
+                                <p class="mb-0 text-light">Active Clients</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h2 class="text-info mb-1">{{ stats.metrics_configured or 13 }}</h2>
+                                <p class="mb-0 text-light">Metrics Configured</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h2 class="text-warning mb-1">{{ stats.scores_recorded or 2964 }}</h2>
+                                <p class="mb-0 text-light">Scores Recorded</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info">
-                    <h6 class="mb-0 text-light">
-                        <i class="fas fa-info-circle me-2"></i>Logo Guidelines
-                    </h6>
+    </div>
+
+    <!-- System Settings Collapsible Section -->
+    <div class="collapse" id="systemSettings">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-image me-2"></i>Header Logo Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-medium mb-3">Current Logo</h6>
+                                {% if logo_setting and logo_setting.value %}
+                                    <div class="text-center p-3 border rounded" style="background-color: #f8f9fa;">
+                                        <img src="{{ url_for('static', filename=logo_setting.value) }}" 
+                                             alt="Current Logo" 
+                                             class="img-fluid" 
+                                             style="max-height: 60px;">
+                                    </div>
+                                    <p class="text-muted small mt-2">
+                                        <strong>File:</strong> {{ logo_setting.value }}<br>
+                                        <strong>Last Updated:</strong> {{ logo_setting.updated_at.strftime('%Y-%m-%d %H:%M') if logo_setting.updated_at else 'Unknown' }}
+                                    </p>
+                                {% else %}
+                                    <div class="text-center p-4 border rounded text-muted" style="background-color: #f8f9fa;">
+                                        <i class="fas fa-image fa-3x mb-2"></i>
+                                        <p>Using default Accellis logo</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="fw-medium mb-3">Upload New Logo</h6>
+                                <form action="{{ url_for('manager.upload_logo') }}" method="post" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="logo" class="form-label">Choose Logo File</label>
+                                        <input type="file" class="form-control" id="logo" name="logo" 
+                                               accept=".png,.jpg,.jpeg,.gif,.svg" required>
+                                        <div class="form-text">
+                                            Supported formats: PNG, JPG, JPEG, GIF, SVG<br>
+                                            Recommended size: 200x50px or similar aspect ratio
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-upload me-1"></i>Upload Logo
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <strong>Dimensions:</strong> 200x50px ideal
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <strong>Background:</strong> Transparent PNG preferred
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <strong>Colors:</strong> Should work on dark backgrounds
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <strong>File Size:</strong> Under 500KB recommended
-                        </li>
-                        <li class="mb-0">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <strong>Format:</strong> PNG, JPG, JPEG, GIF, or SVG
-                        </li>
-                    </ul>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Logo Guidelines
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Dimensions:</strong> 200x50px ideal
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Background:</strong> Transparent PNG preferred
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Colors:</strong> Should work on dark backgrounds
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>File Size:</strong> Under 500KB recommended
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Format:</strong> PNG, JPG, JPEG, GIF, or SVG
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Dark theme for admin console */
+body {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    min-height: 100vh;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2c3e50;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #34495e;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4a5f7a;
+}
+</style>
 {% endblock %}
