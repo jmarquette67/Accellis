@@ -74,7 +74,7 @@ def register_client():
     
     # Populate account manager choices from users with MANAGER or ADMIN roles
     users = User.query.filter(User.role.in_([UserRole.MANAGER, UserRole.ADMIN])).all()
-    form.account_manager.choices = [(user.id, f"{user.first_name} {user.last_name}".strip()) for user in users]
+    form.account_manager.choices = [(str(user.id), f"{user.first_name} {user.last_name}".strip()) for user in users]
     
     if form.validate_on_submit():
         client = Client(

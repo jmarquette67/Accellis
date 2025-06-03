@@ -9,7 +9,7 @@ class ClientRegistrationForm(FlaskForm):
         Length(min=2, max=100, message='Name must be between 2 and 100 characters')
     ])
     
-    account_manager = SelectField('Account Manager', coerce=int, validators=[
+    account_manager = SelectField('Account Manager', coerce=str, validators=[
         DataRequired(message='Account manager is required')
     ])
     
