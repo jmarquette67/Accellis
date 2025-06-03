@@ -28,29 +28,7 @@ def require_manager():
         abort(403)
     return user
 
-@manager_bp.route("/")
-@require_login
-def dashboard():
-    """Manager dashboard overview"""
-    require_manager()
-    
-    # Get summary statistics
-    total_clients = Client.query.count()
-    active_alerts = Alert.query.filter_by(is_active=True).count()
-    recent_checkins = HealthCheck.query.filter(
-        HealthCheck.timestamp >= datetime.utcnow() - timedelta(hours=24)
-    ).count()
-    
-    # Get recent activity
-    recent_clients = Client.query.order_by(Client.last_checkin.desc()).limit(5).all()
-    recent_alerts = Alert.query.filter_by(is_active=True).order_by(Alert.created_at.desc()).limit(5).all()
-    
-    return render_template('manager_dashboard.html', 
-                         total_clients=total_clients,
-                         active_alerts=active_alerts,
-                         recent_checkins=recent_checkins,
-                         recent_clients=recent_clients,
-                         recent_alerts=recent_alerts)
+
 
 @manager_bp.route("/clients")
 @require_login
