@@ -227,7 +227,7 @@ def calculate_trend_direction(trend_data):
     return 'stable'
 
 def analyze_account_owner_performance(all_scores):
-    """Analyze performance by account owner"""
+    """Analyze performance by account owner with normalized metric comparison"""
     owner_performance = {}
     
     for score, metric, client, user in all_scores:
@@ -260,36 +260,53 @@ def analyze_account_owner_performance(all_scores):
     owner_analysis = []
     for owner_id, data in owner_performance.items():
         if data['total_weight'] > 0:
-            # Calculate weighted total score (not average)
-            overall_weighted_total = data['total_weighted_score']
-            # Calculate percentage of maximum possible (68 points per complete scoresheet)
-            estimated_scoresheets = data['total_weight'] / 41  # Sum of all metric weights = 41
-            max_possible_for_owner = estimated_scoresheets * 68
-            performance_percentage = (overall_weighted_total / max_possible_for_owner * 100) if max_possible_for_owner > 0 else 0
+            # Calculate balanced scoresheet total using same normalization
+            balanced_total = 0
+            for metric_name, scores in data['metric_performance'].items():
+                avg_score = sum(scores) / len(scores)
+                if metric_name == 'Cross Selling':
+                    # Apply same 0.33 factor to Cross Selling
+                    metric_weight = 3  # Cross Selling weight
+                    balanced_total += avg_score * metric_weight * 0.33 * len(scores)
+                else:
+                    # Get actual metric weight from database
+                    metric_weight = next((m.weight for s, m, c, u in all_scores if m.name == metric_name), 1)
+                    balanced_total += avg_score * metric_weight * len(scores)
             
-            # Find strongest and weakest metrics
-            metric_averages = {}
-            for metric, scores in data['metric_performance'].items():
-                metric_averages[metric] = sum(scores) / len(scores)
+            # Normalize metrics for relative comparison (convert to percentages)
+            normalized_metrics = {}
+            for metric_name, scores in data['metric_performance'].items():
+                avg_score = sum(scores) / len(scores)
+                if metric_name == 'Cross Selling':
+                    # Cross Selling: 0-10 scale, convert to percentage
+                    normalized_metrics[metric_name] = (avg_score / 10) * 100
+                else:
+                    # Other metrics: 0-1 scale, convert to percentage
+                    normalized_metrics[metric_name] = avg_score * 100
             
-            strongest_metric = max(metric_averages.items(), key=lambda x: x[1]) if metric_averages else ('N/A', 0)
-            weakest_metric = min(metric_averages.items(), key=lambda x: x[1]) if metric_averages else ('N/A', 0)
+            # Find strongest and weakest metrics using normalized values
+            if normalized_metrics:
+                strongest_metric = max(normalized_metrics.items(), key=lambda x: x[1])
+                weakest_metric = min(normalized_metrics.items(), key=lambda x: x[1])
+            else:
+                strongest_metric = ('N/A', 0)
+                weakest_metric = ('N/A', 0)
             
             owner_analysis.append({
                 'name': data['name'],
                 'owner_id': owner_id,
-                'overall_average': round(performance_percentage, 1),
+                'balanced_total': round(balanced_total, 1),
                 'client_count': len(data['client_count']),
                 'total_scores': len(data['scores']),
                 'strongest_metric': strongest_metric[0],
-                'strongest_score': round(strongest_metric[1], 1),
+                'strongest_percentage': round(strongest_metric[1], 1),
                 'weakest_metric': weakest_metric[0],
-                'weakest_score': round(weakest_metric[1], 1),
-                'metric_breakdown': {k: round(sum(v)/len(v), 1) for k, v in data['metric_performance'].items()}
+                'weakest_percentage': round(weakest_metric[1], 1),
+                'normalized_metrics': {k: round(v, 1) for k, v in normalized_metrics.items()}
             })
     
-    # Sort by performance percentage (highest to lowest)
-    owner_analysis.sort(key=lambda x: x['overall_average'], reverse=True)
+    # Sort by balanced total (highest to lowest)
+    owner_analysis.sort(key=lambda x: x['balanced_total'], reverse=True)
     
     return owner_analysis
 

@@ -296,12 +296,12 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Account Owner</th>
-                                    <th>Overall Average</th>
+                                    <th>Balanced Total</th>
                                     <th>Clients Managed</th>
                                     <th>Total Scores</th>
                                     <th>Strongest Area</th>
                                     <th>Needs Focus</th>
-                                    <th>Performance Breakdown</th>
+                                    <th>Normalized Breakdown</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -309,32 +309,35 @@
                                 <tr>
                                     <td><strong>{{ owner.name }}</strong></td>
                                     <td>
-                                        <span class="badge bg-{% if owner.overall_average >= 80 %}success{% elif owner.overall_average >= 60 %}warning{% else %}danger{% endif %} fs-6">
-                                            {{ owner.overall_average }}%
+                                        <span class="badge bg-{% if owner.balanced_total >= 25 %}success{% elif owner.balanced_total >= 18 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ owner.balanced_total }} pts
                                         </span>
-                                        <small class="d-block text-muted">of max 68 pts</small>
+                                        <small class="d-block text-muted">balanced score</small>
                                     </td>
                                     <td>{{ owner.client_count }}</td>
                                     <td>{{ owner.total_scores }}</td>
                                     <td>
                                         <small class="text-success">
                                             <strong>{{ owner.strongest_metric }}</strong><br>
-                                            {{ owner.strongest_score }}
+                                            {{ owner.strongest_percentage }}%
                                         </small>
                                     </td>
                                     <td>
                                         <small class="text-warning">
                                             <strong>{{ owner.weakest_metric }}</strong><br>
-                                            {{ owner.weakest_score }}
+                                            {{ owner.weakest_percentage }}%
                                         </small>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#breakdown{{ loop.index }}">
-                                            View Details
+                                            View Normalized %
                                         </button>
                                         <div class="collapse mt-2" id="breakdown{{ loop.index }}">
-                                            {% for metric, score in owner.metric_breakdown.items() %}
-                                            <small class="d-block">{{ metric }}: {{ score }}</small>
+                                            {% for metric, percentage in owner.normalized_metrics.items() %}
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <small>{{ metric }}:</small>
+                                                <small><strong>{{ percentage }}%</strong></small>
+                                            </div>
                                             {% endfor %}
                                         </div>
                                     </td>
