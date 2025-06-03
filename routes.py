@@ -72,18 +72,19 @@ def register_client():
     """Register a new client"""
     form = ClientRegistrationForm()
     
+    # Populate account manager choices from users with MANAGER or ADMIN roles
+    users = User.query.filter(User.role.in_([UserRole.MANAGER, UserRole.ADMIN])).all()
+    form.account_manager.choices = [(user.id, f"{user.first_name} {user.last_name}".strip()) for user in users]
+    
     if form.validate_on_submit():
-        # Check if hostname already exists
-        existing_client = Client.query.filter_by(hostname=form.hostname.data).first()
-        if existing_client:
-            flash('A client with this hostname already exists.', 'error')
-            return render_template('register_client.html', form=form)
-        
         client = Client(
             name=form.name.data,
-            hostname=form.hostname.data,
-            ip_address=form.ip_address.data,
-            description=form.description.data
+            account_owner_id=form.account_manager.data,
+            contact_name=form.contact_name.data,
+            contact_phone=form.contact_phone.data,
+            contact_email=form.contact_email.data,
+            description=form.client_description.data,
+            industry=form.industry.data
         )
         
         try:
@@ -438,23 +439,20 @@ def admin_dashboard():
     # Get system statistics
     stats = {
         'total_users': User.query.count(),
-        'total_clients': Client.query.count(),
-        'total_metrics': Metric.query.count(),
-        'total_scores': Score.query.count()
+        'active_clients': Client.query.filter_by(is_active=True).count(),
+        'metrics_configured': Metric.query.count(),
+        'scores_recorded': Score.query.count()
     }
     
-    # Get recent activity (placeholder for now)
-    recent_activity = [
-        {
-            'timestamp': datetime.utcnow(),
-            'action': 'System Initialized',
-            'type_color': 'success',
-            'user_email': current_user.email,
-            'details': 'Admin console accessed'
-        }
-    ]
+    # Get current logo setting
+    logo_setting = None
+    try:
+        from models import SiteSetting
+        logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
+    except:
+        pass
     
-    return render_template("admin_dashboard.html", stats=stats, recent_activity=recent_activity, user=current_user)
+    return render_template("admin_settings.html", stats=stats, logo_setting=logo_setting, user=current_user)
 
 @app.route('/admin/metrics')
 def admin_metrics():
@@ -580,15 +578,7 @@ def admin_reports():
     flash('Admin reports functionality will be implemented based on your requirements', 'info')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/settings')
-def admin_settings():
-    """Admin system settings"""
-    if not current_user.is_authenticated or not current_user.has_role(UserRole.ADMIN):
-        flash('Admin access required', 'error')
-        return redirect(url_for('dashboard'))
-    
-    flash('System settings functionality will be implemented based on your requirements', 'info')
-    return redirect(url_for('admin_dashboard'))
+# Admin settings moved to manager_routes.py
 
 @app.errorhandler(404)
 def not_found_error(error):
