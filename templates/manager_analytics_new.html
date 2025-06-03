@@ -71,28 +71,27 @@
             <div class="alert alert-info">
                 <div class="row">
                     <div class="col-md-4">
-                        <h6 class="fw-bold mb-2"><i class="fas fa-calculator me-2"></i>Normalized Scoring System</h6>
-                        <p class="mb-0">Cross Selling impact reduced by 67% for balanced analysis</p>
-                        <small class="text-muted">Original: Cross Selling contributed 7.4 avg pts (23% of total)<br>
-                        Normalized: Cross Selling contributes 2.4 avg pts (proportional to other metrics)</small>
+                        <h6 class="fw-bold mb-2"><i class="fas fa-calculator me-2"></i>Balanced Scoring System</h6>
+                        <p class="mb-0">Fair comparison across all client engagement metrics</p>
+                        <small class="text-muted">Provides balanced view of performance without any single metric dominating the results</small>
                     </div>
                     <div class="col-md-8">
-                        <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-2"></i>Normalized Performance Ranges</h6>
+                        <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-2"></i>Performance Grade Ranges</h6>
                         <div class="row">
                             <div class="col-md-4">
                                 <span class="badge bg-success me-2">Excellent Performance</span>
-                                <small>25+ points (Balanced Excellence)</small>
+                                <small>25+ points (Strong Engagement)</small>
                             </div>
                             <div class="col-md-4">
                                 <span class="badge bg-warning me-2">Good Performance</span>
-                                <small>18-24 points (Above Average)</small>
+                                <small>18-24 points (Solid Engagement)</small>
                             </div>
                             <div class="col-md-4">
                                 <span class="badge bg-danger me-2">Needs Improvement</span>
-                                <small>Below 18 points (Focus Required)</small>
+                                <small>Below 18 points (Focus Areas)</small>
                             </div>
                         </div>
-                        <small class="text-muted d-block mt-2">Fair comparison across all metrics without Cross Selling dominance</small>
+                        <small class="text-muted d-block mt-2">Based on balanced evaluation of all client engagement metrics</small>
                     </div>
                 </div>
             </div>
@@ -351,14 +350,14 @@ new Chart(monthlyCtx, {
         },
         scales: {
             y: {
-                min: 10,
-                max: 50,
+                min: 5,
+                max: 30,
                 ticks: {
-                    stepSize: 5
+                    stepSize: 3
                 },
                 title: {
                     display: true,
-                    text: 'Scoresheet Total (Points)'
+                    text: 'Balanced Scoresheet Total (Points)'
                 }
             }
         }
@@ -407,14 +406,14 @@ new Chart(metricCtx, {
         },
         scales: {
             y: {
-                min: 10,
-                max: 50,
+                min: 5,
+                max: 30,
                 ticks: {
-                    stepSize: 5
+                    stepSize: 3
                 },
                 title: {
                     display: true,
-                    text: 'Scoresheet Total (Points)'
+                    text: 'Balanced Scoresheet Total (Points)'
                 }
             }
         }
