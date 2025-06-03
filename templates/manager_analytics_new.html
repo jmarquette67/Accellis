@@ -148,7 +148,10 @@
                                         <i class="fas fa-sort me-1"></i>Metric
                                     </th>
                                     <th class="sortable text-center" data-sort="performance_percentage">
-                                        <i class="fas fa-sort me-1"></i>Performance %
+                                        <i class="fas fa-sort me-1"></i>Unweighted %
+                                    </th>
+                                    <th class="sortable text-center" data-sort="weighted_impact">
+                                        <i class="fas fa-sort me-1"></i>Weighted Impact
                                     </th>
                                     <th class="sortable text-center" data-sort="trend_direction">
                                         <i class="fas fa-sort me-1"></i>Trend
@@ -184,14 +187,28 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
+                                        <span class="badge bg-secondary" 
+                                              title="Weighted Impact: {{ metric.performance_percentage }}% × weight {{ metric.weight }} = {{ metric.weighted_impact }} points"
+                                              data-bs-toggle="tooltip" data-bs-placement="top">
+                                            {{ metric.weighted_impact }}
+                                        </span>
+                                        <small class="d-block text-muted">pts</small>
+                                    </td>
+                                    <td class="text-center">
                                         {% if metric.trend_direction == 'trending_up' %}
-                                        <i class="fas fa-arrow-up text-success" title="Trending Up"></i>
+                                        <i class="fas fa-arrow-up text-success" 
+                                           title="Trending Up: Recent half of scores show 15%+ improvement vs older half"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
                                         <small class="text-success">Improving</small>
                                         {% elif metric.trend_direction == 'trending_down' %}
-                                        <i class="fas fa-arrow-down text-danger" title="Trending Down"></i>
+                                        <i class="fas fa-arrow-down text-danger" 
+                                           title="Trending Down: Recent half of scores show 15%+ decline vs older half"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
                                         <small class="text-danger">Declining</small>
                                         {% else %}
-                                        <i class="fas fa-minus text-muted" title="Stable"></i>
+                                        <i class="fas fa-minus text-muted" 
+                                           title="Stable: Less than 15% change between recent vs older score averages (min 6 scores needed)"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
                                         <small class="text-muted">Stable</small>
                                         {% endif %}
                                     </td>
@@ -489,23 +506,37 @@ new Chart(metricCtx, {
     }
 });
 
-// Table sorting functionality
+// Table sorting functionality with toggle
+let sortState = {}; // Track sort direction for each column
+
 function sortTable(columnIndex, sortType) {
     const table = document.getElementById('metricsTable');
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
     
+    // Toggle sort direction
+    if (!sortState[columnIndex]) {
+        sortState[columnIndex] = 'desc';
+    } else {
+        sortState[columnIndex] = sortState[columnIndex] === 'desc' ? 'asc' : 'desc';
+    }
+    
+    const isAscending = sortState[columnIndex] === 'asc';
+    
     rows.sort((a, b) => {
         const aValue = a.cells[columnIndex].textContent.trim();
         const bValue = b.cells[columnIndex].textContent.trim();
         
+        let comparison = 0;
         if (sortType === 'numeric') {
             const aNum = parseFloat(aValue.replace('%', '').replace(',', ''));
             const bNum = parseFloat(bValue.replace('%', '').replace(',', ''));
-            return bNum - aNum; // Descending order
+            comparison = aNum - bNum;
         } else {
-            return aValue.localeCompare(bValue);
+            comparison = aValue.localeCompare(bValue);
         }
+        
+        return isAscending ? comparison : -comparison;
     });
     
     // Clear and append sorted rows
