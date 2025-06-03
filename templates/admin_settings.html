@@ -23,12 +23,14 @@
     <div class="row mb-4">
         <!-- Metrics Management -->
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-center text-white">
-                    <i class="fas fa-chart-line fa-3x mb-3 opacity-75"></i>
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                    </div>
                     <h5 class="card-title">Metrics Management</h5>
-                    <p class="card-text">Manage engagement metrics, weights, and scoring criteria</p>
-                    <a href="{{ url_for('manager.metric_configuration') }}" class="btn btn-light btn-sm mt-2">
+                    <p class="card-text text-muted">Manage engagement metrics, weights, and scoring criteria</p>
+                    <a href="{{ url_for('manager.metric_configuration') }}" class="btn btn-primary btn-sm mt-2">
                         Configure Metrics
                     </a>
                 </div>
@@ -37,12 +39,14 @@
 
         <!-- User Management -->
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="card-body text-center text-white">
-                    <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="text-info mb-3">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
                     <h5 class="card-title">User Management</h5>
-                    <p class="card-text">Control user roles, permissions, and access levels</p>
-                    <a href="{{ url_for('manager.user_management') }}" class="btn btn-light btn-sm mt-2">
+                    <p class="card-text text-muted">Control user roles, permissions, and access levels</p>
+                    <a href="{{ url_for('manager.user_management') }}" class="btn btn-outline-primary btn-sm mt-2">
                         Manage Users
                     </a>
                 </div>
@@ -51,12 +55,14 @@
 
         <!-- Client Management -->
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <div class="card-body text-center text-white">
-                    <i class="fas fa-building fa-3x mb-3 opacity-75"></i>
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-building fa-3x"></i>
+                    </div>
                     <h5 class="card-title">Client Management</h5>
-                    <p class="card-text">Add, edit, and organize client accounts and data</p>
-                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-light btn-sm mt-2">
+                    <p class="card-text text-muted">Add, edit, and organize client accounts and data</p>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-primary btn-sm mt-2">
                         Manage Clients
                     </a>
                 </div>
@@ -65,12 +71,14 @@
 
         <!-- System Settings -->
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                <div class="card-body text-center text-white">
-                    <i class="fas fa-cogs fa-3x mb-3 opacity-75"></i>
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="text-secondary mb-3">
+                        <i class="fas fa-cogs fa-3x"></i>
+                    </div>
                     <h5 class="card-title">System Settings</h5>
-                    <p class="card-text">Configure platform settings and branding</p>
-                    <a href="#systemSettings" class="btn btn-light btn-sm mt-2" data-bs-toggle="collapse">
+                    <p class="card-text text-muted">Configure platform settings and branding</p>
+                    <a href="#systemSettings" class="btn btn-outline-secondary btn-sm mt-2" data-bs-toggle="collapse">
                         System Settings
                     </a>
                 </div>
@@ -80,35 +88,35 @@
 
     <!-- Statistics Dashboard -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0 bg-dark text-light">
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <h2 class="text-primary mb-1">{{ stats.total_users or 7 }}</h2>
-                                <p class="mb-0 text-light">Total Users</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <h2 class="text-success mb-1">{{ stats.active_clients or 21 }}</h2>
-                                <p class="mb-0 text-light">Active Clients</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <h2 class="text-info mb-1">{{ stats.metrics_configured or 13 }}</h2>
-                                <p class="mb-0 text-light">Metrics Configured</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <h2 class="text-warning mb-1">{{ stats.scores_recorded or 2964 }}</h2>
-                                <p class="mb-0 text-light">Scores Recorded</p>
-                            </div>
-                        </div>
-                    </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0">
+                <div class="card-body text-center">
+                    <h2 class="text-primary mb-1">{{ stats.total_users }}</h2>
+                    <p class="mb-0 text-muted">Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0">
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-1">{{ stats.active_clients }}</h2>
+                    <p class="mb-0 text-muted">Active Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0">
+                <div class="card-body text-center">
+                    <h2 class="text-info mb-1">{{ stats.total_metrics }}</h2>
+                    <p class="mb-0 text-muted">Metrics Configured</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0">
+                <div class="card-body text-center">
+                    <h2 class="text-secondary mb-1">{{ stats.total_scores }}</h2>
+                    <p class="mb-0 text-muted">Scores Recorded</p>
                 </div>
             </div>
         </div>
@@ -118,8 +126,8 @@
     <div class="collapse" id="systemSettings">
         <div class="row">
             <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white">
+                <div class="card border-0">
+                    <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-image me-2"></i>Header Logo Management
                         </h5>
