@@ -1644,20 +1644,33 @@ def update_user(user_id):
     if user.role != UserRole.ADMIN:
         abort(403)
     
-    target_user = User.query.get_or_404(user_id)
-    
-    # Update user information
-    target_user.first_name = request.form.get('first_name', '').strip()
-    target_user.last_name = request.form.get('last_name', '').strip()
-    
-    # Update role
-    new_role = request.form.get('role')
-    if new_role in ['TAM', 'VCIO', 'MANAGER', 'ADMIN']:
-        target_user.role = UserRole(new_role)
-    
     try:
+        target_user = User.query.get_or_404(user_id)
+        
+        # Validate and update user information
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        new_role = request.form.get('role', '').strip()
+        
+        # Update basic information
+        target_user.first_name = first_name if first_name else None
+        target_user.last_name = last_name if last_name else None
+        
+        # Validate and update role
+        if new_role in ['TAM', 'VCIO', 'MANAGER', 'ADMIN']:
+            target_user.role = UserRole(new_role)
+        else:
+            flash('Invalid role selected.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Update timestamp
+        target_user.updated_at = datetime.utcnow()
+        
         db.session.commit()
-        flash(f'User {target_user.first_name or target_user.email} updated successfully.', 'success')
+        
+        display_name = target_user.first_name or target_user.email.split('@')[0] if target_user.email else 'User'
+        flash(f'User {display_name} updated successfully.', 'success')
+        
     except Exception as e:
         db.session.rollback()
         flash(f'Error updating user: {str(e)}', 'error')
