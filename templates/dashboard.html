@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Accellis Client Engagement Platform{% endblock %}
+{% block title %}Dashboard - Accellis Client Engagement{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 class="mb-1">Accellis Client Engagement Platform</h1>
+                    <h1 class="mb-1">Accellis Client Engagement</h1>
                     <p class="text-muted mb-0">Welcome back, {{ user.first_name or user.email.split('@')[0] if user.email else 'User' }}! Your role: <span class="badge bg-primary">{{ user.role.value if user.role else 'TAM' }}</span></p>
                 </div>
                 <div>
