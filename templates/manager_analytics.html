@@ -166,9 +166,9 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ url_for('manager.client_details', client_id=r.client.id) }}" 
-                                               class="btn btn-outline-primary" title="View Individual Dashboard">
-                                                <i data-feather="user"></i> Dashboard
+                                            <a href="{{ url_for('manager.client_scoresheet', client_id=r.client.id) }}" 
+                                               class="btn btn-outline-primary" title="View Client Scoresheet">
+                                                <i data-feather="user"></i> Scoresheet
                                             </a>
                                             <a href="{{ url_for('manager.client_trend', client_id=r.client.id) }}" 
                                                class="btn btn-outline-info" title="Performance Trends">
