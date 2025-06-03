@@ -406,7 +406,7 @@ def generate_ai_trend_insights(all_scores):
     return insights[:5]  # Return top 5 insights
 
 def prepare_chart_data(all_scores):
-    """Prepare data for charts and visualizations"""
+    """Prepare data for charts and visualizations using scoresheet totals"""
     chart_data = {
         'monthly_trends': {},
         'metric_distribution': {},
@@ -414,29 +414,52 @@ def prepare_chart_data(all_scores):
         'account_owner_comparison': {}
     }
     
-    # Monthly trends
-    for score, metric, client, user in all_scores:
-        month_key = score.taken_at.strftime('%Y-%m')
-        if month_key not in chart_data['monthly_trends']:
-            chart_data['monthly_trends'][month_key] = []
-        chart_data['monthly_trends'][month_key].append(score.value)
+    # Calculate scoresheet totals by month
+    scoresheet_totals_by_month = {}
+    scoresheet_data = {}
     
-    # Convert to chart format
+    # Group scores by date and client to calculate scoresheet totals
+    for score, metric, client, user in all_scores:
+        date_key = score.taken_at.date()
+        sheet_key = f"{date_key}_{client.id}"
+        
+        if sheet_key not in scoresheet_data:
+            scoresheet_data[sheet_key] = {'date': date_key, 'client_id': client.id, 'total': 0}
+        scoresheet_data[sheet_key]['total'] += score.value * metric.weight
+    
+    # Group scoresheet totals by month
+    for sheet_key, data in scoresheet_data.items():
+        month_key = data['date'].strftime('%Y-%m')
+        if month_key not in scoresheet_totals_by_month:
+            scoresheet_totals_by_month[month_key] = []
+        scoresheet_totals_by_month[month_key].append(data['total'])
+    
+    # Convert to chart format with scoresheet totals
     chart_data['monthly_trends'] = {
-        'labels': sorted(chart_data['monthly_trends'].keys()),
-        'data': [sum(scores)/len(scores) for month, scores in sorted(chart_data['monthly_trends'].items())]
+        'labels': sorted(scoresheet_totals_by_month.keys()),
+        'data': [sum(totals)/len(totals) for month, totals in sorted(scoresheet_totals_by_month.items())]
     }
     
-    # Metric distribution
+    # Client performance distribution (using scoresheet totals)
+    client_scoresheet_totals = {}
+    for sheet_key, data in scoresheet_data.items():
+        client_id = data['client_id']
+        if client_id not in client_scoresheet_totals:
+            client_scoresheet_totals[client_id] = []
+        client_scoresheet_totals[client_id].append(data['total'])
+    
+    # Get client names and average scoresheet totals
+    client_names = []
+    client_averages = []
     for score, metric, client, user in all_scores:
-        metric_name = metric.name
-        if metric_name not in chart_data['metric_distribution']:
-            chart_data['metric_distribution'][metric_name] = []
-        chart_data['metric_distribution'][metric_name].append(score.value)
+        if client.id in client_scoresheet_totals and client.name not in client_names:
+            client_names.append(client.name)
+            avg_total = sum(client_scoresheet_totals[client.id]) / len(client_scoresheet_totals[client.id])
+            client_averages.append(avg_total)
     
     chart_data['metric_distribution'] = {
-        'labels': list(chart_data['metric_distribution'].keys()),
-        'data': [sum(scores)/len(scores) for scores in chart_data['metric_distribution'].values()]
+        'labels': client_names,
+        'data': client_averages
     }
     
     return chart_data

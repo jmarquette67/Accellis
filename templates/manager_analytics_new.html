@@ -333,7 +333,7 @@ new Chart(monthlyCtx, {
     data: {
         labels: {{ chart_data.monthly_trends.labels | tojson }},
         datasets: [{
-            label: 'Average Score',
+            label: 'Average Scoresheet Total',
             data: {{ chart_data.monthly_trends.data | tojson }},
             borderColor: 'rgb(75, 192, 192)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -350,8 +350,15 @@ new Chart(monthlyCtx, {
         },
         scales: {
             y: {
-                beginAtZero: true,
-                max: 100
+                min: 10,
+                max: 50,
+                ticks: {
+                    stepSize: 5
+                },
+                title: {
+                    display: true,
+                    text: 'Scoresheet Total (Points)'
+                }
             }
         }
     }
@@ -394,13 +401,20 @@ new Chart(metricCtx, {
         plugins: {
             title: {
                 display: true,
-                text: 'Performance by Metric'
+                text: 'Client Performance Distribution'
             }
         },
         scales: {
             y: {
-                beginAtZero: true,
-                max: 100
+                min: 10,
+                max: 50,
+                ticks: {
+                    stepSize: 5
+                },
+                title: {
+                    display: true,
+                    text: 'Scoresheet Total (Points)'
+                }
             }
         }
     }
