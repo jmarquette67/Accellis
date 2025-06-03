@@ -575,7 +575,7 @@ def score_entry():
     """Score entry form for all users"""
     clients = Client.query.order_by(Client.name).all()
     metrics = Metric.query.order_by(Metric.name).all()
-    return render_template("score_entry.html", clients=clients, metrics=metrics)
+    return render_template("score_entry.html", clients=clients, metrics=metrics, user=current_user)
 
 @manager_bp.route("/scores/")
 @require_login  
