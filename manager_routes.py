@@ -85,7 +85,7 @@ def client_table():
     if not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
     
-    # Base query for scores within date range
+    # Base query for scores within date range - ONLY FINAL SCORESHEETS
     base_query = db.session.query(Score, Metric, Client, User).join(
         Metric, Score.metric_id == Metric.id
     ).join(
@@ -94,7 +94,8 @@ def client_table():
         User, Client.account_owner_id == User.id
     ).filter(
         Score.taken_at >= start_date,
-        Score.taken_at <= end_date
+        Score.taken_at <= end_date,
+        Score.status == 'final'  # Only include final scoresheets in performance reports
     )
     
     # Filter by selected clients if specified
