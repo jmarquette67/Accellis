@@ -70,38 +70,337 @@ def client_list():
 @manager_bp.route("/clients/analytics")
 @require_login
 def client_table():
-    """Advanced client analytics with weighted scoring"""
+    """Comprehensive analytics dashboard with multi-dimensional analysis"""
     require_manager()
     
-    subq = latest_scores_subq(db.session)
-    # join subq back to full Score rows with Metric data
-    latest = (
-        db.session.query(Score, Metric)
-        .join(Metric, Score.metric_id == Metric.id)
-        .join(subq, (Score.client_id == subq.c.client_id) &
-                   (Score.metric_id == subq.c.metric_id) &
-                   (Score.taken_at == subq.c.max_ts))
-        .all()
+    # Get date range parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    selected_clients = request.args.getlist('clients')
+    
+    # Set default date range (last 12 months)
+    if not start_date:
+        start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+    if not end_date:
+        end_date = datetime.now().strftime('%Y-%m-%d')
+    
+    # Base query for scores within date range
+    base_query = db.session.query(Score, Metric, Client, User).join(
+        Metric, Score.metric_id == Metric.id
+    ).join(
+        Client, Score.client_id == Client.id
+    ).outerjoin(
+        User, Client.account_owner_id == User.id
+    ).filter(
+        Score.taken_at >= start_date,
+        Score.taken_at <= end_date
     )
+    
+    # Filter by selected clients if specified
+    if selected_clients:
+        base_query = base_query.filter(Client.id.in_(selected_clients))
+    
+    all_scores = base_query.order_by(Score.taken_at.desc()).all()
+    
+    # 1. All Clients Trends Analysis
+    company_metrics_analysis = analyze_company_performance(all_scores)
+    
+    # 2. Performance by Account Owner Analysis
+    account_owner_analysis = analyze_account_owner_performance(all_scores)
+    
+    # 3. AI-Driven Trend Analysis
+    ai_insights = generate_ai_trend_insights(all_scores)
+    
+    # Chart data preparation
+    chart_data = prepare_chart_data(all_scores)
+    
+    # Get all clients and users for filters
+    all_clients = Client.query.order_by(Client.name).all()
+    all_users = User.query.filter(User.role.in_([UserRole.MANAGER, UserRole.ADMIN])).order_by(User.first_name).all()
+    
+    return render_template("manager_analytics_new.html", 
+                         company_metrics=company_metrics_analysis,
+                         account_owner_performance=account_owner_analysis,
+                         ai_insights=ai_insights,
+                         chart_data=chart_data,
+                         all_clients=all_clients,
+                         all_users=all_users,
+                         start_date=start_date,
+                         end_date=end_date,
+                         selected_clients=selected_clients)
 
-    # compute weighted average per client
-    totals = {}
-    for sc, metric in latest:
-        w = metric.weight
-        totals.setdefault(sc.client_id, {"sum": 0, "weight": 0, "client": sc.client})
-        totals[sc.client_id]["sum"] += sc.value * w
-        totals[sc.client_id]["weight"] += w
+def analyze_company_performance(all_scores):
+    """Analyze company-wide performance trends by metric"""
+    metrics_performance = {}
+    
+    for score, metric, client, user in all_scores:
+        metric_name = metric.name
+        if metric_name not in metrics_performance:
+            metrics_performance[metric_name] = {
+                'scores': [],
+                'weight': metric.weight,
+                'total_weighted': 0,
+                'count': 0,
+                'trend_data': []
+            }
+        
+        metrics_performance[metric_name]['scores'].append(score.value)
+        metrics_performance[metric_name]['total_weighted'] += score.value * metric.weight
+        metrics_performance[metric_name]['count'] += 1
+        metrics_performance[metric_name]['trend_data'].append({
+            'date': score.taken_at.strftime('%Y-%m-%d'),
+            'value': score.value,
+            'client': client.name
+        })
+    
+    # Calculate averages and identify strengths/weaknesses
+    company_analysis = []
+    for metric_name, data in metrics_performance.items():
+        avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
+        weighted_avg = data['total_weighted'] / data['count'] if data['count'] > 0 else 0
+        
+        # Determine performance level based on percentage of maximum possible (68 points)
+        percentage_of_max = (weighted_avg / 68) * 100 if weighted_avg > 0 else 0
+        
+        if percentage_of_max >= 80:  # 54.4+ points out of 68
+            performance_level = 'High Performance'
+            color = 'success'
+        elif percentage_of_max >= 60:  # 40.8+ points out of 68
+            performance_level = 'Medium Performance'
+            color = 'warning'
+        else:  # Below 40.8 points out of 68
+            performance_level = 'Low Performance'
+            color = 'danger'
+        
+        company_analysis.append({
+            'metric_name': metric_name,
+            'average_score': round(avg_score, 1),
+            'weighted_average': round(weighted_avg, 1),
+            'performance_level': performance_level,
+            'color': color,
+            'total_entries': data['count'],
+            'trend_data': data['trend_data'][-30:]  # Last 30 entries for trending
+        })
+    
+    # Sort by weighted average (highest to lowest)
+    company_analysis.sort(key=lambda x: x['weighted_average'], reverse=True)
+    
+    return {
+        'top_strengths': company_analysis[:3],
+        'areas_for_improvement': company_analysis[-3:],
+        'all_metrics': company_analysis
+    }
 
-    rows = [
-        {
-            "client": v["client"],
-            "overall": round(v["sum"]) if v["weight"] > 0 else 0,
-            "weighted_score": round(v["sum"]) if v["weight"] > 0 else 0
-        }
-        for v in totals.values()
-    ]
+def analyze_account_owner_performance(all_scores):
+    """Analyze performance by account owner"""
+    owner_performance = {}
+    
+    for score, metric, client, user in all_scores:
+        owner_name = f"{user.first_name} {user.last_name}".strip() if user else "Unassigned"
+        owner_id = user.id if user else "unassigned"
+        
+        if owner_id not in owner_performance:
+            owner_performance[owner_id] = {
+                'name': owner_name,
+                'total_weighted_score': 0,
+                'total_weight': 0,
+                'client_count': set(),
+                'metric_performance': {},
+                'scores': []
+            }
+        
+        owner_data = owner_performance[owner_id]
+        owner_data['total_weighted_score'] += score.value * metric.weight
+        owner_data['total_weight'] += metric.weight
+        owner_data['client_count'].add(client.id)
+        owner_data['scores'].append(score.value)
+        
+        # Track performance by metric
+        metric_name = metric.name
+        if metric_name not in owner_data['metric_performance']:
+            owner_data['metric_performance'][metric_name] = []
+        owner_data['metric_performance'][metric_name].append(score.value)
+    
+    # Calculate owner rankings and insights
+    owner_analysis = []
+    for owner_id, data in owner_performance.items():
+        if data['total_weight'] > 0:
+            overall_avg = data['total_weighted_score'] / data['total_weight']
+            
+            # Find strongest and weakest metrics
+            metric_averages = {}
+            for metric, scores in data['metric_performance'].items():
+                metric_averages[metric] = sum(scores) / len(scores)
+            
+            strongest_metric = max(metric_averages.items(), key=lambda x: x[1]) if metric_averages else ('N/A', 0)
+            weakest_metric = min(metric_averages.items(), key=lambda x: x[1]) if metric_averages else ('N/A', 0)
+            
+            owner_analysis.append({
+                'name': data['name'],
+                'owner_id': owner_id,
+                'overall_average': round(overall_avg, 1),
+                'client_count': len(data['client_count']),
+                'total_scores': len(data['scores']),
+                'strongest_metric': strongest_metric[0],
+                'strongest_score': round(strongest_metric[1], 1),
+                'weakest_metric': weakest_metric[0],
+                'weakest_score': round(weakest_metric[1], 1),
+                'metric_breakdown': {k: round(sum(v)/len(v), 1) for k, v in data['metric_performance'].items()}
+            })
+    
+    # Sort by overall average
+    owner_analysis.sort(key=lambda x: x['overall_average'], reverse=True)
+    
+    return owner_analysis
 
-    return render_template("manager_analytics.html", rows=rows)
+def generate_ai_trend_insights(all_scores):
+    """Generate AI-driven insights from score patterns"""
+    insights = []
+    
+    if not all_scores:
+        return [{
+            'type': 'info',
+            'title': 'No Data Available',
+            'description': 'No scores found for the selected date range.',
+            'confidence': 0
+        }]
+    
+    # Analyze score distribution patterns
+    all_values = [score.value for score, _, _, _ in all_scores]
+    avg_score = sum(all_values) / len(all_values)
+    
+    # Trend 1: Overall performance assessment
+    if avg_score >= 75:
+        insights.append({
+            'type': 'success',
+            'title': 'Strong Overall Performance',
+            'description': f'Company average of {avg_score:.1f} indicates excellent client engagement across all metrics.',
+            'confidence': 85
+        })
+    elif avg_score <= 60:
+        insights.append({
+            'type': 'warning',
+            'title': 'Performance Improvement Needed',
+            'description': f'Company average of {avg_score:.1f} suggests systematic improvements are needed across multiple areas.',
+            'confidence': 90
+        })
+    
+    # Trend 2: Consistency analysis
+    import statistics
+    score_std = statistics.stdev(all_values) if len(all_values) > 1 else 0
+    
+    if score_std < 10:
+        insights.append({
+            'type': 'info',
+            'title': 'Consistent Performance Pattern',
+            'description': f'Low variation (σ={score_std:.1f}) indicates standardized service delivery across clients.',
+            'confidence': 75
+        })
+    elif score_std > 20:
+        insights.append({
+            'type': 'warning',
+            'title': 'High Performance Variability',
+            'description': f'High variation (σ={score_std:.1f}) suggests inconsistent service quality. Consider standardizing processes.',
+            'confidence': 80
+        })
+    
+    # Trend 3: Client distribution analysis
+    client_scores = {}
+    for score, _, client, _ in all_scores:
+        if client.id not in client_scores:
+            client_scores[client.id] = []
+        client_scores[client.id].append(score.value)
+    
+    client_averages = [sum(scores)/len(scores) for scores in client_scores.values()]
+    top_performing_clients = len([avg for avg in client_averages if avg >= 80])
+    total_clients = len(client_averages)
+    
+    if total_clients > 0:
+        top_client_percentage = (top_performing_clients / total_clients) * 100
+        
+        if top_client_percentage >= 70:
+            insights.append({
+                'type': 'success',
+                'title': 'Majority High-Performing Clients',
+                'description': f'{top_client_percentage:.0f}% of clients score above 80. Strong retention likelihood.',
+                'confidence': 85
+            })
+        elif top_client_percentage <= 30:
+            insights.append({
+                'type': 'danger',
+                'title': 'Client Satisfaction Risk',
+                'description': f'Only {top_client_percentage:.0f}% of clients score above 80. Immediate intervention recommended.',
+                'confidence': 90
+            })
+    
+    # Trend 4: Temporal pattern analysis
+    monthly_averages = {}
+    for score, _, _, _ in all_scores:
+        month_key = score.taken_at.strftime('%Y-%m')
+        if month_key not in monthly_averages:
+            monthly_averages[month_key] = []
+        monthly_averages[month_key].append(score.value)
+    
+    if len(monthly_averages) >= 3:
+        monthly_trends = []
+        for month, scores in sorted(monthly_averages.items()):
+            monthly_trends.append(sum(scores) / len(scores))
+        
+        # Check for trend direction
+        recent_trend = monthly_trends[-3:]  # Last 3 months
+        if len(recent_trend) >= 2:
+            if all(recent_trend[i] <= recent_trend[i+1] for i in range(len(recent_trend)-1)):
+                insights.append({
+                    'type': 'success',
+                    'title': 'Positive Trend Detected',
+                    'description': 'Scores show consistent improvement over the last 3 months.',
+                    'confidence': 75
+                })
+            elif all(recent_trend[i] >= recent_trend[i+1] for i in range(len(recent_trend)-1)):
+                insights.append({
+                    'type': 'warning',
+                    'title': 'Declining Trend Alert',
+                    'description': 'Scores show consistent decline over the last 3 months. Intervention needed.',
+                    'confidence': 80
+                })
+    
+    return insights[:5]  # Return top 5 insights
+
+def prepare_chart_data(all_scores):
+    """Prepare data for charts and visualizations"""
+    chart_data = {
+        'monthly_trends': {},
+        'metric_distribution': {},
+        'client_performance': {},
+        'account_owner_comparison': {}
+    }
+    
+    # Monthly trends
+    for score, metric, client, user in all_scores:
+        month_key = score.taken_at.strftime('%Y-%m')
+        if month_key not in chart_data['monthly_trends']:
+            chart_data['monthly_trends'][month_key] = []
+        chart_data['monthly_trends'][month_key].append(score.value)
+    
+    # Convert to chart format
+    chart_data['monthly_trends'] = {
+        'labels': sorted(chart_data['monthly_trends'].keys()),
+        'data': [sum(scores)/len(scores) for month, scores in sorted(chart_data['monthly_trends'].items())]
+    }
+    
+    # Metric distribution
+    for score, metric, client, user in all_scores:
+        metric_name = metric.name
+        if metric_name not in chart_data['metric_distribution']:
+            chart_data['metric_distribution'][metric_name] = []
+        chart_data['metric_distribution'][metric_name].append(score.value)
+    
+    chart_data['metric_distribution'] = {
+        'labels': list(chart_data['metric_distribution'].keys()),
+        'data': [sum(scores)/len(scores) for scores in chart_data['metric_distribution'].values()]
+    }
+    
+    return chart_data
 
 @manager_bp.route("/client/<int:client_id>/trend")
 @require_login

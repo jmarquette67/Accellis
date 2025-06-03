@@ -104,6 +104,7 @@
                                 <li class="mb-2"><a href="{{ url_for('manager.alert_management') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-exclamation-triangle me-2 text-muted"></i> Alert Management</a></li>
                                 {% if user.role and user.role.value == 'ADMIN' %}
                                 <li class="mb-2"><a href="{{ url_for('manager.user_management') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-user me-2 text-muted"></i> User Management</a></li>
+                                <li class="mb-2"><a href="{{ url_for('manager.admin_settings') }}" class="text-decoration-none d-flex align-items-center"><i class="fas fa-cog me-2 text-muted"></i> Admin Settings</a></li>
                                 {% endif %}
                             </ul>
                             {% else %}

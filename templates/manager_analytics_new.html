@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-chart-line me-2"></i>Comprehensive Analytics</h1>
+                    <p class="text-muted">Advanced multi-dimensional performance analysis and insights</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="exportReport('pdf')">
+                        <i class="fas fa-download me-1"></i>Export PDF
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Clients
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary">
+            <h5 class="mb-0 text-light">
+                <i class="fas fa-filter me-2"></i>Analysis Filters & Date Range
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" id="analyticsForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="clients" class="form-label">Select Clients (Optional)</label>
+                        <select multiple class="form-select" id="clients" name="clients" size="3">
+                            {% for client in all_clients %}
+                            <option value="{{ client.id }}" {% if client.id|string in selected_clients %}selected{% endif %}>
+                                {{ client.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Analyze
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info">
+                    <h6 class="mb-0 text-light">
+                        <i class="fas fa-chart-line me-2"></i>Monthly Performance Trends
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success">
+                    <h6 class="mb-0 text-light">
+                        <i class="fas fa-chart-bar me-2"></i>Metric Performance Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="metricDistributionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Sections -->
+    
+    <!-- Section 1: All Clients Trends (Company Performance) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0 text-light">
+                        <i class="fas fa-building me-2"></i>1. Company-Wide Performance Analysis
+                        <small class="ms-2">What we do well vs. areas for improvement</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Top Strengths -->
+                        <div class="col-md-6">
+                            <h6 class="text-success fw-bold mb-3">
+                                <i class="fas fa-trophy me-2"></i>Top Performing Areas
+                            </h6>
+                            {% for strength in company_metrics.top_strengths %}
+                            <div class="card mb-2 border-success">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ strength.metric_name }}</strong>
+                                            <small class="text-muted d-block">{{ strength.total_entries }} entries</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-{{ strength.color }} fs-6">{{ strength.average_score }}</span>
+                                            <small class="text-muted d-block">{{ strength.performance_level }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Areas for Improvement -->
+                        <div class="col-md-6">
+                            <h6 class="text-warning fw-bold mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Areas Needing Attention
+                            </h6>
+                            {% for area in company_metrics.areas_for_improvement %}
+                            <div class="card mb-2 border-warning">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ area.metric_name }}</strong>
+                                            <small class="text-muted d-block">{{ area.total_entries }} entries</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-{{ area.color }} fs-6">{{ area.average_score }}</span>
+                                            <small class="text-muted d-block">{{ area.performance_level }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- All Metrics Overview -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">Complete Metrics Performance Overview</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Average Score</th>
+                                        <th>Weighted Score</th>
+                                        <th>Performance Level</th>
+                                        <th>Total Entries</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for metric in company_metrics.all_metrics %}
+                                    <tr>
+                                        <td><strong>{{ metric.metric_name }}</strong></td>
+                                        <td>{{ metric.average_score }}</td>
+                                        <td>{{ metric.weighted_average }}</td>
+                                        <td><span class="badge bg-{{ metric.color }}">{{ metric.performance_level }}</span></td>
+                                        <td>{{ metric.total_entries }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Performance by Account Owner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success">
+                    <h5 class="mb-0 text-light">
+                        <i class="fas fa-users me-2"></i>2. Performance by Account Owner
+                        <small class="ms-2">Individual strengths and improvement areas</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Account Owner</th>
+                                    <th>Overall Average</th>
+                                    <th>Clients Managed</th>
+                                    <th>Total Scores</th>
+                                    <th>Strongest Area</th>
+                                    <th>Needs Focus</th>
+                                    <th>Performance Breakdown</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for owner in account_owner_performance %}
+                                <tr>
+                                    <td><strong>{{ owner.name }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-{% if owner.overall_average >= 80 %}success{% elif owner.overall_average >= 70 %}info{% elif owner.overall_average >= 60 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ owner.overall_average }}
+                                        </span>
+                                    </td>
+                                    <td>{{ owner.client_count }}</td>
+                                    <td>{{ owner.total_scores }}</td>
+                                    <td>
+                                        <small class="text-success">
+                                            <strong>{{ owner.strongest_metric }}</strong><br>
+                                            {{ owner.strongest_score }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="text-warning">
+                                            <strong>{{ owner.weakest_metric }}</strong><br>
+                                            {{ owner.weakest_score }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#breakdown{{ loop.index }}">
+                                            View Details
+                                        </button>
+                                        <div class="collapse mt-2" id="breakdown{{ loop.index }}">
+                                            {% for metric, score in owner.metric_breakdown.items() %}
+                                            <small class="d-block">{{ metric }}: {{ score }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: AI-Driven Trend Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-brain me-2"></i>3. AI-Driven Trend Analysis
+                        <small class="ms-2">Patterns and insights you might not see</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for insight in ai_insights %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title text-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                            <i class="fas fa-{% if insight.type == 'success' %}check-circle{% elif insight.type == 'warning' %}exclamation-triangle{% elif insight.type == 'danger' %}times-circle{% else %}info-circle{% endif %} me-2"></i>
+                                            {{ insight.title }}
+                                        </h6>
+                                        <span class="badge bg-secondary">{{ insight.confidence }}% confidence</span>
+                                    </div>
+                                    <p class="card-text">{{ insight.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js Scripts -->
+<script>
+// Monthly Trends Chart
+const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_data.monthly_trends.labels | tojson }},
+        datasets: [{
+            label: 'Average Score',
+            data: {{ chart_data.monthly_trends.data | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Monthly Performance Trends'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// Metric Distribution Chart
+const metricCtx = document.getElementById('metricDistributionChart').getContext('2d');
+new Chart(metricCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_data.metric_distribution.labels | tojson }},
+        datasets: [{
+            label: 'Average Score',
+            data: {{ chart_data.metric_distribution.data | tojson }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 205, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)',
+                'rgba(199, 199, 199, 0.2)',
+                'rgba(83, 102, 255, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 205, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(199, 199, 199, 1)',
+                'rgba(83, 102, 255, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Performance by Metric'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// Export functions
+function exportReport(format) {
+    if (format === 'pdf') {
+        window.print();
+    } else if (format === 'excel') {
+        alert('Excel export functionality coming soon!');
+    }
+}
+</script>
+{% endblock %}
