@@ -131,7 +131,7 @@ def client_table():
                          selected_clients=selected_clients)
 
 def analyze_company_performance(all_scores):
-    """Analyze company-wide performance trends by metric"""
+    """Analyze company-wide performance trends by metric with relative rankings"""
     metrics_performance = {}
     
     for score, metric, client, user in all_scores:
@@ -142,7 +142,8 @@ def analyze_company_performance(all_scores):
                 'weight': metric.weight,
                 'total_weighted': 0,
                 'count': 0,
-                'trend_data': []
+                'trend_data': [],
+                'recent_scores': []  # For trending analysis
             }
         
         metrics_performance[metric_name]['scores'].append(score.value)
@@ -151,48 +152,79 @@ def analyze_company_performance(all_scores):
         metrics_performance[metric_name]['trend_data'].append({
             'date': score.taken_at.strftime('%Y-%m-%d'),
             'value': score.value,
-            'client': client.name
+            'client': client.name,
+            'timestamp': score.taken_at
         })
     
-    # Calculate averages and identify strengths/weaknesses
+    # Calculate metrics with normalized Cross Selling
     company_analysis = []
     for metric_name, data in metrics_performance.items():
         avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
-        weighted_avg = data['total_weighted'] / data['count'] if data['count'] > 0 else 0
         
-        # Determine performance level based on actual data distribution
-        # Top 15% (85th percentile+): 39+ points = High Performance
-        # Top 50% (median+): 32-38 points = Medium Performance  
-        # Bottom 50%: Below 32 points = Low Performance
+        # Normalize Cross Selling for fair comparison (convert to percentage scale)
+        if metric_name == 'Cross Selling':
+            # Cross Selling: 0-10 scale, convert to percentage
+            performance_percentage = (avg_score / 10) * 100
+        else:
+            # Other metrics: 0-1 scale, convert to percentage  
+            performance_percentage = avg_score * 100
         
-        if weighted_avg >= 39:  # Top 15% performers
-            performance_level = 'High Performance'
-            color = 'success'
-        elif weighted_avg >= 32:  # Above median performers
-            performance_level = 'Medium Performance'
-            color = 'warning'
-        else:  # Below median performers
-            performance_level = 'Low Performance'
-            color = 'danger'
+        # Calculate trend direction using recent vs older scores
+        trend_direction = calculate_trend_direction(data['trend_data'])
         
         company_analysis.append({
             'metric_name': metric_name,
-            'average_score': round(avg_score, 1),
-            'weighted_average': round(weighted_avg, 1),
-            'performance_level': performance_level,
-            'color': color,
+            'average_score': round(avg_score, 2),
+            'performance_percentage': round(performance_percentage, 1),
             'total_entries': data['count'],
-            'trend_data': data['trend_data'][-30:]  # Last 30 entries for trending
+            'trend_direction': trend_direction,
+            'weight': data['weight']
         })
     
-    # Sort by weighted average (highest to lowest)
-    company_analysis.sort(key=lambda x: x['weighted_average'], reverse=True)
+    # Sort by performance percentage for relative ranking
+    company_analysis.sort(key=lambda x: x['performance_percentage'], reverse=True)
+    
+    # Add relative performance rankings
+    for i, metric in enumerate(company_analysis):
+        if i < len(company_analysis) // 3:
+            metric['relative_performance'] = 'Our Strength'
+            metric['color'] = 'success'
+        elif i < (len(company_analysis) * 2) // 3:
+            metric['relative_performance'] = 'Moderate Performance'
+            metric['color'] = 'warning'
+        else:
+            metric['relative_performance'] = 'Focus Area'
+            metric['color'] = 'info'
     
     return {
+        'metrics_summary': company_analysis,
         'top_strengths': company_analysis[:3],
-        'areas_for_improvement': company_analysis[-3:],
-        'all_metrics': company_analysis
+        'focus_areas': company_analysis[-3:]
     }
+
+def calculate_trend_direction(trend_data):
+    """Calculate if metric is trending up, down, or stable"""
+    if len(trend_data) < 6:
+        return 'stable'
+    
+    # Sort by timestamp and split into recent vs older
+    sorted_data = sorted(trend_data, key=lambda x: x['timestamp'])
+    midpoint = len(sorted_data) // 2
+    older_scores = [item['value'] for item in sorted_data[:midpoint]]
+    recent_scores = [item['value'] for item in sorted_data[midpoint:]]
+    
+    older_avg = sum(older_scores) / len(older_scores) if older_scores else 0
+    recent_avg = sum(recent_scores) / len(recent_scores) if recent_scores else 0
+    
+    # Calculate percentage change
+    if older_avg > 0:
+        change_percent = ((recent_avg - older_avg) / older_avg) * 100
+        if change_percent > 5:
+            return 'trending_up'
+        elif change_percent < -5:
+            return 'trending_down'
+    
+    return 'stable'
 
 def analyze_account_owner_performance(all_scores):
     """Analyze performance by account owner"""

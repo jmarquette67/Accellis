@@ -139,53 +139,113 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <!-- Top Strengths -->
-                        <div class="col-md-6">
-                            <h6 class="text-success fw-bold mb-3">
-                                <i class="fas fa-trophy me-2"></i>Top Performing Areas
-                            </h6>
-                            {% for strength in company_metrics.top_strengths %}
-                            <div class="card mb-2 border-success">
-                                <div class="card-body py-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ strength.metric_name }}</strong>
-                                            <small class="text-muted d-block">{{ strength.total_entries }} entries</small>
+                    <!-- Complete Metrics Performance Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="metricsTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="sortable" data-sort="metric_name">
+                                        <i class="fas fa-sort me-1"></i>Metric
+                                    </th>
+                                    <th class="sortable text-center" data-sort="performance_percentage">
+                                        <i class="fas fa-sort me-1"></i>Performance %
+                                    </th>
+                                    <th class="sortable text-center" data-sort="trend_direction">
+                                        <i class="fas fa-sort me-1"></i>Trend
+                                    </th>
+                                    <th class="sortable text-center" data-sort="relative_performance">
+                                        <i class="fas fa-sort me-1"></i>Relative Ranking
+                                    </th>
+                                    <th class="text-center">Raw Score</th>
+                                    <th class="text-center">Data Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in company_metrics.metrics_summary %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ metric.metric_name }}</strong>
+                                        {% if metric.weight > 1 %}
+                                        <small class="text-muted">(Weight: {{ metric.weight }})</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress mb-1" style="height: 20px;">
+                                            <div class="progress-bar bg-{{ metric.color }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ metric.performance_percentage }}%"
+                                                 aria-valuenow="{{ metric.performance_percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ metric.performance_percentage }}%
+                                            </div>
                                         </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-{{ strength.color }} fs-6">{{ strength.average_score }}</span>
-                                            <small class="text-muted d-block">{{ strength.performance_level }}</small>
-                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if metric.trend_direction == 'trending_up' %}
+                                        <i class="fas fa-arrow-up text-success" title="Trending Up"></i>
+                                        <small class="text-success">Improving</small>
+                                        {% elif metric.trend_direction == 'trending_down' %}
+                                        <i class="fas fa-arrow-down text-danger" title="Trending Down"></i>
+                                        <small class="text-danger">Declining</small>
+                                        {% else %}
+                                        <i class="fas fa-minus text-muted" title="Stable"></i>
+                                        <small class="text-muted">Stable</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-{{ metric.color }}">{{ metric.relative_performance }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ metric.average_score }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ metric.total_entries }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <!-- Summary Cards -->
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Our Strengths</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for strength in company_metrics.top_strengths %}
+                                    <div class="mb-2">
+                                        <strong>{{ strength.metric_name }}</strong>
+                                        <span class="float-end text-success">{{ strength.performance_percentage }}%</span>
                                     </div>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
-
-                        <!-- Areas for Improvement -->
-                        <div class="col-md-6">
-                            <h6 class="text-warning fw-bold mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Areas Needing Attention
-                            </h6>
-                            {% for area in company_metrics.areas_for_improvement %}
-                            <div class="card mb-2 border-warning">
-                                <div class="card-body py-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ area.metric_name }}</strong>
-                                            <small class="text-muted d-block">{{ area.total_entries }} entries</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-{{ area.color }} fs-6">{{ area.average_score }}</span>
-                                            <small class="text-muted d-block">{{ area.performance_level }}</small>
-                                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-focus me-2"></i>Focus Areas</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for area in company_metrics.focus_areas %}
+                                    <div class="mb-2">
+                                        <strong>{{ area.metric_name }}</strong>
+                                        <span class="float-end text-info">{{ area.performance_percentage }}%</span>
                                     </div>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
                     <!-- All Metrics Overview -->
                     <div class="mt-4">
@@ -418,6 +478,46 @@ new Chart(metricCtx, {
             }
         }
     }
+});
+
+// Table sorting functionality
+function sortTable(columnIndex, sortType) {
+    const table = document.getElementById('metricsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    rows.sort((a, b) => {
+        const aValue = a.cells[columnIndex].textContent.trim();
+        const bValue = b.cells[columnIndex].textContent.trim();
+        
+        if (sortType === 'numeric') {
+            const aNum = parseFloat(aValue.replace('%', '').replace(',', ''));
+            const bNum = parseFloat(bValue.replace('%', '').replace(',', ''));
+            return bNum - aNum; // Descending order
+        } else {
+            return aValue.localeCompare(bValue);
+        }
+    });
+    
+    // Clear and append sorted rows
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Add click handlers for sortable columns
+document.addEventListener('DOMContentLoaded', function() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    sortableHeaders.forEach((header, index) => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const sortType = header.getAttribute('data-sort') === 'performance_percentage' ? 'numeric' : 'text';
+            sortTable(index, sortType);
+            
+            // Update sort indicators
+            sortableHeaders.forEach(h => h.classList.remove('sort-active'));
+            header.classList.add('sort-active');
+        });
+    });
 });
 
 // Export functions
