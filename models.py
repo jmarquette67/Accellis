@@ -204,6 +204,9 @@ class Metric(db.Model):
     high_threshold = db.Column(db.Integer, nullable=False)  # >= marks "high"
     low_threshold = db.Column(db.Integer, nullable=False)   # <= marks "low"
     
+    # Input type configuration
+    input_type = db.Column(db.String(50), default='number')  # 'number', 'select', 'boolean'
+    
     # Three-range scoring fields for Help Desk Usage
     too_low_threshold = db.Column(db.Numeric(5,2))
     too_low_score = db.Column(db.Integer)
@@ -217,6 +220,7 @@ class Metric(db.Model):
     
     # Relationships
     scores = db.relationship('Score', backref='metric', lazy=True, cascade='all, delete-orphan')
+    metric_options = db.relationship('MetricOption', backref='metric', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):
         return {
@@ -229,6 +233,27 @@ class Metric(db.Model):
             'high_threshold': self.high_threshold,
             'low_threshold': self.low_threshold,
             'created_at': self.created_at.isoformat()
+        }
+
+class MetricOption(db.Model):
+    """Configurable options for select-type metrics"""
+    id = db.Column(db.Integer, primary_key=True)
+    metric_id = db.Column(db.Integer, db.ForeignKey('metric.id'), nullable=False)
+    option_label = db.Column(db.String(100), nullable=False)  # Display text (e.g., "Happening", "Low Usage")
+    option_value = db.Column(db.Integer, nullable=False)  # Numeric value (e.g., 1, 0)
+    option_order = db.Column(db.Integer, default=0)  # Display order
+    is_active = db.Column(db.Boolean, default=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'metric_id': self.metric_id,
+            'option_label': self.option_label,
+            'option_value': self.option_value,
+            'option_order': self.option_order,
+            'is_active': self.is_active
         }
 
 class Score(db.Model):
