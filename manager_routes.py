@@ -7,6 +7,7 @@ from replit_auth import require_login
 from flask_login import current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from normalized_scoring import calculate_normalized_metrics_by_client, get_normalized_performance_ranges
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 
@@ -287,26 +288,27 @@ def generate_ai_trend_insights(all_scores):
         avg_scoresheet_total = sum(scoresheet_totals.values()) / len(scoresheet_totals)
         performance_percentage = (avg_scoresheet_total / 68) * 100
         
-        # Trend 1: Overall performance assessment based on actual data distribution
-        if avg_scoresheet_total >= 39:  # Top 15% performers (85th percentile)
+        # Trend 1: Overall performance assessment based on normalized scoresheet totals
+        # With Cross Selling normalized (reduced by 67%), expect lower ranges
+        if avg_scoresheet_total >= 25:  # Top performers with normalized scoring
             insights.append({
                 'type': 'success',
-                'title': 'Top-Tier Scoresheet Performance',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points places performance in top 15% of all scoresheets (39+ points).',
+                'title': 'Excellent Normalized Performance',
+                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points demonstrates balanced excellence across all metrics (Cross Selling impact normalized).',
                 'confidence': 85
             })
-        elif avg_scoresheet_total >= 32:  # Above median performers
+        elif avg_scoresheet_total >= 18:  # Above average with normalized scoring
             insights.append({
                 'type': 'info',
-                'title': 'Above-Average Performance',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is above the median of 32 points but below top-tier (39+ points).',
+                'title': 'Good Balanced Performance',
+                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points shows solid performance across metrics without Cross Selling dominance.',
                 'confidence': 80
             })
-        else:  # Below median performers
+        else:  # Below average with normalized scoring
             insights.append({
                 'type': 'warning',
-                'title': 'Below-Median Performance',
-                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is below the median of 32 points. Focus on improvement opportunities.',
+                'title': 'Below-Average Normalized Performance',
+                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points indicates improvement needed across multiple metric areas.',
                 'confidence': 90
             })
     
@@ -418,14 +420,18 @@ def prepare_chart_data(all_scores):
     scoresheet_totals_by_month = {}
     scoresheet_data = {}
     
-    # Group scores by date and client to calculate scoresheet totals
+    # Group scores by date and client to calculate normalized scoresheet totals
     for score, metric, client, user in all_scores:
         date_key = score.taken_at.date()
         sheet_key = f"{date_key}_{client.id}"
         
         if sheet_key not in scoresheet_data:
             scoresheet_data[sheet_key] = {'date': date_key, 'client_id': client.id, 'total': 0}
-        scoresheet_data[sheet_key]['total'] += score.value * metric.weight
+        
+        # Apply normalization: reduce Cross Selling impact by 67%
+        normalization_factor = 0.33 if metric.name == 'Cross Selling' else 1.0
+        normalized_contribution = score.value * metric.weight * normalization_factor
+        scoresheet_data[sheet_key]['total'] += normalized_contribution
     
     # Group scoresheet totals by month
     for sheet_key, data in scoresheet_data.items():
