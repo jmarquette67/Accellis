@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, FloatField, IntegerField, SelectField
-from wtforms.validators import DataRequired, Length, IPAddress, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, Email, NumberRange, Optional, ValidationError
 from models import Client
 
 class ClientRegistrationForm(FlaskForm):
@@ -9,25 +9,45 @@ class ClientRegistrationForm(FlaskForm):
         Length(min=2, max=100, message='Name must be between 2 and 100 characters')
     ])
     
-    hostname = StringField('Hostname', validators=[
-        DataRequired(message='Hostname is required'),
-        Length(min=2, max=100, message='Hostname must be between 2 and 100 characters')
+    account_manager = SelectField('Account Manager', coerce=int, validators=[
+        DataRequired(message='Account manager is required')
     ])
     
-    ip_address = StringField('IP Address', validators=[
-        DataRequired(message='IP address is required'),
-        IPAddress(message='Please enter a valid IP address')
+    # Primary client contact information
+    contact_name = StringField('Primary Contact Name', validators=[
+        DataRequired(message='Primary contact name is required'),
+        Length(min=2, max=100, message='Contact name must be between 2 and 100 characters')
     ])
     
-    description = TextAreaField('Description', validators=[
+    contact_phone = StringField('Primary Contact Phone', validators=[
+        DataRequired(message='Primary contact phone is required'),
+        Length(min=10, max=20, message='Phone number must be between 10 and 20 characters')
+    ])
+    
+    contact_email = StringField('Primary Contact Email', validators=[
+        DataRequired(message='Primary contact email is required'),
+        Email(message='Please enter a valid email address')
+    ])
+    
+    # Client business information
+    client_description = TextAreaField('Client Description', validators=[
         Optional(),
         Length(max=500, message='Description must be less than 500 characters')
     ])
     
-    def validate_hostname(self, field):
-        client = Client.query.filter_by(hostname=field.data).first()
-        if client:
-            raise ValidationError('Hostname already registered. Please choose a different hostname.')
+    industry = SelectField('Industry', validators=[
+        DataRequired(message='Industry is required')
+    ], choices=[
+        ('legal', 'Legal'),
+        ('retail', 'Retail'),
+        ('manufacturing', 'Manufacturing'),
+        ('healthcare', 'Healthcare'),
+        ('technology', 'Technology'),
+        ('finance', 'Finance'),
+        ('education', 'Education'),
+        ('nonprofit', 'Non-Profit'),
+        ('other', 'Other')
+    ])
 
 class HealthCheckForm(FlaskForm):
     cpu_usage = FloatField('CPU Usage (%)', validators=[

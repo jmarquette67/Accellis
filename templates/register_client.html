@@ -1,145 +1,183 @@
 {% extends "base.html" %}
 
-{% block title %}Register Client - Accellis Health Check System{% endblock %}
+{% block title %}Register Client - Accellis Client Engagement{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">
-                    <i data-feather="plus-circle" class="me-2"></i>
-                    Register New Client
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.name.label(class="form-label") }}
-                                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
-                                {% if form.name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.name.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div class="form-text">A friendly name for this client system</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Register New Client
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Client Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-building me-2"></i>Client Information
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Company or organization name</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.industry.label(class="form-label") }}
+                                    {{ form.industry(class="form-control" + (" is-invalid" if form.industry.errors else "")) }}
+                                    {% if form.industry.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.industry.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Select the client's primary industry</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Management -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-user-tie me-2"></i>Account Management
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.account_manager.label(class="form-label") }}
+                                    {{ form.account_manager(class="form-control" + (" is-invalid" if form.account_manager.errors else "")) }}
+                                    {% if form.account_manager.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.account_manager.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Assigned account manager for this client</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primary Contact Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-address-card me-2"></i>Primary Client Contact
+                                </h5>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.contact_name.label(class="form-label") }}
+                                    {{ form.contact_name(class="form-control" + (" is-invalid" if form.contact_name.errors else "")) }}
+                                    {% if form.contact_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.contact_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Main contact person at the client</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.contact_phone.label(class="form-label") }}
+                                    {{ form.contact_phone(class="form-control" + (" is-invalid" if form.contact_phone.errors else "")) }}
+                                    {% if form.contact_phone.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.contact_phone.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Phone number for primary contact</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.contact_email.label(class="form-label") }}
+                                    {{ form.contact_email(class="form-control" + (" is-invalid" if form.contact_email.errors else "")) }}
+                                    {% if form.contact_email.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.contact_email.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Email address for primary contact</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Description -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Additional Information
+                                </h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    {{ form.client_description.label(class="form-label") }}
+                                    {{ form.client_description(class="form-control", rows="4") }}
+                                    {% if form.client_description.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.client_description.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Optional description of the client's business, special requirements, or notes</div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.hostname.label(class="form-label") }}
-                                {{ form.hostname(class="form-control" + (" is-invalid" if form.hostname.errors else "")) }}
-                                {% if form.hostname.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.hostname.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div class="form-text">Unique hostname or identifier for the client</div>
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>
+                                        Back to Dashboard
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        Register Client
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.ip_address.label(class="form-label") }}
-                        {{ form.ip_address(class="form-control" + (" is-invalid" if form.ip_address.errors else "")) }}
-                        {% if form.ip_address.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.ip_address.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">IP address of the client system</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.description.label(class="form-label") }}
-                        {{ form.description(class="form-control", rows="3") }}
-                        {% if form.description.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.description.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">Optional description of the client system</div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
-                            <i data-feather="arrow-left" class="me-1"></i>
-                            Back to Dashboard
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save" class="me-1"></i>
-                            Register Client
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- API Information Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i data-feather="code" class="me-2"></i>
-                    API Integration
-                </h5>
-            </div>
-            <div class="card-body">
-                <p>After registration, your client can check in using the following API endpoint:</p>
-                <div class="bg-dark p-3 rounded">
-                    <code class="text-warning">POST /api/client/&lt;hostname&gt;/checkin</code>
-                </div>
-                
-                <h6 class="mt-3">Required JSON payload:</h6>
-                <pre class="bg-dark text-light p-3 rounded"><code>{
-  "cpu_usage": 45.2,
-  "memory_usage": 67.8,
-  "disk_usage": 23.1,
-  "uptime": 86400,
-  "load_average": 0.8,
-  "network_rx": 1024000,
-  "network_tx": 512000,
-  "notes": "Optional status notes"
-}</code></pre>
-
-                <div class="alert alert-info mt-3">
-                    <i data-feather="info" class="me-2"></i>
-                    <strong>Note:</strong> The hostname in the URL must match exactly what you register here.
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
     // Auto-focus on name field
-    document.getElementById('name').focus();
-    
-    // Auto-generate hostname from name
-    document.getElementById('name').addEventListener('input', function() {
-        const name = this.value;
-        const hostname = name.toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .substring(0, 50);
-        
-        if (hostname && !document.getElementById('hostname').value) {
-            document.getElementById('hostname').value = hostname;
-        }
-    });
+    document.querySelector('input[name="name"]').focus();
 </script>
 {% endblock %}
