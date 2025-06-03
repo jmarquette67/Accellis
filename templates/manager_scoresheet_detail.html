@@ -10,7 +10,12 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h2 mb-1">{{ client.name }} - Score Sheet</h1>
-                    <p class="text-muted mb-0">{{ sheet_date.strftime('%A, %B %d, %Y') }} | Total Score: <strong>{{ total_weighted_points }}</strong> points</p>
+                    <p class="text-muted mb-0">
+                        {{ sheet_date.strftime('%A, %B %d, %Y') }} | Total Score: <strong>{{ total_weighted_points }}</strong> points
+                        {% if client.account_owner %}
+                        <br>Account Manager: <strong>{{ client.account_owner.first_name }} {{ client.account_owner.last_name }}</strong>
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="btn-group">
                     <a href="{{ url_for('manager.all_scoresheets') }}" class="btn btn-outline-secondary">
@@ -107,12 +112,10 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Metric</th>
-                                    <th>Description</th>
                                     <th>Score</th>
                                     <th>Weight</th>
                                     <th>Weighted Points</th>
                                     <th>Status</th>
-                                    <th>Time</th>
                                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
                                     <th class="edit-mode-column" style="display: none;">Actions</th>
                                     {% endif %}
@@ -123,9 +126,9 @@
                                 <tr class="score-row" data-score-id="{{ score.id }}">
                                     <td>
                                         <strong>{{ score.metric_name }}</strong>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ score.metric_description[:80] }}{% if score.metric_description|length > 80 %}...{% endif %}</small>
+                                        {% if score.notes %}
+                                        <br><small class="text-muted">{{ score.notes }}</small>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="badge bg-{% if score.value >= 50 %}success{% elif score.value >= 30 %}warning{% else %}danger{% endif %} fs-6" style="min-width: 50px;">
@@ -145,9 +148,6 @@
                                             <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <small class="text-muted">{{ score.taken_at.strftime('%H:%M') }}</small>
-                                    </td>
                                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
                                     <td class="edit-mode-column" style="display: none;">
                                         <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }})" title="Edit Score">
@@ -156,13 +156,6 @@
                                     </td>
                                     {% endif %}
                                 </tr>
-                                {% if score.notes %}
-                                <tr class="score-notes-row" data-score-id="{{ score.id }}">
-                                    <td colspan="{% if current_user.role and current_user.role.value == 'ADMIN' %}8{% else %}7{% endif %}" class="bg-light">
-                                        <small><strong>Notes:</strong> {{ score.notes }}</small>
-                                    </td>
-                                </tr>
-                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -219,15 +212,9 @@ document.addEventListener('DOMContentLoaded', function() {
     rows.forEach(row => {
         row.addEventListener('mouseenter', function() {
             this.classList.add('table-active');
-            // Also highlight notes row if it exists
-            const noteRow = document.querySelector(`.score-notes-row[data-score-id="${this.dataset.scoreId}"]`);
-            if (noteRow) noteRow.classList.add('table-active');
         });
         row.addEventListener('mouseleave', function() {
             this.classList.remove('table-active');
-            // Also remove highlight from notes row
-            const noteRow = document.querySelector(`.score-notes-row[data-score-id="${this.dataset.scoreId}"]`);
-            if (noteRow) noteRow.classList.remove('table-active');
         });
     });
 });
