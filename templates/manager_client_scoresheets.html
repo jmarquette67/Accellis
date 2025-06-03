@@ -28,143 +28,44 @@
     </div>
 
     {% if scoresheets %}
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-1">{{ scoresheets|length }}</h4>
-                            <p class="mb-0">Score Sheet Days</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-calendar fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-1">{{ scoresheets|sum(attribute='1.total_entries') }}</h4>
-                            <p class="mb-0">Total Score Entries</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-clipboard-list fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-1">{{ scoresheets|sum(attribute='1.total_weighted_points') }}</h4>
-                            <p class="mb-0">Total Weighted Points</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-star fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card bg-warning text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-1">{{ "%.1f"|format(scoresheets|sum(attribute='1.total_weighted_points') / scoresheets|sum(attribute='1.total_entries') if scoresheets|sum(attribute='1.total_entries') > 0 else 0) }}</h4>
-                            <p class="mb-0">Avg Points per Entry</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Score Sheets by Date -->
+    <!-- Scoresheet List -->
     <div class="row">
         <div class="col-12">
-            {% for date_key, date_data in scoresheets %}
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-1">{{ date_data.date.strftime('%A, %B %d, %Y') }}</h5>
-                            <small class="text-muted">
-                                {{ date_data.total_entries }} metric entries
-                                | Total weighted points: {{ date_data.total_weighted_points }}
-                                | Average: {{ "%.1f"|format(date_data.total_weighted_points / date_data.total_entries if date_data.total_entries > 0 else 0) }}
-                            </small>
-                        </div>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="toggleDateSection('{{ date_key }}')">
-                                <i class="fas fa-eye" id="toggle-icon-{{ date_key }}"></i> Toggle View
-                            </button>
-                        </div>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Scoresheet History ({{ scoresheets|length }} scoresheets)</h5>
                 </div>
-                <div class="card-body collapse show" id="section-{{ date_key }}">
-                    <!-- Score Entries Table -->
+                <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm">
-                            <thead class="table-light">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <th>Time</th>
-                                    <th>Metric</th>
-                                    <th>Score</th>
-                                    <th>Weight</th>
-                                    <th>Weighted Points</th>
-                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Total Score</th>
+                                    <th>Metrics Scored</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for score in date_data.scores %}
-                                <tr class="score-entry-row" data-score-id="{{ score.id }}" style="cursor: pointer;" onclick="viewScoreDetails({{ score.id }})">
-                                    <td>{{ score.time }}</td>
+                                {% for date_key, date_data in scoresheets %}
+                                <tr>
                                     <td>
-                                        <strong>{{ score.metric_name }}</strong>
+                                        <strong>{{ date_data.date.strftime('%B %d, %Y') }}</strong>
+                                        <br><small class="text-muted">{{ date_data.date.strftime('%A') }}</small>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{% if score.value >= 50 %}success{% elif score.value >= 30 %}warning{% else %}danger{% endif %}" style="min-width: 50px;">
-                                            {{ score.value }}
+                                        <span class="badge bg-{% if date_data.total_weighted_points >= 50 %}success{% elif date_data.total_weighted_points >= 30 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ date_data.total_weighted_points }} points
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info" style="min-width: 40px;">{{ score.weight }}x</span>
+                                        <span class="text-muted">{{ date_data.total_entries }} of 13 metrics</span>
                                     </td>
                                     <td>
-                                        <strong>{{ score.weighted_points }}</strong>
-                                    </td>
-                                    <td>
-                                        {% if score.locked %}
-                                            <span class="badge bg-success" style="min-width: 60px;">Locked</span>
-                                        {% else %}
-                                            <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            {% if current_user.role and current_user.role.value == 'ADMIN' %}
-                                            <button class="btn btn-outline-primary btn-sm" onclick="editScore({{ score.id }}); event.stopPropagation();" title="Edit Score">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            {% endif %}
-                                            <button class="btn btn-outline-info btn-sm" onclick="viewScoreDetails({{ score.id }}); event.stopPropagation();" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('manager.scoresheet_detail', date=date_key, client_id=client.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            View Details
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -173,7 +74,6 @@
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
     </div>
 
@@ -196,72 +96,11 @@
     {% endif %}
 </div>
 
-<!-- Score Detail Modal -->
-<div class="modal fade" id="scoreDetailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Score Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="scoreDetailContent">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-function toggleDateSection(dateKey) {
-    const section = document.getElementById('section-' + dateKey);
-    const icon = document.getElementById('toggle-icon-' + dateKey);
-    
-    if (section.classList.contains('show')) {
-        section.classList.remove('show');
-        icon.className = 'fas fa-eye-slash';
-    } else {
-        section.classList.add('show');
-        icon.className = 'fas fa-eye';
-    }
-}
-
-function viewScoreDetails(scoreId) {
-    // Load score details in modal
-    fetch(`/manager/api/score/${scoreId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('scoreDetailContent').innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Metric Information</h6>
-                        <p><strong>${data.metric_name}</strong></p>
-                        <p class="text-muted">${data.metric_description}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Score Details</h6>
-                        <p>Score: <span class="badge bg-primary">${data.value}</span></p>
-                        <p>Weight: <span class="badge bg-info">${data.weight}x</span></p>
-                        <p>Weighted Points: <strong>${data.weighted_points}</strong></p>
-                        <p>Date: ${data.taken_at}</p>
-                        ${data.notes ? `<p>Notes: ${data.notes}</p>` : ''}
-                    </div>
-                </div>
-            `;
-            new bootstrap.Modal(document.getElementById('scoreDetailModal')).show();
-        })
-        .catch(error => {
-            console.error('Error loading score details:', error);
-        });
-}
-
-function editScore(scoreId) {
-    // Redirect to edit page
-    window.location.href = `/manager/score/${scoreId}/edit`;
-}
-
-// Add hover effects to score rows
+// Simple scoresheet list functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('.score-entry-row');
+    // Add hover effects to table rows
+    const rows = document.querySelectorAll('tbody tr');
     rows.forEach(row => {
         row.addEventListener('mouseenter', function() {
             this.classList.add('table-active');
