@@ -1633,3 +1633,33 @@ def user_management():
     
     users = User.query.order_by(User.email).all()
     return render_template('manager_users.html', users=users)
+
+@manager_bp.route("/users/<user_id>/update", methods=['POST'])
+@require_login
+def update_user(user_id):
+    """Update user information and role"""
+    user = require_manager()
+    
+    # Only admins can manage users
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    target_user = User.query.get_or_404(user_id)
+    
+    # Update user information
+    target_user.first_name = request.form.get('first_name', '').strip()
+    target_user.last_name = request.form.get('last_name', '').strip()
+    
+    # Update role
+    new_role = request.form.get('role')
+    if new_role in ['TAM', 'VCIO', 'MANAGER', 'ADMIN']:
+        target_user.role = UserRole(new_role)
+    
+    try:
+        db.session.commit()
+        flash(f'User {target_user.first_name or target_user.email} updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating user: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
