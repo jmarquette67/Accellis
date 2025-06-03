@@ -288,27 +288,26 @@ def generate_ai_trend_insights(all_scores):
         avg_scoresheet_total = sum(scoresheet_totals.values()) / len(scoresheet_totals)
         performance_percentage = (avg_scoresheet_total / 68) * 100
         
-        # Trend 1: Overall performance assessment based on normalized scoresheet totals
-        # With Cross Selling normalized (reduced by 67%), expect lower ranges
-        if avg_scoresheet_total >= 25:  # Top performers with normalized scoring
+        # Trend 1: Overall performance assessment based on actual scoresheet totals
+        if avg_scoresheet_total >= 39:  # Top 15% performers (85th percentile)
             insights.append({
                 'type': 'success',
-                'title': 'Excellent Normalized Performance',
-                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points demonstrates balanced excellence across all metrics (Cross Selling impact normalized).',
+                'title': 'Top-Tier Scoresheet Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points places performance in top 15% of all scoresheets (39+ points).',
                 'confidence': 85
             })
-        elif avg_scoresheet_total >= 18:  # Above average with normalized scoring
+        elif avg_scoresheet_total >= 32:  # Above median performers
             insights.append({
                 'type': 'info',
-                'title': 'Good Balanced Performance',
-                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points shows solid performance across metrics without Cross Selling dominance.',
+                'title': 'Above-Average Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is above the median of 32 points but below top-tier (39+ points).',
                 'confidence': 80
             })
-        else:  # Below average with normalized scoring
+        else:  # Below median performers
             insights.append({
                 'type': 'warning',
-                'title': 'Below-Average Normalized Performance',
-                'description': f'Average normalized scoresheet total of {avg_scoresheet_total:.1f} points indicates improvement needed across multiple metric areas.',
+                'title': 'Below-Median Performance',
+                'description': f'Average scoresheet total of {avg_scoresheet_total:.1f} points is below the median of 32 points. Focus on improvement opportunities.',
                 'confidence': 90
             })
     
@@ -343,33 +342,33 @@ def generate_ai_trend_insights(all_scores):
     
     if client_scoresheet_totals:
         client_averages = [sum(totals)/len(totals) for totals in client_scoresheet_totals.values()]
-        top_tier_clients = len([avg for avg in client_averages if avg >= 25])  # Top performers (normalized)
-        good_performance_clients = len([avg for avg in client_averages if avg >= 18])  # Above average (normalized)
+        top_tier_clients = len([avg for avg in client_averages if avg >= 39])  # Top 15% (85th percentile)
+        above_median_clients = len([avg for avg in client_averages if avg >= 32])  # Above median
         total_clients = len(client_averages)
         
         if total_clients > 0:
             top_tier_percentage = (top_tier_clients / total_clients) * 100
-            good_performance_percentage = (good_performance_clients / total_clients) * 100
+            above_median_percentage = (above_median_clients / total_clients) * 100
             
             if top_tier_percentage >= 25:
                 insights.append({
                     'type': 'success',
-                    'title': 'Excellent Normalized Client Distribution',
-                    'description': f'{top_tier_percentage:.0f}% of clients achieve excellent normalized performance (25+ points). Strong balanced engagement.',
+                    'title': 'Strong Client Performance Distribution',
+                    'description': f'{top_tier_percentage:.0f}% of clients achieve top-tier performance (39+ points). Excellent retention indicators.',
                     'confidence': 85
                 })
-            elif good_performance_percentage >= 60:
+            elif above_median_percentage >= 60:
                 insights.append({
                     'type': 'info',
-                    'title': 'Good Balanced Client Performance',
-                    'description': f'{good_performance_percentage:.0f}% of clients show good normalized performance (18+ points), with {top_tier_percentage:.0f}% excellent.',
+                    'title': 'Solid Client Performance Base',
+                    'description': f'{above_median_percentage:.0f}% of clients perform above median (32+ points), with {top_tier_percentage:.0f}% in top tier.',
                     'confidence': 80
                 })
             else:
                 insights.append({
                     'type': 'warning',
-                    'title': 'Client Engagement Balance Needed',
-                    'description': f'Only {good_performance_percentage:.0f}% of clients achieve good normalized performance. Focus on improving metric balance.',
+                    'title': 'Client Performance Concentration Risk',
+                    'description': f'Only {above_median_percentage:.0f}% of clients perform above median. Focus on elevating underperforming accounts.',
                     'confidence': 85
                 })
     
@@ -420,7 +419,7 @@ def prepare_chart_data(all_scores):
     scoresheet_totals_by_month = {}
     scoresheet_data = {}
     
-    # Group scores by date and client to calculate normalized scoresheet totals
+    # Group scores by date and client to calculate balanced scoresheet totals
     for score, metric, client, user in all_scores:
         date_key = score.taken_at.date()
         sheet_key = f"{date_key}_{client.id}"
@@ -428,10 +427,10 @@ def prepare_chart_data(all_scores):
         if sheet_key not in scoresheet_data:
             scoresheet_data[sheet_key] = {'date': date_key, 'client_id': client.id, 'total': 0}
         
-        # Apply normalization: reduce Cross Selling impact by 67%
-        normalization_factor = 0.33 if metric.name == 'Cross Selling' else 1.0
-        normalized_contribution = score.value * metric.weight * normalization_factor
-        scoresheet_data[sheet_key]['total'] += normalized_contribution
+        # Apply balanced weighting to prevent Cross Selling from dominating scores
+        adjustment_factor = 0.33 if metric.name == 'Cross Selling' else 1.0
+        balanced_contribution = score.value * metric.weight * adjustment_factor
+        scoresheet_data[sheet_key]['total'] += balanced_contribution
     
     # Group scoresheet totals by month
     for sheet_key, data in scoresheet_data.items():
