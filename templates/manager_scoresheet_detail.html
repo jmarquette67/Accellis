@@ -115,7 +115,6 @@
                                     <th>Score</th>
                                     <th>Weight</th>
                                     <th>Weighted Points</th>
-                                    <th>Status</th>
                                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
                                     <th class="edit-mode-column" style="display: none;">Actions</th>
                                     {% endif %}
@@ -126,7 +125,7 @@
                                 <tr class="score-row" data-score-id="{{ score.id }}">
                                     <td>
                                         <strong>{{ score.metric_name }}</strong>
-                                        {% if score.notes %}
+                                        {% if score.notes and 'Sample data' not in score.notes %}
                                         <br><small class="text-muted">{{ score.notes }}</small>
                                         {% endif %}
                                     </td>
@@ -140,13 +139,6 @@
                                     </td>
                                     <td>
                                         <strong class="text-primary">{{ score.weighted_points }}</strong>
-                                    </td>
-                                    <td>
-                                        {% if score.locked %}
-                                            <span class="badge bg-success" style="min-width: 60px;">Locked</span>
-                                        {% else %}
-                                            <span class="badge bg-warning" style="min-width: 60px;">Draft</span>
-                                        {% endif %}
                                     </td>
                                     {% if current_user.role and current_user.role.value == 'ADMIN' %}
                                     <td class="edit-mode-column" style="display: none;">
