@@ -183,14 +183,17 @@ def analyze_company_performance(all_scores):
         # Calculate trend direction using recent vs older scores
         trend_direction = calculate_trend_direction(data['trend_data'])
         
-        # Calculate weighted impact (weight × normalized score)
-        weighted_impact = data['weight'] * normalized_scores[metric_name]
+        # Calculate weighted percentage (normalized score × weight, then convert to percentage)
+        weighted_contribution = normalized_scores[metric_name] * data['weight']
+        # Convert to percentage of maximum possible weighted contribution
+        max_possible_weighted = data['weight'] * 1.0  # Maximum normalized score is 1.0
+        weighted_percentage = (weighted_contribution / max_possible_weighted) * 100
         
         company_analysis.append({
             'metric_name': metric_name,
             'average_score': round(avg_score, 2),
             'performance_percentage': round(performance_percentage, 1),
-            'weighted_impact': round(weighted_impact, 2),
+            'weighted_percentage': round(weighted_percentage, 1),
             'total_entries': data['count'],
             'trend_direction': trend_direction,
             'weight': data['weight'],

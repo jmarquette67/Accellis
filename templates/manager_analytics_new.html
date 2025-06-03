@@ -150,8 +150,8 @@
                                     <th class="sortable text-center" data-sort="performance_percentage">
                                         <i class="fas fa-sort me-1"></i>Unweighted %
                                     </th>
-                                    <th class="sortable text-center" data-sort="weighted_impact">
-                                        <i class="fas fa-sort me-1"></i>Weighted Impact
+                                    <th class="sortable text-center" data-sort="weighted_percentage">
+                                        <i class="fas fa-sort me-1"></i>Weighted %
                                     </th>
                                     <th class="sortable text-center" data-sort="trend_direction">
                                         <i class="fas fa-sort me-1"></i>Trend
@@ -187,12 +187,18 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-secondary" 
-                                              title="Weighted Impact: {{ metric.performance_percentage }}% × weight {{ metric.weight }} = {{ metric.weighted_impact }} points"
-                                              data-bs-toggle="tooltip" data-bs-placement="top">
-                                            {{ metric.weighted_impact }}
-                                        </span>
-                                        <small class="d-block text-muted">pts</small>
+                                        <div class="progress mb-1" style="height: 18px;" 
+                                             title="Weighted %: {{ metric.performance_percentage }}% performance × weight {{ metric.weight }} = {{ metric.weighted_percentage }}% of maximum possible for this metric"
+                                             data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <div class="progress-bar bg-info" 
+                                                 role="progressbar" 
+                                                 style="width: {{ metric.weighted_percentage }}%"
+                                                 aria-valuenow="{{ metric.weighted_percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ metric.weighted_percentage }}%
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         {% if metric.trend_direction == 'trending_up' %}
