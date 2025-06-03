@@ -55,8 +55,20 @@ class OAuth(OAuthConsumerMixin, db.Model):
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    
+    # Contact information
+    contact_name = db.Column(db.String(100))
+    contact_phone = db.Column(db.String(20))
+    contact_email = db.Column(db.String(120))
+    
+    # Business information
+    description = db.Column(db.Text)
+    industry = db.Column(db.String(50))
+    
+    # Management
     account_owner_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=True)
-    primary_contact_email = db.Column(db.String(120), nullable=True)
+    
+    # System fields
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_checkin = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
