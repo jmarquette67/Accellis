@@ -170,7 +170,9 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        <div class="progress mb-1" style="height: 20px;">
+                                        <div class="progress mb-1" style="height: 20px;" 
+                                             title="{% if metric.name == 'Cross Selling' %}Cross Selling: Average {{ metric.average_score }}/10 × 100% = {{ metric.performance_percentage }}%{% else %}{{ metric.name }}: Average {{ metric.average_score }}/1 × 100% = {{ metric.performance_percentage }}%{% endif %}"
+                                             data-bs-toggle="tooltip" data-bs-placement="top">
                                             <div class="progress-bar bg-{{ metric.color }}" 
                                                  role="progressbar" 
                                                  style="width: {{ metric.performance_percentage }}%"
@@ -194,7 +196,11 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-{{ metric.color }}">{{ metric.relative_performance }}</span>
+                                        <span class="badge bg-{{ metric.color }}" 
+                                              title="Relative ranking: Compared to other metrics, this is {% if metric.relative_performance == 'Our Strength' %}in top 33%{% elif metric.relative_performance == 'Moderate Performance' %}in middle 33%{% else %}in bottom 33% - needs focus{% endif %}"
+                                              data-bs-toggle="tooltip" data-bs-placement="top">
+                                            {{ metric.relative_performance }}
+                                        </span>
                                     </td>
                                     <td class="text-center">
                                         <small class="text-muted">{{ metric.average_score }}</small>
@@ -296,9 +302,9 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Account Owner</th>
-                                    <th>Balanced Total</th>
+                                    <th>Avg Scoresheet</th>
                                     <th>Clients Managed</th>
-                                    <th>Total Scores</th>
+                                    <th>Scoresheets</th>
                                     <th>Strongest Area</th>
                                     <th>Needs Focus</th>
                                     <th>Normalized Breakdown</th>
@@ -309,13 +315,13 @@
                                 <tr>
                                     <td><strong>{{ owner.name }}</strong></td>
                                     <td>
-                                        <span class="badge bg-{% if owner.balanced_total >= 25 %}success{% elif owner.balanced_total >= 18 %}warning{% else %}danger{% endif %} fs-6">
-                                            {{ owner.balanced_total }} pts
+                                        <span class="badge bg-{% if owner.avg_scoresheet_total >= 25 %}success{% elif owner.avg_scoresheet_total >= 18 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ owner.avg_scoresheet_total }} pts
                                         </span>
-                                        <small class="d-block text-muted">balanced score</small>
+                                        <small class="d-block text-muted">per scoresheet</small>
                                     </td>
                                     <td>{{ owner.client_count }}</td>
-                                    <td>{{ owner.total_scores }}</td>
+                                    <td>{{ owner.scoresheet_count }}</td>
                                     <td>
                                         <small class="text-success">
                                             <strong>{{ owner.strongest_metric }}</strong><br>
@@ -507,8 +513,14 @@ function sortTable(columnIndex, sortType) {
     rows.forEach(row => tbody.appendChild(row));
 }
 
-// Add click handlers for sortable columns
+// Add click handlers for sortable columns and initialize tooltips
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
     const sortableHeaders = document.querySelectorAll('.sortable');
     sortableHeaders.forEach((header, index) => {
         header.style.cursor = 'pointer';
