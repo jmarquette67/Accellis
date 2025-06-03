@@ -1676,3 +1676,122 @@ def update_user(user_id):
         flash(f'Error updating user: {str(e)}', 'error')
     
     return redirect(url_for('manager.user_management'))
+
+@manager_bp.route("/metric-configuration")
+@require_login
+def metric_configuration():
+    """Manage metric configuration and options"""
+    user = require_manager()
+    
+    # Only admins can configure metrics
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    from models import Metric, MetricOption
+    metrics = Metric.query.order_by(Metric.name).all()
+    
+    return render_template('manager_metric_config.html', metrics=metrics)
+
+@manager_bp.route("/metric/<int:metric_id>/options", methods=['GET', 'POST'])
+@require_login
+def manage_metric_options(metric_id):
+    """Manage options for a specific metric"""
+    user = require_manager()
+    
+    # Only admins can configure metrics
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    from models import Metric, MetricOption
+    metric = Metric.query.get_or_404(metric_id)
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add_option':
+            option_label = request.form.get('option_label', '').strip()
+            option_value = request.form.get('option_value')
+            
+            if option_label and option_value is not None:
+                try:
+                    option_value = int(option_value)
+                    max_order = db.session.query(func.max(MetricOption.option_order)).filter_by(metric_id=metric_id).scalar() or 0
+                    
+                    option = MetricOption()
+                    option.metric_id = metric_id
+                    option.option_label = option_label
+                    option.option_value = option_value
+                    option.option_order = max_order + 1
+                    
+                    db.session.add(option)
+                    db.session.commit()
+                    flash(f'Added option "{option_label}" successfully', 'success')
+                except ValueError:
+                    flash('Invalid option value. Must be a number.', 'error')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Error adding option: {str(e)}', 'error')
+        
+        elif action == 'update_metric':
+            input_type = request.form.get('input_type')
+            if input_type in ['number', 'select']:
+                metric.input_type = input_type
+                try:
+                    db.session.commit()
+                    flash(f'Updated {metric.name} input type to {input_type}', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Error updating metric: {str(e)}', 'error')
+        
+        return redirect(url_for('manager.manage_metric_options', metric_id=metric_id))
+    
+    options = MetricOption.query.filter_by(metric_id=metric_id).order_by(MetricOption.option_order).all()
+    
+    return render_template('manager_metric_options.html', metric=metric, options=options)
+
+@manager_bp.route("/metric-option/<int:option_id>/update", methods=['POST'])
+@require_login
+def update_metric_option(option_id):
+    """Update or delete a metric option"""
+    user = require_manager()
+    
+    # Only admins can configure metrics
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    from models import MetricOption
+    option = MetricOption.query.get_or_404(option_id)
+    
+    action = request.form.get('action')
+    
+    if action == 'delete':
+        metric_id = option.metric_id
+        db.session.delete(option)
+        try:
+            db.session.commit()
+            flash('Option deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting option: {str(e)}', 'error')
+        return redirect(url_for('manager.manage_metric_options', metric_id=metric_id))
+    
+    elif action == 'update':
+        option_label = request.form.get('option_label', '').strip()
+        option_value = request.form.get('option_value')
+        is_active = request.form.get('is_active') == 'on'
+        
+        if option_label and option_value is not None:
+            try:
+                option.option_label = option_label
+                option.option_value = int(option_value)
+                option.is_active = is_active
+                
+                db.session.commit()
+                flash('Option updated successfully', 'success')
+            except ValueError:
+                flash('Invalid option value. Must be a number.', 'error')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating option: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.manage_metric_options', metric_id=option.metric_id))

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}{{ metric.name }} Options - Accellis Client Engagement{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-list me-2"></i>{{ metric.name }} Configuration</h2>
+                    <p class="text-muted">Manage dropdown options and input type for this metric</p>
+                </div>
+                <a href="{{ url_for('manager.metric_configuration') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Metrics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric Type Configuration -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Input Type Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="update_metric">
+                        <div class="mb-3">
+                            <label class="form-label">Input Type</label>
+                            <select class="form-select" name="input_type">
+                                <option value="number" {% if metric.input_type == 'number' %}selected{% endif %}>Number Input</option>
+                                <option value="select" {% if metric.input_type == 'select' %}selected{% endif %}>Dropdown Select</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Input Type</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        {% if metric.input_type == 'select' %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Option</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="add_option">
+                        <div class="mb-3">
+                            <label class="form-label">Option Label</label>
+                            <input type="text" class="form-control" name="option_label" required placeholder="e.g., Happening, Not Happening">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Option Value</label>
+                            <input type="number" class="form-control" name="option_value" required placeholder="e.g., 1, 0">
+                        </div>
+                        <button type="submit" class="btn btn-success">Add Option</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if metric.input_type == 'select' %}
+    <!-- Current Options -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Options</h5>
+                    <small class="text-muted">Configure the dropdown options for this metric</small>
+                </div>
+                <div class="card-body">
+                    {% if options %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Label</th>
+                                    <th>Value</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for option in options %}
+                                <tr>
+                                    <td>{{ option.option_order }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('manager.update_metric_option', option_id=option.id) }}" style="display: inline-block;">
+                                            <input type="hidden" name="action" value="update">
+                                            <input type="text" class="form-control form-control-sm" name="option_label" value="{{ option.option_label }}" style="width: 150px; display: inline-block;">
+                                    </td>
+                                    <td>
+                                            <input type="number" class="form-control form-control-sm" name="option_value" value="{{ option.option_value }}" style="width: 80px; display: inline-block;">
+                                    </td>
+                                    <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_active" {% if option.is_active %}checked{% endif %}>
+                                                <label class="form-check-label">Active</label>
+                                            </div>
+                                    </td>
+                                    <td>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary me-2">Update</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('manager.update_metric_option', option_id=option.id) }}" style="display: inline-block;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this option?')">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Options Configured</h5>
+                        <p class="text-muted">Add dropdown options using the form above.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Usage Examples -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Configuration Examples</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Boolean Metrics</h6>
+                            <small class="text-muted">For most metrics except Cross Selling</small>
+                            <ul class="small mt-2">
+                                <li>"Not Happening" → 0</li>
+                                <li>"Happening" → 1</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Help Desk Usage</h6>
+                            <small class="text-muted">Three-tier usage levels</small>
+                            <ul class="small mt-2">
+                                <li>"Low Usage" → 3</li>
+                                <li>"Medium Usage" → 10</li>
+                                <li>"High Usage" → 5</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Lifecycle Phases</h6>
+                            <small class="text-muted">Client progression stages</small>
+                            <ul class="small mt-2">
+                                <li>"Discovery & Assessment" → 2</li>
+                                <li>"Implementation" → 4</li>
+                                <li>"Strategic Partnership" → 8</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -77,16 +77,31 @@
                                                     <span class="badge bg-secondary">{{ metric.weight }}</span>
                                                 </td>
                                                 <td>
-                                                    <input type="number" 
-                                                           class="form-control metric-score" 
-                                                           name="metric_{{ metric.id }}" 
-                                                           id="metric_{{ metric.id }}"
-                                                           min="0" 
-                                                           max="{{ metric.max_value or 10 }}" 
-                                                           step="0.1"
-                                                           data-weight="{{ metric.weight }}"
-                                                           data-max="{{ metric.max_value or 10 }}"
-                                                           placeholder="0-{{ metric.max_value or 10 }}">
+                                                    {% if metric.input_type == 'select' %}
+                                                        <select class="form-select metric-score" 
+                                                                name="metric_{{ metric.id }}" 
+                                                                id="metric_{{ metric.id }}"
+                                                                data-weight="{{ metric.weight }}"
+                                                                data-max="{{ metric.max_score or 10 }}">
+                                                            <option value="">Select...</option>
+                                                            {% for option in metric.metric_options|sort(attribute='option_order') %}
+                                                                {% if option.is_active %}
+                                                                <option value="{{ option.option_value }}">{{ option.option_label }}</option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    {% else %}
+                                                        <input type="number" 
+                                                               class="form-control metric-score" 
+                                                               name="metric_{{ metric.id }}" 
+                                                               id="metric_{{ metric.id }}"
+                                                               min="0" 
+                                                               max="{{ metric.max_score or 10 }}" 
+                                                               step="0.1"
+                                                               data-weight="{{ metric.weight }}"
+                                                               data-max="{{ metric.max_score or 10 }}"
+                                                               placeholder="0-{{ metric.max_score or 10 }}">
+                                                    {% endif %}
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="weighted-points fw-bold" id="weighted_{{ metric.id }}">0.0</span>

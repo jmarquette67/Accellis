@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Metric Configuration - Accellis Client Engagement{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-cogs me-2"></i>Metric Configuration</h2>
+                    <p class="text-muted">Manage metric input types and dropdown options</p>
+                </div>
+                <a href="{{ url_for('manager.admin_settings') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Metric Input Configuration</h5>
+                    <small class="text-muted">Configure how each metric accepts input in score entry forms</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Metric Name</th>
+                                    <th>Weight</th>
+                                    <th>Input Type</th>
+                                    <th>Options</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in metrics %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ metric.name }}</strong>
+                                        {% if metric.description %}
+                                        <small class="d-block text-muted">{{ metric.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ metric.weight }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if metric.input_type == 'select' %}info{% else %}primary{% endif %}">
+                                            {{ metric.input_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if metric.input_type == 'select' %}
+                                            {% set option_count = metric.metric_options|length %}
+                                            <small class="text-muted">{{ option_count }} option{{ 's' if option_count != 1 else '' }}</small>
+                                        {% else %}
+                                            <small class="text-muted">Number input (0-{{ metric.max_score }})</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('manager.manage_metric_options', metric_id=metric.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i> Configure
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Help -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Configuration Guide</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><span class="badge bg-primary">Number</span> Input Type</h6>
+                            <ul class="small">
+                                <li>Users enter numeric values (0-max score)</li>
+                                <li>Suitable for Cross Selling and custom metrics</li>
+                                <li>Allows decimal values for precise scoring</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><span class="badge bg-info">Select</span> Input Type</h6>
+                            <ul class="small">
+                                <li>Users choose from predefined options</li>
+                                <li>Each option has a label and numeric value</li>
+                                <li>Perfect for "Happening/Not Happening" metrics</li>
+                                <li>Configurable dropdown options</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
