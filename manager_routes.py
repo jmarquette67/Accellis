@@ -156,18 +156,28 @@ def analyze_company_performance(all_scores):
             'timestamp': score.taken_at
         })
     
-    # Calculate metrics with normalized Cross Selling
+    # Calculate metrics with proper normalization and exclude Gut Instinct from performance rankings
     company_analysis = []
+    normalized_scores = {}  # For relative ranking calculation
+    
     for metric_name, data in metrics_performance.items():
+        # Skip Gut Instinct from performance analysis
+        if metric_name == 'Gut Instinct':
+            continue
+            
         avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
         
-        # Normalize Cross Selling for fair comparison (convert to percentage scale)
+        # Calculate performance percentage for display
         if metric_name == 'Cross Selling':
             # Cross Selling: 0-10 scale, convert to percentage
             performance_percentage = (avg_score / 10) * 100
+            # Store normalized score for relative ranking (0-1 scale)
+            normalized_scores[metric_name] = avg_score / 10
         else:
             # Other metrics: 0-1 scale, convert to percentage  
             performance_percentage = avg_score * 100
+            # Store normalized score for relative ranking
+            normalized_scores[metric_name] = avg_score
         
         # Calculate trend direction using recent vs older scores
         trend_direction = calculate_trend_direction(data['trend_data'])
@@ -178,13 +188,14 @@ def analyze_company_performance(all_scores):
             'performance_percentage': round(performance_percentage, 1),
             'total_entries': data['count'],
             'trend_direction': trend_direction,
-            'weight': data['weight']
+            'weight': data['weight'],
+            'normalized_score': normalized_scores[metric_name]
         })
     
-    # Sort by performance percentage for relative ranking
-    company_analysis.sort(key=lambda x: x['performance_percentage'], reverse=True)
+    # Sort by normalized scores for fair relative ranking
+    company_analysis.sort(key=lambda x: x['normalized_score'], reverse=True)
     
-    # Add relative performance rankings
+    # Add relative performance rankings based on normalized scores
     for i, metric in enumerate(company_analysis):
         if i < len(company_analysis) // 3:
             metric['relative_performance'] = 'Our Strength'
@@ -275,19 +286,34 @@ def analyze_account_owner_performance(all_scores):
             scoresheet_totals = list(owner_scoresheets[owner_id].values())
             avg_scoresheet_total = sum(scoresheet_totals) / len(scoresheet_totals)
             
-            # Normalize metrics for relative comparison
+            # Normalize metrics for relative comparison (exclude Gut Instinct)
             normalized_metrics = {}
+            normalized_for_ranking = {}
+            
             for metric_name, scores in data['metric_performance'].items():
+                # Skip Gut Instinct from performance analysis
+                if metric_name == 'Gut Instinct':
+                    continue
+                    
                 avg_score = sum(scores) / len(scores)
                 if metric_name == 'Cross Selling':
+                    # Display percentage: 0-10 scale to percentage
                     normalized_metrics[metric_name] = (avg_score / 10) * 100
+                    # Ranking comparison: normalize to 0-1 scale
+                    normalized_for_ranking[metric_name] = avg_score / 10
                 else:
+                    # Display percentage: 0-1 scale to percentage
                     normalized_metrics[metric_name] = avg_score * 100
+                    # Ranking comparison: already 0-1 scale
+                    normalized_for_ranking[metric_name] = avg_score
             
-            # Find strongest and weakest metrics using normalized values
-            if normalized_metrics:
-                strongest_metric = max(normalized_metrics.items(), key=lambda x: x[1])
-                weakest_metric = min(normalized_metrics.items(), key=lambda x: x[1])
+            # Find strongest and weakest metrics using normalized values for fair comparison
+            if normalized_for_ranking:
+                strongest_metric = max(normalized_for_ranking.items(), key=lambda x: x[1])
+                weakest_metric = min(normalized_for_ranking.items(), key=lambda x: x[1])
+                # Convert back to display percentages
+                strongest_metric = (strongest_metric[0], normalized_metrics[strongest_metric[0]])
+                weakest_metric = (weakest_metric[0], normalized_metrics[weakest_metric[0]])
             else:
                 strongest_metric = ('N/A', 0)
                 weakest_metric = ('N/A', 0)
@@ -336,10 +362,11 @@ def generate_ai_trend_insights(all_scores):
             client_metrics[client.id]['metrics'][metric_name] = []
         client_metrics[client.id]['metrics'][metric_name].append(score.value)
         
-        # Track retention-critical metrics
-        if metric_name not in retention_metrics:
-            retention_metrics[metric_name] = []
-        retention_metrics[metric_name].append((score.value, client.id))
+        # Track retention-critical metrics (exclude Gut Instinct)
+        if metric_name != 'Gut Instinct':
+            if metric_name not in retention_metrics:
+                retention_metrics[metric_name] = []
+            retention_metrics[metric_name].append((score.value, client.id))
     
     # Insight 1: Customer Satisfaction & Retention Risk Analysis
     if 'Customer Satisfaction' in retention_metrics:
