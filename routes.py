@@ -49,21 +49,21 @@ def dashboard():
 def dashboard_data():
     """API endpoint for dashboard data"""
     try:
-        # Get recent scoresheets using a simpler approach
-        recent_scores = Score.query.filter_by(status='FINAL').order_by(desc(Score.created_at)).limit(15).all()
+        # Get recent scoresheets using existing schema
+        recent_scores = Score.query.filter_by(status='final').order_by(desc(Score.taken_at)).limit(15).all()
         
         # Group by client and date to get complete scoresheets
         scoresheet_data = {}
         for score in recent_scores:
-            if score.client and score.user and score.metric:
-                key = (score.client.id, score.created_at.date())
+            if score.client and score.metric:
+                key = (score.client.id, score.taken_at.date())
                 if key not in scoresheet_data:
                     scoresheet_data[key] = {
                         'client_name': score.client.name,
-                        'date': score.created_at.strftime('%m/%d'),
-                        'user_name': score.user.first_name or (score.user.email.split('@')[0] if score.user.email else 'User'),
+                        'date': score.taken_at.strftime('%m/%d'),
+                        'user_name': 'System',  # Default since user_id may not exist
                         'scores': [],
-                        'created_at': score.created_at
+                        'taken_at': score.taken_at
                     }
                 scoresheet_data[key]['scores'].append((score.value, score.metric.weight))
         
@@ -71,7 +71,7 @@ def dashboard_data():
         max_score = get_maximum_possible_score()
         recent_data = []
         
-        for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['created_at'], reverse=True)[:5]:
+        for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['taken_at'], reverse=True)[:5]:
             if sheet_data['scores']:
                 total_weighted = sum(score * weight for score, weight in sheet_data['scores'])
                 grade_info = get_performance_grade(total_weighted, max_score)
@@ -85,17 +85,17 @@ def dashboard_data():
                     'grade_color': grade_info['color']
                 })
         
-        # Calculate trending clients - simplified approach
+        # Calculate trending clients using existing data
         trending_up = []
         trending_down = []
         
-        # Get sample trending data based on recent performance
+        # Get trending data based on recent performance
         clients = Client.query.filter_by(is_active=True).limit(10).all()
         for client in clients:
             recent_client_scores = Score.query.filter_by(
                 client_id=client.id, 
-                status='FINAL'
-            ).order_by(desc(Score.created_at)).limit(5).all()
+                status='final'
+            ).order_by(desc(Score.taken_at)).limit(5).all()
             
             if len(recent_client_scores) >= 3:
                 # Simple trend calculation based on recent vs older scores
