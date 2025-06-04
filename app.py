@@ -30,12 +30,16 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # initialize the app with the extension
 db.init_app(app)
 
+# Initialize database immediately but with error handling
 with app.app_context():
-    # Import models and routes
-    import models  # noqa: F401
-    import routes  # noqa: F401
-    
-    db.create_all()
+    try:
+        # Import models
+        import models  # noqa: F401
+        db.create_all()
+        app.logger.info("Database tables created successfully")
+    except Exception as e:
+        app.logger.error(f"Database initialization error: {e}")
+        # Continue without crashing
 
 # Context processor to make site settings and dynamic scoring available in all templates
 @app.context_processor
