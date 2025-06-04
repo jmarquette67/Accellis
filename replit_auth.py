@@ -3,6 +3,7 @@ import os
 import uuid
 from functools import wraps
 from urllib.parse import urlencode
+from datetime import datetime
 
 from flask import g, session, redirect, request, render_template, url_for, abort
 from flask_dance.consumer import (
@@ -170,9 +171,22 @@ def handle_error(blueprint, error, error_description=None, error_uri=None):
 def require_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Ultra-fast authentication check
         if not current_user.is_authenticated:
+            session["next_url"] = get_next_navigation_url(request)
             return redirect(url_for('replit_auth.login'))
+
+        # Check if token needs refresh
+        if current_user.token_expires_at and datetime.now() > current_user.token_expires_at:
+            try:
+                # Refresh token
+                token = current_user.refresh_token_if_needed()
+                if not token:
+                    session["next_url"] = get_next_navigation_url(request)
+                    return redirect(url_for('replit_auth.login'))
+            except Exception:
+                session["next_url"] = get_next_navigation_url(request)
+                return redirect(url_for('replit_auth.login'))
+
         return f(*args, **kwargs)
     return decorated_function
 

@@ -62,93 +62,44 @@ def client_list():
     return render_template('manager_clients.html', clients_data=clients_data)
 
 @manager_bp.route("/clients/analytics")
-@require_login
+@require_manager()
 def client_table():
-    """Optimized analytics dashboard with authentic data"""
-    # Simplified authentication check for performance
-    if not current_user.is_authenticated or current_user.role not in ['manager', 'admin']:
-        return redirect(url_for('replit_auth.login'))
+    """Manager analytics dashboard with comprehensive performance metrics"""
     
-    # Set very short date range for maximum performance
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
+    # Get filters from request
+    start_date = request.args.get('start_date', (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d'))
+    end_date = request.args.get('end_date', datetime.now().strftime('%Y-%m-%d'))
+    selected_clients = request.args.getlist('clients')
     
-    # Default to last 30 days only
-    if not start_date:
-        start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-    if not end_date:
-        end_date = datetime.now().strftime('%Y-%m-%d')
+    # Get all scores within date range for analysis
+    all_scores_query = latest_scores_subq(db.session).filter(
+        Score.taken_at >= start_date,
+        Score.taken_at <= end_date
+    )
     
-    # Retrieve authentic metrics data directly from your database
-    try:
-        # Get aggregated metrics for immediate display
-        authentic_metrics = db.session.execute(text("""
-            SELECT m.name, AVG(CAST(s.value AS DECIMAL)), COUNT(*) 
-            FROM score s 
-            JOIN metric m ON s.metric_id = m.id 
-            WHERE s.status = 'final' 
-            GROUP BY m.name 
-            ORDER BY m.name
-            LIMIT 15
-        """)).fetchall()
-        
-        company_metrics = []
-        for metric_row in authentic_metrics:
-            avg_score = float(metric_row[1] or 0)
-            company_metrics.append({
-                'metric_name': metric_row[0],
-                'average_score': round(avg_score, 1),
-                'performance_percentage': round(avg_score * 20 if avg_score <= 5 else avg_score * 100, 1),
-                'total_entries': int(metric_row[2])
-            })
-    except Exception:
-        company_metrics = []
+    if selected_clients:
+        all_scores_query = all_scores_query.filter(Score.client_id.in_(selected_clients))
     
-    # Get authentic client and user data for filters
-    try:
-        clients_data = db.session.execute(text("""
-            SELECT id, name FROM client WHERE is_active = true ORDER BY name LIMIT 20
-        """)).fetchall()
-        all_clients = [{'id': row[0], 'name': row[1]} for row in clients_data]
-    except Exception:
-        all_clients = []
+    all_scores = all_scores_query.all()
     
-    try:
-        users_data = db.session.execute(text("""
-            SELECT id, first_name, last_name FROM users ORDER BY first_name LIMIT 10
-        """)).fetchall()
-        all_users = [{'id': row[0], 'first_name': row[1], 'last_name': row[2]} for row in users_data]
-    except Exception:
-        all_users = []
+    # Analyze performance metrics
+    company_metrics = analyze_company_performance(all_scores)
+    account_owner_performance = analyze_account_owner_performance(all_scores)
+    chart_data = prepare_chart_data(all_scores)
     
-    # Use authentic client and user data from database queries above
-    
-    # Complete chart_data structure with all required components
-    chart_data = {
-        'monthly_trends': {
-            'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data': [75, 80, 85, 78, 82, 88]
-        },
-        'metric_distribution': {
-            'labels': [metric['metric_name'] for metric in company_metrics] if company_metrics else ['No Data'],
-            'data': [metric['average_score'] for metric in company_metrics] if company_metrics else [0]
-        },
-        'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        'datasets': [{
-            'label': 'Monthly Performance',
-            'data': [75, 80, 85, 78, 82, 88]
-        }]
-    }
+    # Get filter options
+    all_clients = db.session.query(Client).filter(Client.is_active == True).order_by(Client.name).all()
+    all_users = db.session.query(User).filter(User.role.in_(['manager', 'admin'])).order_by(User.first_name).all()
     
     return render_template("manager_analytics_new.html", 
                          company_metrics=company_metrics,
-                         account_owner_performance=[],
+                         account_owner_performance=account_owner_performance,
                          chart_data=chart_data,
                          all_clients=all_clients,
                          all_users=all_users,
                          start_date=start_date,
                          end_date=end_date,
-                         selected_clients=[])
+                         selected_clients=selected_clients)
 
 def analyze_company_performance_optimized(all_scores):
     """Optimized company performance analysis with reduced complexity"""
