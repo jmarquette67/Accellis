@@ -6,7 +6,7 @@ from app import app, db
 from models import Client, HealthCheck, Alert, User, UserRole, Score, Metric
 from forms import ClientRegistrationForm, HealthCheckForm
 from replit_auth import require_login, require_role, make_replit_blueprint
-from scoring_calculations import get_maximum_possible_score, get_performance_grade
+from scoring_calculations import get_maximum_possible_score, get_performance_grade, calculate_score_percentage
 
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
@@ -74,7 +74,8 @@ def dashboard_data():
         for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['taken_at'], reverse=True)[:5]:
             if sheet_data['scores']:
                 total_weighted = sum(score * weight for score, weight in sheet_data['scores'])
-                grade_info = get_performance_grade(total_weighted, max_score)
+                percentage = calculate_score_percentage(total_weighted, max_score)
+                grade_info = get_performance_grade(percentage)
                 
                 recent_data.append({
                     'client_name': sheet_data['client_name'],
