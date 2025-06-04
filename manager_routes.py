@@ -555,7 +555,7 @@ def client_trend(client_id):
     
     client = Client.query.get_or_404(client_id)
     
-    # Get monthly scoresheet totals for proper trend analysis
+    # Get monthly scoresheet totals for proper trend analysis - last 12 months
     monthly_data = (
         db.session.query(
             db.func.date_trunc('month', Score.taken_at).label('month'),
@@ -564,14 +564,14 @@ def client_trend(client_id):
         .join(Metric, Score.metric_id == Metric.id)
         .filter(Score.client_id == client_id)
         .group_by(db.func.date_trunc('month', Score.taken_at))
-        .order_by('month')
+        .order_by(db.desc('month'))
         .limit(12)
         .all()
     )
     
-    # Format data for chart with proper monthly aggregation
+    # Format data for chart with proper monthly aggregation (reverse to show chronological order)
     data = []
-    for month_data in monthly_data:
+    for month_data in reversed(monthly_data):
         month_str = month_data.month.strftime("%b %Y")
         total_score = round(float(month_data.total_score), 1)
         data.append({"x": month_str, "y": total_score})
