@@ -79,7 +79,9 @@ def dashboard_data():
                 
                 recent_data.append({
                     'client_name': sheet_data['client_name'],
+                    'client_id': key[0],  # client_id from the key tuple
                     'date': sheet_data['date'],
+                    'date_key': sheet_data['taken_at'].strftime('%Y-%m-%d'),  # For scoresheet URL
                     'user_name': sheet_data['user_name'],
                     'total_score': f"{total_weighted:.1f}",
                     'max_score': f"{max_score:.0f}",
@@ -109,11 +111,13 @@ def dashboard_data():
                     if trend_percent > 10:
                         trending_up.append({
                             'name': client.name,
+                            'client_id': client.id,
                             'trend': trend_percent
                         })
                     elif trend_percent < -10:
                         trending_down.append({
                             'name': client.name,
+                            'client_id': client.id,
                             'trend': trend_percent
                         })
         
