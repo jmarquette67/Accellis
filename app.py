@@ -20,12 +20,16 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production"))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# configure the database, relative to the app instance folder
+# configure the database with optimized connection pooling
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///health_check.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_size": 10,
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "max_overflow": 20,
+    "pool_timeout": 30,
 }
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # initialize the app with the extension
 db.init_app(app)

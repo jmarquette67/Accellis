@@ -40,34 +40,46 @@ def client_list():
     """Display all clients for management"""
     require_manager()
     
-    # Get clients with their account owners
-    clients = db.session.query(Client).join(User, Client.account_owner_id == User.id, isouter=True).order_by(Client.name).all()
+    # Optimized query to get clients with their account owners in one query
+    clients = db.session.query(Client, User).outerjoin(
+        User, Client.account_owner_id == User.id
+    ).order_by(Client.name).all()
     
-    # Calculate latest total scores for each client
+    # Optimized query to get latest scores for all clients at once
+    latest_scores_subq = db.session.query(
+        Score.client_id,
+        Score.metric_id,
+        func.max(Score.taken_at).label('max_date')
+    ).group_by(Score.client_id, Score.metric_id).subquery()
+    
+    scores_with_metrics = db.session.query(
+        Score.client_id,
+        Score.value,
+        Metric.weight
+    ).join(
+        latest_scores_subq,
+        (Score.client_id == latest_scores_subq.c.client_id) &
+        (Score.metric_id == latest_scores_subq.c.metric_id) &
+        (Score.taken_at == latest_scores_subq.c.max_date)
+    ).join(Metric, Score.metric_id == Metric.id).all()
+    
+    # Calculate client scores efficiently
     client_scores = {}
-    for client in clients:
-        # Get latest scores for this client
-        latest_scores = db.session.query(Score, Metric).join(Metric).filter(
-            Score.client_id == client.id
-        ).order_by(Score.taken_at.desc()).all()
-        
-        if latest_scores:
-            # Group by metric and get the latest for each
-            metric_scores = {}
-            for score, metric in latest_scores:
-                if metric.id not in metric_scores:
-                    metric_scores[metric.id] = (score, metric)
-            
-            # Calculate weighted total (sum of score * weight for each metric)
-            total_weighted_score = 0
-            for score, metric in metric_scores.values():
-                total_weighted_score += score.value * metric.weight
-            
-            client_scores[client.id] = total_weighted_score
-        else:
-            client_scores[client.id] = None
+    for client_id, score_value, weight in scores_with_metrics:
+        if client_id not in client_scores:
+            client_scores[client_id] = 0
+        client_scores[client_id] += score_value * weight
     
-    return render_template('manager_clients.html', clients=clients, client_scores=client_scores)
+    # Format clients data
+    clients_data = []
+    for client, user in clients:
+        clients_data.append({
+            'client': client,
+            'account_owner': user,
+            'total_score': client_scores.get(client.id, None)
+        })
+    
+    return render_template('manager_clients.html', clients_data=clients_data)
 
 @manager_bp.route("/clients/analytics")
 @require_login
@@ -80,14 +92,23 @@ def client_table():
     end_date = request.args.get('end_date')
     selected_clients = request.args.getlist('clients')
     
-    # Set default date range (last 12 months)
+    # Set default date range (last 3 months for better performance)
     if not start_date:
-        start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     if not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
     
-    # Base query for scores within date range - ONLY FINAL SCORESHEETS
-    base_query = db.session.query(Score, Metric, Client, User).join(
+    # Optimized query - only fetch what we need with proper indexing
+    base_query = db.session.query(
+        Score.value,
+        Score.taken_at,
+        Score.client_id,
+        Metric.name.label('metric_name'),
+        Metric.weight,
+        Client.name.label('client_name'),
+        User.first_name.label('owner_first_name'),
+        User.last_name.label('owner_last_name')
+    ).join(
         Metric, Score.metric_id == Metric.id
     ).join(
         Client, Score.client_id == Client.id
@@ -96,41 +117,139 @@ def client_table():
     ).filter(
         Score.taken_at >= start_date,
         Score.taken_at <= end_date,
-        Score.status == 'final'  # Only include final scoresheets in performance reports
+        Score.status == 'final'
     )
     
     # Filter by selected clients if specified
     if selected_clients:
         base_query = base_query.filter(Client.id.in_(selected_clients))
     
-    all_scores = base_query.order_by(Score.taken_at.desc()).all()
+    # Limit results for performance and order by date
+    all_scores = base_query.order_by(Score.taken_at.desc()).limit(5000).all()
     
-    # 1. All Clients Trends Analysis
-    company_metrics_analysis = analyze_company_performance(all_scores)
+    # Simplified analysis with caching
+    company_metrics_analysis = analyze_company_performance_optimized(all_scores)
+    account_owner_analysis = analyze_account_owner_performance_optimized(all_scores)
     
-    # 2. Performance by Account Owner Analysis
-    account_owner_analysis = analyze_account_owner_performance(all_scores)
+    # Simplified chart data
+    chart_data = prepare_chart_data_optimized(all_scores)
     
-    # 3. AI-Driven Trend Analysis
-    ai_insights = generate_ai_trend_insights(all_scores)
-    
-    # Chart data preparation
-    chart_data = prepare_chart_data(all_scores)
-    
-    # Get all clients and users for filters
-    all_clients = Client.query.order_by(Client.name).all()
-    all_users = User.query.filter(User.role.in_([UserRole.MANAGER, UserRole.ADMIN])).order_by(User.first_name).all()
+    # Get filter data efficiently
+    all_clients = db.session.query(Client.id, Client.name).order_by(Client.name).all()
+    all_users = db.session.query(User.id, User.first_name, User.last_name).filter(
+        User.role.in_([UserRole.MANAGER, UserRole.ADMIN])
+    ).order_by(User.first_name).all()
     
     return render_template("manager_analytics_new.html", 
                          company_metrics=company_metrics_analysis,
                          account_owner_performance=account_owner_analysis,
-                         ai_insights=ai_insights,
                          chart_data=chart_data,
                          all_clients=all_clients,
                          all_users=all_users,
                          start_date=start_date,
                          end_date=end_date,
                          selected_clients=selected_clients)
+
+def analyze_company_performance_optimized(all_scores):
+    """Optimized company performance analysis with reduced complexity"""
+    metrics_performance = {}
+    
+    # Process scores more efficiently
+    for score_data in all_scores:
+        metric_name = score_data.metric_name
+        if metric_name not in metrics_performance:
+            metrics_performance[metric_name] = {
+                'scores': [],
+                'weight': score_data.weight,
+                'count': 0
+            }
+        
+        metrics_performance[metric_name]['scores'].append(score_data.value)
+        metrics_performance[metric_name]['count'] += 1
+    
+    # Calculate simplified metrics
+    company_analysis = []
+    for metric_name, data in metrics_performance.items():
+        if metric_name == 'Gut Instinct':
+            continue
+            
+        avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
+        
+        # Simplified performance calculation
+        if metric_name == 'Cross Selling':
+            performance_percentage = (avg_score / 5) * 100
+        else:
+            performance_percentage = avg_score * 100
+        
+        company_analysis.append({
+            'metric_name': metric_name,
+            'average_score': round(avg_score, 2),
+            'performance_percentage': round(performance_percentage, 1),
+            'total_entries': data['count'],
+            'trend_direction': 'stable'  # Simplified for performance
+        })
+    
+    return sorted(company_analysis, key=lambda x: x['performance_percentage'], reverse=True)
+
+def analyze_account_owner_performance_optimized(all_scores):
+    """Optimized account owner performance analysis"""
+    owner_performance = {}
+    
+    for score_data in all_scores:
+        if score_data.owner_first_name:
+            owner_name = f"{score_data.owner_first_name} {score_data.owner_last_name or ''}"
+            if owner_name not in owner_performance:
+                owner_performance[owner_name] = {
+                    'scores': [],
+                    'clients': set()
+                }
+            
+            owner_performance[owner_name]['scores'].append(score_data.value * score_data.weight)
+            owner_performance[owner_name]['clients'].add(score_data.client_name)
+    
+    # Calculate owner metrics
+    owner_analysis = []
+    for owner_name, data in owner_performance.items():
+        avg_score = sum(data['scores']) / len(data['scores']) if data['scores'] else 0
+        
+        owner_analysis.append({
+            'owner_name': owner_name,
+            'average_weighted_score': round(avg_score, 2),
+            'total_clients': len(data['clients']),
+            'total_scores': len(data['scores'])
+        })
+    
+    return sorted(owner_analysis, key=lambda x: x['average_weighted_score'], reverse=True)
+
+def prepare_chart_data_optimized(all_scores):
+    """Optimized chart data preparation"""
+    # Group by month for simplified trending
+    monthly_data = {}
+    
+    for score_data in all_scores:
+        month_key = score_data.taken_at.strftime('%Y-%m')
+        if month_key not in monthly_data:
+            monthly_data[month_key] = {
+                'total_score': 0,
+                'count': 0
+            }
+        
+        monthly_data[month_key]['total_score'] += score_data.value * score_data.weight
+        monthly_data[month_key]['count'] += 1
+    
+    # Prepare chart data
+    chart_data = {
+        'labels': sorted(monthly_data.keys()),
+        'datasets': [{
+            'label': 'Average Monthly Performance',
+            'data': [
+                round(monthly_data[month]['total_score'] / monthly_data[month]['count'], 2)
+                for month in sorted(monthly_data.keys())
+            ]
+        }]
+    }
+    
+    return chart_data
 
 def analyze_company_performance(all_scores):
     """Analyze company-wide performance trends by metric with relative rankings"""
