@@ -29,13 +29,18 @@
                     <form method="POST">
                         <input type="hidden" name="action" value="update_metric">
                         <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="2" placeholder="Enter metric description">{{ metric.description or '' }}</textarea>
+                            <small class="text-muted">Brief description of what this metric measures</small>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Input Type</label>
                             <select class="form-select" name="input_type">
                                 <option value="number" {% if metric.input_type == 'number' %}selected{% endif %}>Number Input</option>
                                 <option value="select" {% if metric.input_type == 'select' %}selected{% endif %}>Dropdown Select</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Input Type</button>
+                        <button type="submit" class="btn btn-primary">Update Metric</button>
                     </form>
                 </div>
             </div>

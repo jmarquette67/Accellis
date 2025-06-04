@@ -1747,11 +1747,18 @@ def manage_metric_options(metric_id):
         
         elif action == 'update_metric':
             input_type = request.form.get('input_type')
+            description = request.form.get('description', '').strip()
+            
             if input_type in ['number', 'select']:
                 metric.input_type = input_type
+                if description:
+                    metric.description = description
+                else:
+                    metric.description = None
+                    
                 try:
                     db.session.commit()
-                    flash(f'Updated {metric.name} input type to {input_type}', 'success')
+                    flash(f'Updated {metric.name} configuration successfully', 'success')
                 except Exception as e:
                     db.session.rollback()
                     flash(f'Error updating metric: {str(e)}', 'error')
