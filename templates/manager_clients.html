@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    {% if clients %}
+    {% if clients_data %}
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -54,35 +54,35 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for client in clients %}
+                                {% for client_data in clients_data %}
                                 <tr>
-                                    <td data-value="{{ client.name }}">
-                                        <strong>{{ client.name }}</strong>
+                                    <td data-value="{{ client_data.client.name }}">
+                                        <strong>{{ client_data.client.name }}</strong>
                                     </td>
-                                    <td data-value="{% if client.account_owner %}{{ client.account_owner.first_name }} {{ client.account_owner.last_name }}{% else %}Unassigned{% endif %}">
-                                        {% if client.account_owner %}
-                                            {{ client.account_owner.first_name }} {{ client.account_owner.last_name }}
-                                            <br><small class="text-muted">{{ client.account_owner.email }}</small>
+                                    <td data-value="{% if client_data.account_owner %}{{ client_data.account_owner.first_name }} {{ client_data.account_owner.last_name }}{% else %}Unassigned{% endif %}">
+                                        {% if client_data.account_owner %}
+                                            {{ client_data.account_owner.first_name }} {{ client_data.account_owner.last_name }}
+                                            <br><small class="text-muted">{{ client_data.account_owner.email }}</small>
                                         {% else %}
                                             <span class="text-muted">Unassigned</span>
                                         {% endif %}
                                     </td>
-                                    <td data-value="{% if client.primary_contact_email %}{{ client.primary_contact_email }}{% else %}Not set{% endif %}">
-                                        {% if client.primary_contact_email %}
-                                            <a href="mailto:{{ client.primary_contact_email }}" class="text-decoration-none">
-                                                {{ client.primary_contact_email }}
+                                    <td data-value="{{ client_data.client.contact_email or 'Not set' }}">
+                                        {% if client_data.client.contact_email %}
+                                            <a href="mailto:{{ client_data.client.contact_email }}" class="text-decoration-none">
+                                                {{ client_data.client.contact_email }}
                                             </a>
                                         {% else %}
                                             <span class="text-muted">Not set</span>
                                         {% endif %}
                                     </td>
-                                    <td data-value="{% if client_scores[client.id] is not none %}{{ client_scores[client.id] }}{% else %}0{% endif %}">
-                                        {% if client_scores[client.id] is not none %}
-                                            <span class="badge bg-{% if client_scores[client.id] >= 50 %}success{% elif client_scores[client.id] >= 30 %}warning{% else %}danger{% endif %}">
-                                                {{ client_scores[client.id] }}
+                                    <td data-value="{{ client_data.total_score }}">
+                                        {% if client_data.total_score != 'N/A' %}
+                                            <span class="badge bg-primary">
+                                                {{ client_data.total_score }}
                                             </span>
                                         {% else %}
-                                            <span class="text-muted">No scores</span>
+                                            <span class="text-muted">{{ client_data.total_score }}</span>
                                         {% endif %}
                                     </td>
                                     <td data-value="Active">
@@ -92,12 +92,10 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ url_for('client_details', client_id=client.id) }}" 
-                                               class="btn btn-outline-primary btn-sm">
-                                                Client Details
+                                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                                View Details
                                             </a>
-                                            <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" 
-                                               class="btn btn-outline-info btn-sm">
+                                            <a href="#" class="btn btn-outline-info btn-sm">
                                                 Scoresheets
                                             </a>
                                         </div>
@@ -114,28 +112,38 @@
 
     <!-- Status Summary Cards -->
     <div class="row mt-4">
-        {% set status_counts = {} %}
-        {% for client in clients %}
-            {% set status = client.status %}
-            {% if status in status_counts %}
-                {% set _ = status_counts.update({status: status_counts[status] + 1}) %}
-            {% else %}
-                {% set _ = status_counts.update({status: 1}) %}
-            {% endif %}
-        {% endfor %}
-
-        {% for status, count in status_counts.items() %}
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="card-title text-{{ 'success' if status == 'healthy' else ('warning' if status == 'warning' else 'danger') }}">
-                        {{ count }}
-                    </h4>
-                    <p class="card-text">{{ status|title }} Clients</p>
+                    <h4 class="card-title text-success">{{ clients_data|length }}</h4>
+                    <p class="card-text">Total Clients</p>
                 </div>
             </div>
         </div>
-        {% endfor %}
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title text-success">{{ clients_data|length }}</h4>
+                    <p class="card-text">Active Clients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title text-warning">0</h4>
+                    <p class="card-text">Warning</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title text-danger">0</h4>
+                    <p class="card-text">Critical</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     {% else %}

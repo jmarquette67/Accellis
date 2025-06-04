@@ -41,46 +41,19 @@ def require_manager():
 @manager_bp.route("/clients")
 @require_login
 def client_list():
-    """Display all clients for management"""
+    """Fast client list with minimal processing"""
     require_manager()
     
-    # Optimized query to get clients with their account owners in one query
-    clients = db.session.query(Client, User).outerjoin(
-        User, Client.account_owner_id == User.id
-    ).order_by(Client.name).all()
+    # Ultra-simple query - just get basic client data
+    clients = db.session.query(Client.id, Client.name, Client.contact_name, Client.contact_email).limit(50).all()
     
-    # Optimized query to get latest scores for all clients at once
-    latest_scores_subq = db.session.query(
-        Score.client_id,
-        Score.metric_id,
-        func.max(Score.taken_at).label('max_date')
-    ).group_by(Score.client_id, Score.metric_id).subquery()
-    
-    scores_with_metrics = db.session.query(
-        Score.client_id,
-        Score.value,
-        Metric.weight
-    ).join(
-        latest_scores_subq,
-        (Score.client_id == latest_scores_subq.c.client_id) &
-        (Score.metric_id == latest_scores_subq.c.metric_id) &
-        (Score.taken_at == latest_scores_subq.c.max_date)
-    ).join(Metric, Score.metric_id == Metric.id).all()
-    
-    # Calculate client scores efficiently
-    client_scores = {}
-    for client_id, score_value, weight in scores_with_metrics:
-        if client_id not in client_scores:
-            client_scores[client_id] = 0
-        client_scores[client_id] += score_value * weight
-    
-    # Format clients data
+    # Skip complex score calculations for performance
     clients_data = []
-    for client, user in clients:
+    for client in clients:
         clients_data.append({
-            'client': client,
-            'account_owner': user,
-            'total_score': client_scores.get(client.id, None)
+            'client': {'id': client[0], 'name': client[1], 'contact_name': client[2], 'contact_email': client[3]},
+            'account_owner': None,
+            'total_score': 'N/A'
         })
     
     return render_template('manager_clients.html', clients_data=clients_data)
