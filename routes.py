@@ -3,9 +3,10 @@ from flask import render_template, request, jsonify, redirect, url_for, flash
 from sqlalchemy import desc, func
 from flask_login import current_user
 from app import app, db
-from models import Client, HealthCheck, Alert, User, UserRole
+from models import Client, HealthCheck, Alert, User, UserRole, Score, Metric
 from forms import ClientRegistrationForm, HealthCheckForm
 from replit_auth import require_login, require_role, make_replit_blueprint
+from scoring_calculations import get_maximum_possible_score, get_performance_grade
 
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
@@ -42,6 +43,118 @@ def dashboard():
     
     # Fallback for unauthenticated users
     return render_template('landing.html')
+
+@app.route('/api/dashboard-data')
+@require_login
+def dashboard_data():
+    """API endpoint for dashboard data"""
+    try:
+        # Get 5 most recent scoresheets
+        recent_scoresheets = db.session.query(Score, Client, User, Metric).join(
+            Client, Score.client_id == Client.id
+        ).join(
+            User, Score.user_id == User.id
+        ).join(
+            Metric, Score.metric_id == Metric.id
+        ).filter(
+            Score.status == 'FINAL'
+        ).order_by(desc(Score.created_at)).limit(20).all()
+        
+        # Group by client and date to get complete scoresheets
+        scoresheet_data = {}
+        for score, client, user, metric in recent_scoresheets:
+            key = (client.id, score.created_at.date())
+            if key not in scoresheet_data:
+                scoresheet_data[key] = {
+                    'client_name': client.name,
+                    'date': score.created_at.strftime('%m/%d'),
+                    'user_name': user.first_name or user.email.split('@')[0] if user.email else 'User',
+                    'scores': [],
+                    'created_at': score.created_at
+                }
+            scoresheet_data[key]['scores'].append((score.value, metric.weight))
+        
+        # Calculate totals and format for display
+        max_score = get_maximum_possible_score()
+        recent_data = []
+        
+        for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['created_at'], reverse=True)[:5]:
+            total_weighted = sum(score * weight for score, weight in sheet_data['scores'])
+            grade_info = get_performance_grade(total_weighted, max_score)
+            
+            recent_data.append({
+                'client_name': sheet_data['client_name'],
+                'date': sheet_data['date'],
+                'user_name': sheet_data['user_name'],
+                'total_score': f"{total_weighted:.1f}",
+                'max_score': f"{max_score:.0f}",
+                'grade_color': grade_info['color']
+            })
+        
+        # Calculate trending clients (3 up, 3 down)
+        # Get client averages for last 2 months vs previous 2 months
+        two_months_ago = datetime.now() - timedelta(days=60)
+        four_months_ago = datetime.now() - timedelta(days=120)
+        
+        trending_up = []
+        trending_down = []
+        
+        clients = Client.query.filter_by(is_active=True).all()
+        for client in clients:
+            # Recent scores (last 2 months)
+            recent_scores = db.session.query(Score, Metric).join(
+                Metric, Score.metric_id == Metric.id
+            ).filter(
+                Score.client_id == client.id,
+                Score.status == 'FINAL',
+                Score.created_at >= two_months_ago
+            ).all()
+            
+            # Previous scores (2-4 months ago)
+            previous_scores = db.session.query(Score, Metric).join(
+                Metric, Score.metric_id == Metric.id
+            ).filter(
+                Score.client_id == client.id,
+                Score.status == 'FINAL',
+                Score.created_at >= four_months_ago,
+                Score.created_at < two_months_ago
+            ).all()
+            
+            if recent_scores and previous_scores:
+                recent_avg = sum(score.value * metric.weight for score, metric in recent_scores) / len(recent_scores)
+                previous_avg = sum(score.value * metric.weight for score, metric in previous_scores) / len(previous_scores)
+                
+                if previous_avg > 0:
+                    trend_percent = ((recent_avg - previous_avg) / previous_avg) * 100
+                    
+                    if trend_percent > 5:  # Trending up by more than 5%
+                        trending_up.append({
+                            'name': client.name,
+                            'trend': trend_percent
+                        })
+                    elif trend_percent < -5:  # Trending down by more than 5%
+                        trending_down.append({
+                            'name': client.name,
+                            'trend': trend_percent
+                        })
+        
+        # Sort and limit to top 3
+        trending_up = sorted(trending_up, key=lambda x: x['trend'], reverse=True)[:3]
+        trending_down = sorted(trending_down, key=lambda x: x['trend'])[:3]
+        
+        return jsonify({
+            'recent_scoresheets': recent_data,
+            'trending_up': trending_up,
+            'trending_down': trending_down
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Dashboard data error: {e}")
+        return jsonify({
+            'recent_scoresheets': [],
+            'trending_up': [],
+            'trending_down': []
+        })
     
     # Get system overview stats
     total_clients = len(clients)
