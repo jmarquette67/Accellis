@@ -6,7 +6,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_compress import Compress
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -26,25 +25,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:/
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
-    "pool_size": 20,
-    "max_overflow": 30,
-    "echo": False,  # Disable SQL query logging for performance
 }
 
 # initialize the app with the extension
 db.init_app(app)
-
-# Initialize response compression for better performance
-compress = Compress(app)
-
-# Performance optimization: Add context processor for cached values
-@app.context_processor
-def inject_cached_values():
-    """Inject frequently used values into all templates"""
-    from performance_optimizations import get_maximum_possible_score_cached
-    return {
-        'max_possible_score': get_maximum_possible_score_cached()
-    }
 
 with app.app_context():
     # Import models and routes

@@ -3,10 +3,9 @@ from flask import render_template, request, jsonify, redirect, url_for, flash
 from sqlalchemy import desc, func
 from flask_login import current_user
 from app import app, db
-from models import Client, HealthCheck, Alert, User, UserRole, Score, Metric
+from models import Client, HealthCheck, Alert, User, UserRole
 from forms import ClientRegistrationForm, HealthCheckForm
 from replit_auth import require_login, require_role, make_replit_blueprint
-from scoring_calculations import get_maximum_possible_score, get_performance_grade, calculate_score_percentage
 
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
@@ -43,22 +42,6 @@ def dashboard():
     
     # Fallback for unauthenticated users
     return render_template('landing.html')
-
-@app.route('/api/dashboard-data')
-@require_login
-def dashboard_data():
-    """Optimized API endpoint for dashboard data with caching"""
-    try:
-        from performance_optimizations import get_dashboard_data_cached
-        return jsonify(get_dashboard_data_cached())
-        
-    except Exception as e:
-        app.logger.error(f"Dashboard data error: {e}")
-        return jsonify({
-            'recent_scoresheets': [],
-            'trending_up': [],
-            'trending_down': []
-        })
     
     # Get system overview stats
     total_clients = len(clients)
