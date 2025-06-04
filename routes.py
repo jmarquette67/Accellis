@@ -47,89 +47,10 @@ def dashboard():
 @app.route('/api/dashboard-data')
 @require_login
 def dashboard_data():
-    """API endpoint for dashboard data"""
+    """Optimized API endpoint for dashboard data with caching"""
     try:
-        # Get recent scoresheets using existing schema
-        recent_scores = Score.query.filter_by(status='final').order_by(desc(Score.taken_at)).limit(15).all()
-        
-        # Group by client and date to get complete scoresheets
-        scoresheet_data = {}
-        for score in recent_scores:
-            if score.client and score.metric:
-                key = (score.client.id, score.taken_at.date())
-                if key not in scoresheet_data:
-                    scoresheet_data[key] = {
-                        'client_name': score.client.name,
-                        'date': score.taken_at.strftime('%m/%d'),
-                        'user_name': 'System',  # Default since user_id may not exist
-                        'scores': [],
-                        'taken_at': score.taken_at
-                    }
-                scoresheet_data[key]['scores'].append((score.value, score.metric.weight))
-        
-        # Calculate totals and format for display
-        max_score = get_maximum_possible_score()
-        recent_data = []
-        
-        for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['taken_at'], reverse=True)[:5]:
-            if sheet_data['scores']:
-                total_weighted = sum(score * weight for score, weight in sheet_data['scores'])
-                percentage = calculate_score_percentage(total_weighted, max_score)
-                grade_info = get_performance_grade(percentage)
-                
-                recent_data.append({
-                    'client_name': sheet_data['client_name'],
-                    'client_id': key[0],  # client_id from the key tuple
-                    'date': sheet_data['date'],
-                    'date_key': sheet_data['taken_at'].strftime('%Y-%m-%d'),  # For scoresheet URL
-                    'user_name': sheet_data['user_name'],
-                    'total_score': f"{total_weighted:.1f}",
-                    'max_score': f"{max_score:.0f}",
-                    'grade_color': grade_info['color']
-                })
-        
-        # Calculate trending clients using existing data
-        trending_up = []
-        trending_down = []
-        
-        # Get trending data based on recent performance
-        clients = Client.query.filter_by(is_active=True).limit(10).all()
-        for client in clients:
-            recent_client_scores = Score.query.filter_by(
-                client_id=client.id, 
-                status='final'
-            ).order_by(desc(Score.taken_at)).limit(5).all()
-            
-            if len(recent_client_scores) >= 3:
-                # Simple trend calculation based on recent vs older scores
-                recent_avg = sum(s.value * s.metric.weight for s in recent_client_scores[:2] if s.metric) / 2
-                older_avg = sum(s.value * s.metric.weight for s in recent_client_scores[2:4] if s.metric) / 2
-                
-                if older_avg > 0:
-                    trend_percent = ((recent_avg - older_avg) / older_avg) * 100
-                    
-                    if trend_percent > 10:
-                        trending_up.append({
-                            'name': client.name,
-                            'client_id': client.id,
-                            'trend': trend_percent
-                        })
-                    elif trend_percent < -10:
-                        trending_down.append({
-                            'name': client.name,
-                            'client_id': client.id,
-                            'trend': trend_percent
-                        })
-        
-        # Sort and limit to top 3
-        trending_up = sorted(trending_up, key=lambda x: x['trend'], reverse=True)[:3]
-        trending_down = sorted(trending_down, key=lambda x: x['trend'])[:3]
-        
-        return jsonify({
-            'recent_scoresheets': recent_data,
-            'trending_up': trending_up,
-            'trending_down': trending_down
-        })
+        from performance_optimizations import get_dashboard_data_cached
+        return jsonify(get_dashboard_data_cached())
         
     except Exception as e:
         app.logger.error(f"Dashboard data error: {e}")
