@@ -8,6 +8,7 @@ from flask_login import current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from normalized_scoring import calculate_normalized_metrics_by_client, get_normalized_performance_ranges
+from scoring_calculations import get_maximum_possible_score, calculate_score_percentage, get_performance_grade, format_score_display
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 

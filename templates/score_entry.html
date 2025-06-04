@@ -122,7 +122,7 @@
                                             <tr>
                                                 <th colspan="3" class="text-end">Total Scoresheet Points:</th>
                                                 <th class="text-center">
-                                                    <span id="totalPoints" class="fs-5">0.0</span> / 68
+                                                    <span id="totalPoints" class="fs-5">0.0</span> / {{ "%.0f"|format(max_possible_score) }}
                                                 </th>
                                                 <th></th>
                                             </tr>
@@ -188,8 +188,8 @@
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <h6>Maximum Scoresheet Total: 68 Points</h6>
-                            <small class="text-muted">Each metric contributes differently based on its weight and maximum value. Cross Selling has a maximum of 5 points, while other metrics typically have 10 points maximum.</small>
+                            <h6>Maximum Scoresheet Total: {{ "%.0f"|format(max_possible_score) }} Points</h6>
+                            <small class="text-muted">Each metric contributes differently based on its weight and maximum value. Current configuration allows up to {{ "%.0f"|format(max_possible_score) }} total points.</small>
                         </div>
                     </div>
                 </div>
