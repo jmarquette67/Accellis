@@ -170,13 +170,9 @@ def handle_error(blueprint, error, error_description=None, error_uri=None):
 def require_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Fast path: check authentication without expensive token operations
+        # Ultra-fast authentication check
         if not current_user.is_authenticated:
-            session["next_url"] = get_next_navigation_url(request)
             return redirect(url_for('replit_auth.login'))
-
-        # Skip expensive token validation for performance
-        # Token refresh will happen automatically when needed
         return f(*args, **kwargs)
     return decorated_function
 

@@ -110,10 +110,23 @@ def client_table():
     all_clients = [{'id': 1, 'name': 'Sample Client'}]
     all_users = [{'id': 1, 'first_name': 'Admin', 'last_name': 'User'}]
     
+    # Fix chart_data structure to match template expectations
+    chart_data = {
+        'monthly_trends': {
+            'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'data': [75, 80, 85, 78, 82, 88]
+        },
+        'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        'datasets': [{
+            'label': 'Monthly Performance',
+            'data': [75, 80, 85, 78, 82, 88]
+        }]
+    }
+    
     return render_template("manager_analytics_new.html", 
                          company_metrics=company_metrics,
                          account_owner_performance=[],
-                         chart_data={'labels': [], 'datasets': []},
+                         chart_data=chart_data,
                          all_clients=all_clients,
                          all_users=all_users,
                          start_date=start_date,

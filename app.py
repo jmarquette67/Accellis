@@ -23,12 +23,20 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # configure the database with optimized connection pooling
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///health_check.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_size": 10,
+    "pool_size": 15,
     "pool_recycle": 300,
     "pool_pre_ping": True,
-    "max_overflow": 20,
-    "pool_timeout": 30,
+    "max_overflow": 25,
+    "pool_timeout": 5,
+    "connect_args": {
+        "connect_timeout": 3,
+        "application_name": "accellis_fast"
+    }
 }
+
+# Performance optimizations
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
+app.config['TEMPLATES_AUTO_RELOAD'] = False
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # initialize the app with the extension
