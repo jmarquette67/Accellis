@@ -80,5 +80,12 @@ def inject_site_settings():
             metric_breakdown=[]
         )
 
+# Apply navigation performance optimizations
+try:
+    from navigation_fix import apply_navigation_fix
+    apply_navigation_fix()
+except Exception as e:
+    app.logger.warning(f"Navigation fix not applied: {e}")
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
