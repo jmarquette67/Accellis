@@ -38,8 +38,13 @@ with app.app_context():
         import models  # noqa: F401
         db.create_all()
         app.logger.info("Database tables created successfully")
+        
+        # Import routes to register them
+        import routes  # noqa: F401
+        app.logger.info("Routes imported successfully")
+        
     except Exception as e:
-        app.logger.error(f"Database initialization error: {e}")
+        app.logger.error(f"Initialization error: {e}")
         # Continue without crashing
 
 # Context processor to make site settings and dynamic scoring available in all templates

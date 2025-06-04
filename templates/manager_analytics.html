@@ -33,7 +33,7 @@
             <h5><i data-feather="filter" class="me-2"></i>Advanced Filters & Date Range Analysis</h5>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ url_for('manager.client_table') }}">
+            <form method="GET" action="{{ url_for('manager.client_list') }}">
                 <div class="row">
                     <div class="col-md-3">
                         <label for="date_from" class="form-label">From Date</label>
@@ -71,7 +71,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i data-feather="search" class="me-1"></i>Apply Filters
                         </button>
-                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-sync-alt me-1"></i>Reset
                         </a>
                     </div>
