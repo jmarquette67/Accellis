@@ -555,18 +555,26 @@ def client_trend(client_id):
     
     client = Client.query.get_or_404(client_id)
     
-    # Get last 12 scores for trend analysis
-    points = (
-        Score.query
+    # Get monthly scoresheet totals for proper trend analysis
+    monthly_data = (
+        db.session.query(
+            db.func.date_trunc('month', Score.taken_at).label('month'),
+            db.func.sum(Score.value * Metric.weight).label('total_score')
+        )
+        .join(Metric, Score.metric_id == Metric.id)
         .filter(Score.client_id == client_id)
-        .order_by(Score.taken_at.desc())
+        .group_by(db.func.date_trunc('month', Score.taken_at))
+        .order_by('month')
         .limit(12)
         .all()
     )
     
-    # Format data for chart (oldest to newest)
-    data = [{"x": sc.taken_at.strftime("%Y-%m-%d"), "y": sc.value} for sc in points]
-    data = data[::-1]  # Reverse to show oldest → newest
+    # Format data for chart with proper monthly aggregation
+    data = []
+    for month_data in monthly_data:
+        month_str = month_data.month.strftime("%b %Y")
+        total_score = round(float(month_data.total_score), 1)
+        data.append({"x": month_str, "y": total_score})
     
     return render_template("client_trend.html", client=client, data=data)
 
