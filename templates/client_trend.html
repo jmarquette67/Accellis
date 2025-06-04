@@ -125,6 +125,83 @@
         </div>
     </div>
 
+    <!-- Recent Scoresheet Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Most Recent Scoresheet</h5>
+                    <small class="text-muted">Latest metric scores and performance breakdown</small>
+                </div>
+                <div class="card-body">
+                    {% if recent_scores and scoresheet_date %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">Scoresheet Date: {{ scoresheet_date.strftime('%B %d, %Y') }}</h6>
+                            <small class="text-muted">Total Weighted Score: <strong>{{ "%.1f"|format(total_weighted_score) }}</strong> points</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-{% if total_weighted_score >= 45 %}success{% elif total_weighted_score >= 30 %}warning{% else %}danger{% endif %} fs-6">
+                                {{ "%.1f"|format(total_weighted_score) }}/68 points
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Score</th>
+                                    <th>Weight</th>
+                                    <th>Weighted Points</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score_data in recent_scores %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ score_data.metric.name }}</strong>
+                                        {% if score_data.metric.description %}
+                                        <br><small class="text-muted">{{ score_data.metric.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if score_data.score is not none %}
+                                            <span class="badge bg-{% if score_data.score >= score_data.metric.max_score * 0.8 %}success{% elif score_data.score >= score_data.metric.max_score * 0.5 %}warning{% else %}danger{% endif %}">
+                                                {{ score_data.score }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Not scored</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ score_data.metric.weight }}x</td>
+                                    <td>
+                                        <strong>{{ "%.1f"|format(score_data.weighted_points) }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if score_data.notes %}
+                                            <small>{{ score_data.notes }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No recent scoresheet data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% else %}
     <div class="row">
         <div class="col-12">

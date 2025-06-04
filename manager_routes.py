@@ -576,7 +576,77 @@ def client_trend(client_id):
         total_score = round(float(month_data.total_score), 1)
         data.append({"x": month_str, "y": total_score})
     
-    return render_template("client_trend.html", client=client, data=data)
+    # Get most recent scoresheet data
+    most_complete_date = (
+        db.session.query(
+            db.func.date(Score.taken_at).label('score_date'),
+            db.func.count(Score.id).label('metric_count')
+        )
+        .filter(Score.client_id == client_id)
+        .group_by(db.func.date(Score.taken_at))
+        .order_by(db.func.count(Score.id).desc(), db.func.date(Score.taken_at).desc())
+        .first()
+    )
+    
+    recent_scores = []
+    total_weighted_score = 0
+    scoresheet_date = None
+    
+    if most_complete_date:
+        complete_date = most_complete_date.score_date
+        scoresheet_date = complete_date
+        
+        # Get all metrics
+        all_metrics = Metric.query.order_by(Metric.name).all()
+        
+        # Get scores for this date
+        scored_metrics = {}
+        recent_scores_query = (
+            db.session.query(Score, Metric)
+            .join(Metric, Score.metric_id == Metric.id)
+            .filter(
+                Score.client_id == client_id,
+                db.func.date(Score.taken_at) == complete_date
+            )
+        )
+        
+        for score_obj, metric_obj in recent_scores_query:
+            scored_metrics[metric_obj.id] = {
+                'id': score_obj.id,
+                'taken_at': score_obj.taken_at,
+                'value': score_obj.value,
+                'notes': score_obj.notes or '',
+                'locked': score_obj.locked
+            }
+        
+        # Build complete scoresheet
+        for metric_obj in all_metrics:
+            if metric_obj.id in scored_metrics:
+                score_data = scored_metrics[metric_obj.id]
+                weighted_points = score_data['value'] * metric_obj.weight
+                total_weighted_score += weighted_points
+                recent_scores.append({
+                    'metric': metric_obj,
+                    'score': score_data['value'],
+                    'weighted_points': weighted_points,
+                    'notes': score_data['notes'],
+                    'score_id': score_data['id']
+                })
+            else:
+                recent_scores.append({
+                    'metric': metric_obj,
+                    'score': None,
+                    'weighted_points': 0,
+                    'notes': '',
+                    'score_id': None
+                })
+    
+    return render_template("client_trend.html", 
+                         client=client, 
+                         data=data,
+                         recent_scores=recent_scores,
+                         total_weighted_score=total_weighted_score,
+                         scoresheet_date=scoresheet_date)
 
 @manager_bp.route("/scores/new", methods=['GET', 'POST'])
 @require_login
