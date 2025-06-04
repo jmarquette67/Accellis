@@ -100,7 +100,10 @@
                                                                step="0.1"
                                                                data-weight="{{ metric.weight }}"
                                                                data-max="{{ metric.max_score or 10 }}"
-                                                               placeholder="0-{{ metric.max_score or 10 }}">
+                                                               placeholder="{% if metric.name == 'Help Desk Usage' %}0.0-5.0 tickets/user/month{% else %}0-{{ metric.max_score or 10 }}{% endif %}">
+                                                        {% if metric.name == 'Help Desk Usage' %}
+                                                        <small class="text-muted">Tickets per end user per month (0.25-1.0 = optimal)</small>
+                                                        {% endif %}
                                                     {% endif %}
                                                 </td>
                                                 <td class="text-center">
