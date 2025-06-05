@@ -26,22 +26,11 @@ def make_session_permanent():
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
-    # Check if user is authenticated (with fallback for missing login manager)
-    try:
-        user_authenticated = current_user.is_authenticated
-        if user_authenticated:
-            user = current_user
-            # Use the full dashboard template now that authentication is working
-            return render_template('dashboard.html', user=user)
-    except Exception as e:
-        user_authenticated = False
-        app.logger.error(f"Authentication check failed: {e}")
-    
-    if not user_authenticated:
+    # Check if user is authenticated
+    if current_user.is_authenticated:
+        return render_template('dashboard.html', user=current_user)
+    else:
         return render_template('landing.html')
-    
-    # Fallback for unauthenticated users
-    return render_template('landing.html')
     
     # Get system overview stats
     total_clients = len(clients)

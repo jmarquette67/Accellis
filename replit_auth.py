@@ -156,13 +156,20 @@ def save_user(user_claims):
 
 @oauth_authorized.connect
 def logged_in(blueprint, token):
-    user_claims = jwt.decode(token['id_token'], options={"verify_signature": False})
-    user = save_user(user_claims)
-    login_user(user)
-    blueprint.token = token
-    next_url = session.pop("next_url", None)
-    if next_url is not None:
-        return redirect(next_url)
+    try:
+        user_claims = jwt.decode(token['id_token'], options={"verify_signature": False})
+        user = save_user(user_claims)
+        login_user(user)
+        blueprint.token = token
+        
+        # Clear any problematic next_url that causes routing errors
+        session.pop("next_url", None)
+        
+        # Always redirect to dashboard after successful login
+        return redirect(url_for('dashboard'))
+    except Exception as e:
+        app.logger.error(f"Login error: {e}")
+        return redirect(url_for('dashboard'))
 
 @oauth_error.connect
 def handle_error(blueprint, error, error_description=None, error_uri=None):

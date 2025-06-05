@@ -51,7 +51,7 @@
                     <h5 class="card-title fw-medium text-nowrap">Analytics</h5>
                     <p class="card-text flex-grow-1 small">View client engagement analytics and trends</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-info btn-sm mt-auto">View Analytics</a>
+                        <a href="{{ url_for('manager.client_list') }}" class="btn btn-info btn-sm mt-auto">View Analytics</a>
                     {% else %}
                         <a href="/scores/" class="btn btn-info btn-sm mt-auto">View Scores</a>
                     {% endif %}
