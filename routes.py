@@ -10,12 +10,20 @@ from replit_auth import require_login, require_role, make_replit_blueprint
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
-# Score entry redirect for manager routes
+# Score entry page
 @app.route('/scores/new')
 @require_login
-def score_entry_redirect():
-    """Redirect to manager score entry"""
-    return redirect(url_for('manager.score_entry'))
+def new_score_entry():
+    """Direct score entry page"""
+    from models import Client, Metric
+    
+    clients = Client.query.filter_by(is_active=True).order_by(Client.name).all()
+    metrics = Metric.query.order_by(Metric.name).all()
+    
+    return render_template('comprehensive_score_entry.html', 
+                         clients=clients, 
+                         metrics=metrics,
+                         user=current_user)
 
 # Make session permanent
 @app.before_request
