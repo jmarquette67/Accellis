@@ -51,7 +51,7 @@
                     <h5 class="card-title fw-medium text-nowrap">Analytics</h5>
                     <p class="card-text flex-grow-1 small">View client engagement analytics and trends</p>
                     {% if user.role and user.role.value in ['ADMIN', 'MANAGER'] %}
-                        <a href="/manager/clients" class="btn btn-info btn-sm mt-auto">View Analytics</a>
+                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-info btn-sm mt-auto">View Analytics</a>
                     {% else %}
                         <a href="/scores/" class="btn btn-info btn-sm mt-auto">View Scores</a>
                     {% endif %}
@@ -87,7 +87,7 @@
                         <div class="col-md-6">
                             <h6>Getting Started</h6>
                             <p class="small text-muted mb-2">New to the platform? Learn how to use all features effectively.</p>
-                            <a href="/manager/user-manual" class="btn btn-outline-primary btn-sm">
+                            <a href="{{ url_for('manager.user_manual') }}" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-book me-1"></i>View User Manual
                             </a>
                         </div>

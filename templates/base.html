@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Accellis Client Engagement{% endblock %}</title>
     
-    <!-- Bootstrap CSS with proper dark theme -->
+    <!-- Bootstrap CSS with Replit theme -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     
-    <!-- Font Awesome for icons (lighter alternative to Feather) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
@@ -31,13 +34,13 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>
+                            <i data-feather="monitor" class="me-1"></i>
                             Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('register_client') }}">
-                            <i class="fas fa-plus-circle me-1"></i>
+                            <i data-feather="plus-circle" class="me-1"></i>
                             Register Client
                         </a>
                     </li>
@@ -46,7 +49,7 @@
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <span class="navbar-text">
-                            <i class="fas fa-clock me-1"></i>
+                            <i data-feather="clock" class="me-1"></i>
                             <span id="current-time"></span>
                         </span>
                     </li>
@@ -72,7 +75,7 @@
         <!-- Error Messages -->
         {% if error_message %}
             <div class="alert alert-danger" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
+                <i data-feather="alert-circle" class="me-2"></i>
                 {{ error_message }}
             </div>
         {% endif %}
@@ -90,7 +93,7 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <p class="mb-0">
-                        <i class="fas fa-users me-1"></i>
+                        <i data-feather="users" class="me-1"></i>
                         Strategic Client Relationship Management
                     </p>
                 </div>
@@ -103,20 +106,18 @@
     
     <!-- Custom JavaScript -->
     <script>
+        // Initialize Feather icons
+        feather.replace();
+        
         // Update current time
         function updateTime() {
             const now = new Date();
-            const timeEl = document.getElementById('current-time');
-            if (timeEl) {
-                timeEl.textContent = now.toLocaleString();
-            }
+            document.getElementById('current-time').textContent = now.toLocaleString();
         }
         
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            setInterval(updateTime, 1000);
-        });
+        // Update time every second
+        setInterval(updateTime, 1000);
+        updateTime();
         
         // Auto-refresh alerts every 30 seconds
         setInterval(function() {

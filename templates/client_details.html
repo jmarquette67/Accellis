@@ -92,11 +92,11 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a href="{{ "/manager/client-scoresheet" }}" class="btn btn-primary">
+                    <a href="{{ url_for('manager.client_scoresheet', client_id=client.id) }}" class="btn btn-primary">
                         <i data-feather="clipboard" class="me-2"></i>
                         View Performance Summary
                     </a>
-                    <a href="{{ "/manager/score-entry" }}?client_id={{ client.id }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('manager.score_entry') }}?client_id={{ client.id }}" class="btn btn-outline-primary">
                         <i data-feather="plus" class="me-2"></i>
                         Add New Score
                     </a>
@@ -155,7 +155,7 @@
                         <i data-feather="phone" class="me-2"></i>
                         Call Primary Contact
                     </a>
-                    <a href="{{ "/manager/clients" }}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary btn-sm">
                         <i data-feather="arrow-left" class="me-2"></i>
                         Back to Client List
                     </a>

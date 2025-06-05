@@ -10,20 +10,12 @@ from replit_auth import require_login, require_role, make_replit_blueprint
 # Register Replit Auth blueprint
 app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
-# Score entry page
+# Score entry redirect for manager routes
 @app.route('/scores/new')
 @require_login
-def new_score_entry():
-    """Direct score entry page"""
-    from models import Client, Metric
-    
-    clients = Client.query.filter_by(is_active=True).order_by(Client.name).all()
-    metrics = Metric.query.order_by(Metric.name).all()
-    
-    return render_template('comprehensive_score_entry.html', 
-                         clients=clients, 
-                         metrics=metrics,
-                         user=current_user)
+def score_entry_redirect():
+    """Redirect to manager score entry"""
+    return redirect(url_for('manager.score_entry'))
 
 # Make session permanent
 @app.before_request
@@ -34,11 +26,22 @@ def make_session_permanent():
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
-    # Check if user is authenticated
-    if current_user.is_authenticated:
-        return render_template('dashboard_simple.html', user=current_user)
-    else:
+    # Check if user is authenticated (with fallback for missing login manager)
+    try:
+        user_authenticated = current_user.is_authenticated
+        if user_authenticated:
+            user = current_user
+            # Use the full dashboard template now that authentication is working
+            return render_template('dashboard.html', user=user)
+    except Exception as e:
+        user_authenticated = False
+        app.logger.error(f"Authentication check failed: {e}")
+    
+    if not user_authenticated:
         return render_template('landing.html')
+    
+    # Fallback for unauthenticated users
+    return render_template('landing.html')
     
     # Get system overview stats
     total_clients = len(clients)

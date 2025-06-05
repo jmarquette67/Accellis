@@ -3,7 +3,6 @@ import os
 import uuid
 from functools import wraps
 from urllib.parse import urlencode
-from datetime import datetime
 
 from flask import g, session, redirect, request, render_template, url_for, abort
 from flask_dance.consumer import (
@@ -156,20 +155,13 @@ def save_user(user_claims):
 
 @oauth_authorized.connect
 def logged_in(blueprint, token):
-    try:
-        user_claims = jwt.decode(token['id_token'], options={"verify_signature": False})
-        user = save_user(user_claims)
-        login_user(user)
-        blueprint.token = token
-        
-        # Clear any problematic next_url that causes routing errors
-        session.pop("next_url", None)
-        
-        # Always redirect to dashboard after successful login
-        return redirect(url_for('dashboard'))
-    except Exception as e:
-        app.logger.error(f"Login error: {e}")
-        return redirect(url_for('dashboard'))
+    user_claims = jwt.decode(token['id_token'], options={"verify_signature": False})
+    user = save_user(user_claims)
+    login_user(user)
+    blueprint.token = token
+    next_url = session.pop("next_url", None)
+    if next_url is not None:
+        return redirect(next_url)
 
 @oauth_error.connect
 def handle_error(blueprint, error, error_description=None, error_uri=None):
@@ -182,8 +174,22 @@ def require_login(f):
             session["next_url"] = get_next_navigation_url(request)
             return redirect(url_for('replit_auth.login'))
 
-        # Skip token expiration check to prevent attribute errors
-        pass
+        # Check if token exists and is valid
+        if replit.token and 'expires_in' in replit.token:
+            expires_in = replit.token.get('expires_in', 0)
+        else:
+            expires_in = 0
+            
+        if expires_in < 0:
+            issuer_url = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
+            refresh_token_url = issuer_url + "/token"
+            try:
+                token = replit.refresh_token(token_url=refresh_token_url,
+                                           client_id=os.environ['REPL_ID'])
+            except InvalidGrantError:
+                session["next_url"] = get_next_navigation_url(request)
+                return redirect(url_for('replit_auth.login'))
+            replit.token_updater(token)
 
         return f(*args, **kwargs)
     return decorated_function

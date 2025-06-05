@@ -19,7 +19,7 @@
                     <button class="btn btn-outline-primary" onclick="exportReport('excel')">
                         <i data-feather="file-text" class="me-1"></i>Export Excel
                     </button>
-                    <a href="{{ "/manager/clients" }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
                         <i data-feather="arrow-left" class="me-1"></i>Back to Clients
                     </a>
                 </div>
@@ -33,7 +33,7 @@
             <h5><i data-feather="filter" class="me-2"></i>Advanced Filters & Date Range Analysis</h5>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ "/manager/clients" }}">
+            <form method="GET" action="{{ url_for('manager.client_table') }}">
                 <div class="row">
                     <div class="col-md-3">
                         <label for="date_from" class="form-label">From Date</label>
@@ -71,8 +71,8 @@
                         <button type="submit" class="btn btn-primary">
                             <i data-feather="search" class="me-1"></i>Apply Filters
                         </button>
-                        <a href="{{ "/manager/clients" }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-sync-alt me-1"></i>Reset
+                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
+                            <i data-feather="refresh-cw" class="me-1"></i>Reset
                         </a>
                     </div>
                 </div>
@@ -166,7 +166,7 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ "/manager/client-scoresheet" }}" 
+                                            <a href="{{ url_for('manager.client_scoresheet', client_id=r.client.id) }}" 
                                                class="btn btn-outline-primary" title="View Client Scoresheet">
                                                 <i data-feather="user"></i> Scoresheet
                                             </a>
@@ -285,7 +285,7 @@
                 <div class="card-body text-center py-5">
                     <h5 class="text-muted">No Scoring Data Available</h5>
                     <p class="text-muted">Client scores will appear here once metrics and scoring data are entered.</p>
-                    <a href="{{ "/manager/dashboard" }}" class="btn btn-primary">
+                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-primary">
                         <i class="fas fa-tachometer-alt"></i> Return to Dashboard
                     </a>
                 </div>

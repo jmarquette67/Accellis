@@ -20,32 +20,22 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production"))
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# configure the database with optimized connection pooling
+# configure the database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///health_check.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # initialize the app with the extension
 db.init_app(app)
 
-# Initialize database immediately but with error handling
 with app.app_context():
-    try:
-        # Import models
-        import models  # noqa: F401
-        db.create_all()
-        app.logger.info("Database tables created successfully")
-        
-        # Import routes to register them
-        import routes  # noqa: F401
-        app.logger.info("Routes imported successfully")
-        
-    except Exception as e:
-        app.logger.error(f"Initialization error: {e}")
-        # Continue without crashing
+    # Import models and routes
+    import models  # noqa: F401
+    import routes  # noqa: F401
+    
+    db.create_all()
 
 # Context processor to make site settings and dynamic scoring available in all templates
 @app.context_processor
@@ -73,8 +63,6 @@ def inject_site_settings():
             max_possible_score=68,  # Fallback to current system max
             metric_breakdown=[]
         )
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

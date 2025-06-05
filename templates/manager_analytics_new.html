@@ -19,7 +19,7 @@
                     <button class="btn btn-outline-primary btn-sm" onclick="exportReport('excel')">
                         <i class="fas fa-file-excel me-1"></i><span class="d-none d-sm-inline">Export </span>Excel
                     </button>
-                    <a href="{{ "/manager/clients" }}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-left me-1"></i><span class="d-none d-sm-inline">Back to </span>Clients
                     </a>
                 </div>

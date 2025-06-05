@@ -258,21 +258,14 @@ class MetricOption(db.Model):
 
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False, index=True)
-    metric_id = db.Column(db.Integer, db.ForeignKey('metric.id'), nullable=False, index=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    metric_id = db.Column(db.Integer, db.ForeignKey('metric.id'), nullable=False)
     value = db.Column(db.Integer, nullable=False)  # 0-100, rounded on save
     taken_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     locked = db.Column(db.Boolean, default=True)
     notes = db.Column(db.Text)
-    status = db.Column(db.String(20), default='final', index=True)  # 'draft' or 'final'
+    status = db.Column(db.String(20), default='final')  # 'draft' or 'final'
     scoresheet_id = db.Column(db.String(100))  # Groups scores from same assessment
-    
-    # Composite indexes for better query performance
-    __table_args__ = (
-        db.Index('idx_score_client_metric', 'client_id', 'metric_id'),
-        db.Index('idx_score_status_taken_at', 'status', 'taken_at'),
-        db.Index('idx_score_client_taken_at', 'client_id', 'taken_at'),
-    )
     
     # Relationships
     client = db.relationship('Client', backref='scores')
