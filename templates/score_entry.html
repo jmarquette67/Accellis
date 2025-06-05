@@ -258,10 +258,18 @@ document.addEventListener('DOMContentLoaded', function() {
         metricInputs.forEach(input => {
             const score = parseFloat(input.value) || 0;
             const weight = parseFloat(input.dataset.weight) || 1;
-            const maxValue = parseFloat(input.dataset.max) || 10;
+            const maxValue = parseFloat(input.dataset.max) || 1;
             
-            // Calculate weighted points
-            const weightedPoints = (score / maxValue) * weight;
+            // Calculate weighted points - for dropdown metrics, score is already the raw value
+            let weightedPoints;
+            if (input.tagName.toLowerCase() === 'select') {
+                // For select inputs, multiply score directly by weight
+                weightedPoints = score * weight;
+            } else {
+                // For number inputs, normalize by max value then multiply by weight
+                weightedPoints = (score / maxValue) * weight;
+            }
+            
             total += weightedPoints;
             
             // Update the weighted points display
