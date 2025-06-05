@@ -23,7 +23,7 @@
                     </p>
                 </div>
                 <div class="btn-group">
-                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
+                    <a href="{{ "/manager/clients" }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Back to Clients
                     </a>
                     {% if current_user.role and current_user.role.value == 'ADMIN' %}

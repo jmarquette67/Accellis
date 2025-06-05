@@ -28,7 +28,7 @@ def dashboard():
     """Main dashboard view"""
     # Check if user is authenticated
     if current_user.is_authenticated:
-        return render_template('dashboard.html', user=current_user)
+        return render_template('dashboard_simple.html', user=current_user)
     else:
         return render_template('landing.html')
     
