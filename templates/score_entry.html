@@ -126,11 +126,12 @@ select {
                                                 </td>
                                                 <td>
                                                     {% if metric.input_type == 'select' %}
+                                                        {% set max_option_value = metric.metric_options|selectattr('is_active')|map(attribute='option_value')|max %}
                                                         <select class="form-select metric-score" 
                                                                 name="metric_{{ metric.id }}" 
                                                                 id="metric_{{ metric.id }}"
                                                                 data-weight="{{ metric.weight }}"
-                                                                data-max="{{ metric.max_score or 10 }}">
+                                                                data-max="{{ max_option_value or 1 }}">
                                                             <option value="">Select...</option>
                                                             {% for option in metric.metric_options|sort(attribute='option_order') %}
                                                                 {% if option.is_active %}
