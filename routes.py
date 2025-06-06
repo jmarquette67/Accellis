@@ -47,88 +47,100 @@ def dashboard():
 @app.route('/api/dashboard-data')
 @require_login
 def dashboard_data():
-    """API endpoint for dashboard data"""
+    """Optimized API endpoint for dashboard data"""
     try:
-        # Get recent scoresheets using existing schema
-        recent_scores = Score.query.filter_by(status='final').order_by(desc(Score.taken_at)).limit(15).all()
+        # Use a single efficient query with joins to get recent scoresheets
+        from sqlalchemy import text
         
-        # Group by client and date to get complete scoresheets
-        scoresheet_data = {}
-        for score in recent_scores:
-            if score.client and score.metric:
-                key = (score.client.id, score.taken_at.date())
-                if key not in scoresheet_data:
-                    scoresheet_data[key] = {
-                        'client_name': score.client.name,
-                        'date': score.taken_at.strftime('%m/%d'),
-                        'user_name': 'System',  # Default since user_id may not exist
-                        'scores': [],
-                        'taken_at': score.taken_at
-                    }
-                scoresheet_data[key]['scores'].append((score.value, score.metric.weight))
+        # Get recent scoresheets with a single optimized query
+        recent_query = text("""
+            SELECT DISTINCT
+                c.id as client_id,
+                c.name as client_name,
+                DATE(s.taken_at) as score_date,
+                s.taken_at,
+                COALESCE(SUM(s.value * m.weight), 0) as total_weighted
+            FROM score s
+            JOIN client c ON s.client_id = c.id
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+            GROUP BY c.id, c.name, DATE(s.taken_at), s.taken_at
+            ORDER BY s.taken_at DESC
+            LIMIT 5
+        """)
         
-        # Calculate totals and format for display
-        max_score = get_maximum_possible_score()
+        result = db.session.execute(recent_query)
         recent_data = []
+        max_score = get_maximum_possible_score()
         
-        for sheet_data in sorted(scoresheet_data.values(), key=lambda x: x['taken_at'], reverse=True)[:5]:
-            if sheet_data['scores']:
-                total_weighted = sum(score * weight for score, weight in sheet_data['scores'])
-                percentage = calculate_score_percentage(total_weighted, max_score)
-                grade_info = get_performance_grade(percentage)
-                
-                recent_data.append({
-                    'client_name': sheet_data['client_name'],
-                    'client_id': key[0],  # client_id from the key tuple
-                    'date': sheet_data['date'],
-                    'date_key': sheet_data['taken_at'].strftime('%Y-%m-%d'),  # For scoresheet URL
-                    'user_name': sheet_data['user_name'],
-                    'total_score': f"{total_weighted:.1f}",
-                    'max_score': f"{max_score:.0f}",
-                    'grade_color': grade_info['color']
-                })
+        for row in result:
+            percentage = calculate_score_percentage(row.total_weighted, max_score)
+            grade_info = get_performance_grade(percentage)
+            
+            recent_data.append({
+                'client_name': row.client_name,
+                'client_id': row.client_id,
+                'date': row.taken_at.strftime('%m/%d'),
+                'date_key': row.score_date.strftime('%Y-%m-%d'),
+                'user_name': 'System',
+                'total_score': f"{row.total_weighted:.1f}",
+                'max_score': f"{max_score:.0f}",
+                'grade_color': grade_info['color']
+            })
         
-        # Calculate trending clients using existing data
+        # Simplified trending calculation using aggregated data
+        trending_query = text("""
+            WITH client_trends AS (
+                SELECT 
+                    c.id,
+                    c.name,
+                    AVG(CASE WHEN s.taken_at >= CURRENT_DATE - INTERVAL '7 days' 
+                        THEN s.value * m.weight ELSE NULL END) as recent_avg,
+                    AVG(CASE WHEN s.taken_at BETWEEN CURRENT_DATE - INTERVAL '21 days' 
+                        AND CURRENT_DATE - INTERVAL '14 days' 
+                        THEN s.value * m.weight ELSE NULL END) as older_avg
+                FROM client c
+                JOIN score s ON c.id = s.client_id
+                JOIN metric m ON s.metric_id = m.id
+                WHERE c.is_active = true AND s.status = 'final'
+                GROUP BY c.id, c.name
+                HAVING COUNT(s.id) >= 5
+            )
+            SELECT 
+                id, name,
+                CASE 
+                    WHEN older_avg > 0 
+                    THEN ((recent_avg - older_avg) / older_avg) * 100 
+                    ELSE 0 
+                END as trend_percent
+            FROM client_trends
+            WHERE recent_avg IS NOT NULL AND older_avg IS NOT NULL
+            ORDER BY trend_percent DESC
+            LIMIT 10
+        """)
+        
+        trend_result = db.session.execute(trending_query)
         trending_up = []
         trending_down = []
         
-        # Get trending data based on recent performance
-        clients = Client.query.filter_by(is_active=True).limit(10).all()
-        for client in clients:
-            recent_client_scores = Score.query.filter_by(
-                client_id=client.id, 
-                status='final'
-            ).order_by(desc(Score.taken_at)).limit(5).all()
-            
-            if len(recent_client_scores) >= 3:
-                # Simple trend calculation based on recent vs older scores
-                recent_avg = sum(s.value * s.metric.weight for s in recent_client_scores[:2] if s.metric) / 2
-                older_avg = sum(s.value * s.metric.weight for s in recent_client_scores[2:4] if s.metric) / 2
-                
-                if older_avg > 0:
-                    trend_percent = ((recent_avg - older_avg) / older_avg) * 100
-                    
-                    if trend_percent > 10:
-                        trending_up.append({
-                            'name': client.name,
-                            'client_id': client.id,
-                            'trend': trend_percent
-                        })
-                    elif trend_percent < -10:
-                        trending_down.append({
-                            'name': client.name,
-                            'client_id': client.id,
-                            'trend': trend_percent
-                        })
-        
-        # Sort and limit to top 3
-        trending_up = sorted(trending_up, key=lambda x: x['trend'], reverse=True)[:3]
-        trending_down = sorted(trending_down, key=lambda x: x['trend'])[:3]
+        for row in trend_result:
+            if row.trend_percent > 10:
+                trending_up.append({
+                    'name': row.name,
+                    'client_id': row.id,
+                    'trend': row.trend_percent
+                })
+            elif row.trend_percent < -10:
+                trending_down.append({
+                    'name': row.name,
+                    'client_id': row.id,
+                    'trend': row.trend_percent
+                })
         
         return jsonify({
             'recent_scoresheets': recent_data,
-            'trending_up': trending_up,
-            'trending_down': trending_down
+            'trending_up': trending_up[:3],
+            'trending_down': trending_down[:3]
         })
         
     except Exception as e:
@@ -138,29 +150,6 @@ def dashboard_data():
             'trending_up': [],
             'trending_down': []
         })
-    
-    # Get system overview stats
-    total_clients = len(clients)
-    healthy_clients = len([c for c in clients if c.status == 'healthy'])
-    warning_clients = len([c for c in clients if c.status == 'warning'])
-    critical_clients = len([c for c in clients if c.status == 'critical'])
-    offline_clients = len([c for c in clients if c.status == 'offline'])
-    
-    # Get recent alerts
-    recent_alerts = Alert.query.filter_by(is_active=True).order_by(desc(Alert.created_at)).limit(10).all()
-    
-    stats = {
-        'total': total_clients,
-        'healthy': healthy_clients,
-        'warning': warning_clients,
-        'critical': critical_clients,
-        'offline': offline_clients
-    }
-    
-    return render_template('dashboard.html', 
-                         clients=clients, 
-                         stats=stats, 
-                         recent_alerts=recent_alerts)
 
 @app.route('/register', methods=['GET', 'POST'])
 @require_role(UserRole.MANAGER)
