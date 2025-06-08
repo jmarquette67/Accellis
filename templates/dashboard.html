@@ -244,8 +244,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${client.name}
                 </a>
                 <span class="badge bg-${badgeColor}" style="font-size: 0.65rem;" 
-                      title="Performance change compared to previous period: ${client.trend > 0 ? '+' : ''}${client.trend.toFixed(1)}% improvement in weighted score average">
-                    ${client.trend > 0 ? '+' : ''}${client.trend.toFixed(1)}%
+                      title="Performance change compared to previous period">
+                    ${client.trend}
                 </span>
             </div>
         `).join('');

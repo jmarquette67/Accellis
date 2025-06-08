@@ -104,7 +104,7 @@ def dashboard_data():
                 WHERE c.is_active = true AND s.status = 'final'
                   AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
                 GROUP BY c.id, c.name
-                HAVING COUNT(s.id) >= 10
+                HAVING COUNT(s.id) >= 5
             )
             SELECT 
                 id, name,
