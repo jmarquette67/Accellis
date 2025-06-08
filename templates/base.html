@@ -8,8 +8,8 @@
     <!-- Bootstrap CSS with Replit theme -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -34,13 +34,13 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard') }}">
-                            <i data-feather="monitor" class="me-1"></i>
+                            <i class="fas fa-tachometer-alt me-1"></i>
                             Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('register_client') }}">
-                            <i data-feather="plus-circle" class="me-1"></i>
+                            <i class="fas fa-plus-circle me-1"></i>
                             Register Client
                         </a>
                     </li>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <p class="mb-0">
-                        <i data-feather="users" class="me-1"></i>
+                        <i class="fas fa-users me-1"></i>
                         Strategic Client Relationship Management
                     </p>
                 </div>

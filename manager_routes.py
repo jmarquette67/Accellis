@@ -1727,40 +1727,6 @@ def advanced_reports():
                          default_from_date=date_from,
                          default_to_date=date_to)
 
-@manager_bp.route("/alerts")
-@require_login
-def alert_management():
-    """Manage system alerts"""
-    require_manager()
-    
-    # Get all active alerts
-    active_alerts = Alert.query.filter_by(is_active=True)\
-                              .order_by(Alert.created_at.desc()).all()
-    
-    # Get recently resolved alerts
-    resolved_alerts = Alert.query.filter_by(is_active=False)\
-                                .order_by(Alert.resolved_at.desc())\
-                                .limit(10).all()
-    
-    return render_template('manager_alerts.html',
-                         active_alerts=active_alerts,
-                         resolved_alerts=resolved_alerts)
-
-@manager_bp.route("/alerts/<int:alert_id>/resolve", methods=["POST"])
-@require_login
-def resolve_alert(alert_id):
-    """Resolve an active alert"""
-    require_manager()
-    
-    alert = Alert.query.get_or_404(alert_id)
-    alert.is_active = False
-    alert.resolved_at = datetime.utcnow()
-    
-    db.session.commit()
-    flash(f'Alert resolved successfully!', 'success')
-    
-    return redirect(url_for('manager.alert_management'))
-
 @manager_bp.route("/users")
 @require_login
 def user_management():
