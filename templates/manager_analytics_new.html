@@ -376,34 +376,102 @@
         </div>
     </div>
 
-    <!-- Section 3: AI-Driven Trend Analysis -->
+    <!-- Section 3: Charts and Visualizations -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>All Company Monthly Scoresheet Trends</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendsChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>90 Day Average Score per Account Manager</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="accountManagerChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Additional AI Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-brain me-2"></i>AI-Driven Trend Analysis
-                        <small class="ms-2 text-muted d-none d-md-inline">Patterns and insights you might not see</small>
+                        <i class="fas fa-brain me-2"></i>Performance Insights
+                        <small class="ms-2 text-muted d-none d-md-inline">Key patterns identified</small>
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         {% for insight in ai_insights %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card">
-                                <div class="card-body">
+                        <div class="col-12 mb-3">
+                            <div class="card border-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="card-title text-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                        <h6 class="card-title text-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %} mb-1">
                                             <i class="fas fa-{% if insight.type == 'success' %}check-circle{% elif insight.type == 'warning' %}exclamation-triangle{% elif insight.type == 'danger' %}times-circle{% else %}info-circle{% endif %} me-2"></i>
                                             {{ insight.title }}
                                         </h6>
-                                        <span class="badge bg-secondary">{{ insight.confidence }}% confidence</span>
+                                        <span class="badge bg-secondary">{{ insight.confidence }}%</span>
                                     </div>
-                                    <p class="card-text">{{ insight.description }}</p>
+                                    <p class="card-text small mb-0">{{ insight.description }}</p>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Risk Analysis
+                        <small class="ms-2 text-muted d-none d-md-inline">Client retention indicators</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>High Risk Clients
+                        </h6>
+                        <div class="list-group list-group-flush">
+                            {% set high_risk_clients = account_owner_performance | selectattr('avg_scoresheet_total', 'lt', 40) | list %}
+                            {% if high_risk_clients %}
+                                {% for client in high_risk_clients[:3] %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span>{{ client.name }}</span>
+                                    <span class="badge bg-danger">{{ client.avg_scoresheet_total }}%</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted small">No high-risk clients identified</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-success">
+                            <i class="fas fa-check-circle me-2"></i>Top Performers
+                        </h6>
+                        <div class="list-group list-group-flush">
+                            {% set top_performers = account_owner_performance | sort(attribute='avg_scoresheet_total', reverse=true) | list %}
+                            {% for client in top_performers[:3] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>{{ client.name }}</span>
+                                <span class="badge bg-success">{{ client.avg_scoresheet_total }}%</span>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
