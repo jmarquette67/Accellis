@@ -182,8 +182,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function loadDashboardData() {
         fetch('/api/dashboard-data')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Dashboard data loaded:', data);
                 updateRecentScoreSHEets(data.recent_scoresheets);
                 updateTrendingClients(data.trending_up, data.trending_down);
             })
