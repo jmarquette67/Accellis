@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('Dashboard data loaded:', data);
-                updateRecentScoreSHEets(data.recent_scoresheets);
+                updateRecentScoreSheets(data.recent_scoresheets);
                 updateTrendingClients(data.trending_up, data.trending_down);
             })
             .catch(error => {
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    function updateRecentScoreSHEets(scoresheets) {
+    function updateRecentScoreSheets(scoresheets) {
         const container = document.getElementById('recent-scoresheets');
         if (!scoresheets || scoresheets.length === 0) {
             container.innerHTML = '<div class="text-muted small">No recent scoresheets found</div>';
