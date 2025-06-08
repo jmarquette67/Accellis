@@ -26,7 +26,7 @@
                     <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
                     <h5 class="card-title fw-medium">Metrics Management</h5>
                     <p class="card-text flex-grow-1">Manage engagement metrics, weights, and scoring criteria</p>
-                    <a href="{{ url_for('admin_metrics') }}" class="btn btn-primary btn-lg mt-auto">Manage Metrics</a>
+                    <a href="{{ url_for('manager.metric_configuration') }}" class="btn btn-primary btn-lg mt-auto">Manage Metrics</a>
                 </div>
             </div>
         </div>
@@ -37,7 +37,7 @@
                     <i class="fas fa-users fa-3x text-success mb-3"></i>
                     <h5 class="card-title fw-medium">User Management</h5>
                     <p class="card-text flex-grow-1">Control user roles, permissions, and access levels</p>
-                    <a href="{{ url_for('admin_users') }}" class="btn btn-success btn-lg mt-auto">Manage Users</a>
+                    <a href="{{ url_for('manager.user_management') }}" class="btn btn-success btn-lg mt-auto">Manage Users</a>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
                     <i class="fas fa-building fa-3x text-info mb-3"></i>
                     <h5 class="card-title fw-medium">Client Management</h5>
                     <p class="card-text flex-grow-1">Add, edit, and organize client accounts and data</p>
-                    <a href="{{ url_for('admin_clients') }}" class="btn btn-info btn-lg mt-auto">Manage Clients</a>
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-info btn-lg mt-auto">Manage Clients</a>
                 </div>
             </div>
         </div>
@@ -57,9 +57,9 @@
             <div class="card text-center h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-database fa-3x text-warning mb-3"></i>
-                    <h5 class="card-title fw-medium">Data Management</h5>
-                    <p class="card-text flex-grow-1">Import/export data, backup, and system maintenance</p>
-                    <a href="{{ url_for('admin_data') }}" class="btn btn-warning btn-lg mt-auto">Manage Data</a>
+                    <h5 class="card-title fw-medium">Alert Management</h5>
+                    <p class="card-text flex-grow-1">Monitor system alerts and manage notifications</p>
+                    <a href="{{ url_for('manager.alert_management') }}" class="btn btn-warning btn-lg mt-auto">Manage Alerts</a>
                 </div>
             </div>
         </div>
@@ -110,19 +110,19 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="d-grid gap-3">
-                        <a href="{{ url_for('admin_backup') }}" class="btn btn-outline-primary btn-lg d-flex align-items-center">
+                        <a href="#" class="btn btn-outline-primary btn-lg d-flex align-items-center" onclick="alert('Backup feature coming soon')">
                             <i class="fas fa-download me-2"></i> 
                             <span>Backup System</span>
                         </a>
-                        <a href="{{ url_for('admin_import') }}" class="btn btn-outline-success btn-lg d-flex align-items-center">
+                        <a href="#" class="btn btn-outline-success btn-lg d-flex align-items-center" onclick="alert('Import feature coming soon')">
                             <i class="fas fa-upload me-2"></i> 
                             <span>Import Data</span>
                         </a>
-                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info btn-lg d-flex align-items-center">
+                        <a href="{{ url_for('manager.advanced_reports') }}" class="btn btn-outline-info btn-lg d-flex align-items-center">
                             <i class="fas fa-file-alt me-2"></i> 
                             <span>Generate Reports</span>
                         </a>
-                        <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-warning btn-lg d-flex align-items-center">
+                        <a href="{{ url_for('manager.admin_settings') }}" class="btn btn-outline-warning btn-lg d-flex align-items-center">
                             <i class="fas fa-cog me-2"></i> 
                             <span>System Settings</span>
                         </a>
