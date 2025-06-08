@@ -88,33 +88,45 @@ def dashboard_data():
                 'grade_color': grade_info['color']
             })
         
-        # Simplified trending calculation using aggregated data
+        # Calculate trending using monthly comparison with available data
         trending_query = text("""
-            WITH client_trends AS (
+            WITH monthly_scores AS (
                 SELECT 
                     c.id,
                     c.name,
-                    AVG(CASE WHEN s.taken_at >= CURRENT_DATE - INTERVAL '7 days' 
-                        THEN s.value * m.weight ELSE NULL END) as recent_avg,
-                    AVG(CASE WHEN s.taken_at BETWEEN CURRENT_DATE - INTERVAL '21 days' 
-                        AND CURRENT_DATE - INTERVAL '14 days' 
-                        THEN s.value * m.weight ELSE NULL END) as older_avg
+                    DATE_TRUNC('month', s.taken_at) as score_month,
+                    AVG(s.value * m.weight) as avg_weighted_score,
+                    COUNT(*) as score_count
                 FROM client c
                 JOIN score s ON c.id = s.client_id
                 JOIN metric m ON s.metric_id = m.id
                 WHERE c.is_active = true AND s.status = 'final'
-                GROUP BY c.id, c.name
-                HAVING COUNT(s.id) >= 5
+                  AND s.taken_at >= CURRENT_DATE - INTERVAL '3 months'
+                GROUP BY c.id, c.name, DATE_TRUNC('month', s.taken_at)
+                HAVING COUNT(*) >= 3
+            ),
+            client_trends AS (
+                SELECT 
+                    ms1.id,
+                    ms1.name,
+                    ms1.avg_weighted_score as recent_avg,
+                    ms2.avg_weighted_score as previous_avg
+                FROM monthly_scores ms1
+                LEFT JOIN monthly_scores ms2 ON ms1.id = ms2.id 
+                    AND ms2.score_month = ms1.score_month - INTERVAL '1 month'
+                WHERE ms1.score_month = (
+                    SELECT MAX(score_month) FROM monthly_scores WHERE id = ms1.id
+                )
             )
             SELECT 
                 id, name,
                 CASE 
-                    WHEN older_avg > 0 
-                    THEN ((recent_avg - older_avg) / older_avg) * 100 
+                    WHEN previous_avg > 0 AND previous_avg IS NOT NULL
+                    THEN ((recent_avg - previous_avg) / previous_avg) * 100 
                     ELSE 0 
                 END as trend_percent
             FROM client_trends
-            WHERE recent_avg IS NOT NULL AND older_avg IS NOT NULL
+            WHERE previous_avg IS NOT NULL AND recent_avg IS NOT NULL
             ORDER BY trend_percent DESC
             LIMIT 10
         """)
@@ -124,17 +136,17 @@ def dashboard_data():
         trending_down = []
         
         for row in trend_result:
-            if row.trend_percent > 10:
+            if row.trend_percent > 5:  # Lower threshold to show more trends
                 trending_up.append({
                     'name': row.name,
                     'client_id': row.id,
-                    'trend': row.trend_percent
+                    'trend': f"{row.trend_percent:.1f}%"
                 })
-            elif row.trend_percent < -10:
+            elif row.trend_percent < -5:  # Lower threshold to show more trends
                 trending_down.append({
                     'name': row.name,
                     'client_id': row.id,
-                    'trend': row.trend_percent
+                    'trend': f"{row.trend_percent:.1f}%"
                 })
         
         return jsonify({
