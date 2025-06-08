@@ -376,29 +376,7 @@
         </div>
     </div>
 
-    <!-- Section 3: Charts and Visualizations -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>All Company Monthly Scoresheet Trends</h6>
-                </div>
-                <div class="card-body" style="height: 300px;">
-                    <canvas id="monthlyTrendsChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>90 Day Average Score per Account Manager</h6>
-                </div>
-                <div class="card-body" style="height: 300px;">
-                    <canvas id="accountManagerChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
 
 
@@ -483,18 +461,18 @@ const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
 if (monthlyTrendsElement) {
     const monthlyCtx = monthlyTrendsElement.getContext('2d');
     new Chart(monthlyCtx, {
-    type: 'line',
-    data: {
-        labels: {{ chart_data.monthly_trends.labels | tojson }},
-        datasets: [{
-            label: 'Average Scoresheet Total',
-            data: {{ chart_data.monthly_trends.data | tojson }},
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.1
-        }]
-    },
-    options: {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.monthly_trends.labels | tojson }},
+            datasets: [{
+                label: 'Average Scoresheet Total',
+                data: {{ chart_data.monthly_trends.data | tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
