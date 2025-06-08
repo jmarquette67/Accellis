@@ -106,13 +106,13 @@
     
     <!-- Custom JavaScript -->
     <script>
-        // Initialize Feather icons
-        feather.replace();
-        
         // Update current time
         function updateTime() {
             const now = new Date();
-            document.getElementById('current-time').textContent = now.toLocaleString();
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleString();
+            }
         }
         
         // Update time every second
