@@ -1774,6 +1774,63 @@ def user_management():
     users = User.query.order_by(User.email).all()
     return render_template('manager_users.html', users=users)
 
+@manager_bp.route("/users/add", methods=['POST'])
+@require_login
+def add_user():
+    """Add a new user to the platform"""
+    user = require_manager()
+    
+    # Only admins can manage users
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        # Get form data
+        email = request.form.get('email', '').strip().lower()
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        role = request.form.get('role', '').strip()
+        
+        # Validate required fields
+        if not email:
+            flash('Email address is required.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        if not role or role not in ['TAM', 'VCIO', 'MANAGER', 'ADMIN']:
+            flash('Valid role selection is required.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash(f'User with email {email} already exists.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Create new user
+        new_user = User()
+        new_user.email = email
+        new_user.first_name = first_name if first_name else None
+        new_user.last_name = last_name if last_name else None
+        new_user.role = UserRole(role)
+        new_user.created_at = datetime.utcnow()
+        new_user.updated_at = datetime.utcnow()
+        
+        # Generate a unique user ID
+        import uuid
+        new_user.id = str(uuid.uuid4())
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        display_name = first_name or email.split('@')[0]
+        flash(f'User {display_name} added successfully with {role} role.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding user: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
+
 @manager_bp.route("/users/<user_id>/update", methods=['POST'])
 @require_login
 def update_user(user_id):
