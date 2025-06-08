@@ -479,8 +479,10 @@
 <!-- Chart.js Scripts -->
 <script>
 // Monthly Trends Chart
-const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
-new Chart(monthlyCtx, {
+const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
+if (monthlyTrendsElement) {
+    const monthlyCtx = monthlyTrendsElement.getContext('2d');
+    new Chart(monthlyCtx, {
     type: 'line',
     data: {
         labels: {{ chart_data.monthly_trends.labels | tojson }},
@@ -508,8 +510,8 @@ new Chart(monthlyCtx, {
                 }
             }
         }
-    }
-});
+    });
+}
 
 // Top Account Manager Chart
 const topAccountManagerElement = document.getElementById('topAccountManagerChart');
@@ -652,6 +654,7 @@ new Chart(accountManagerCtx, {
         }
     }
 });
+}
 
 // Table sorting functionality with toggle
 let sortState = {}; // Track sort direction for each column
