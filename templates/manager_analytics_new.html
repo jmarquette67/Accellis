@@ -65,33 +65,46 @@
         </div>
     </div>
 
-    <!-- Scoring System Overview -->
+    <!-- AI-Driven Trend Analysis (moved to top) -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="alert alert-info">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h6 class="fw-bold mb-2"><i class="fas fa-calculator me-2"></i>Balanced Scoring System</h6>
-                        <p class="mb-0">Fair comparison across all client engagement metrics</p>
-                        <small class="text-muted">Provides balanced view of performance without any single metric dominating the results</small>
-                    </div>
-                    <div class="col-md-8">
-                        <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-2"></i>Performance Grade Ranges</h6>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <span class="badge bg-success me-2">Excellent Performance</span>
-                                <small>25+ points (Strong Engagement)</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-warning me-2">Good Performance</span>
-                                <small>18-24 points (Solid Engagement)</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-2">Needs Improvement</span>
-                                <small>Below 18 points (Focus Areas)</small>
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2"></i>AI-Driven Trend Analysis
+                        <small class="ms-2 text-muted d-none d-md-inline">Patterns and insights you might not see</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for insight in ai_insights %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title text-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                            <i class="fas fa-{{ insight.icon }} me-1"></i>{{ insight.title }}
+                                        </h6>
+                                        <span class="badge bg-{{ insight.type }}">{{ insight.confidence }}%</span>
+                                    </div>
+                                    <p class="card-text small">{{ insight.description }}</p>
+                                    {% if insight.action %}
+                                    <div class="alert alert-light py-2 mb-0">
+                                        <small><strong>Suggested Action:</strong> {{ insight.action }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                        <small class="text-muted d-block mt-2">Based on balanced evaluation of all client engagement metrics</small>
+                        {% endfor %}
+                        {% if not ai_insights %}
+                        <div class="col-12">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-lightbulb fs-1 mb-3"></i>
+                                <p>AI insights will appear here once sufficient data is available for analysis.</p>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -104,7 +117,7 @@
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h6 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>Monthly Performance Trends
+                        <i class="fas fa-chart-line me-2"></i>All Company Monthly Scoresheet Trends
                     </h6>
                 </div>
                 <div class="card-body">
@@ -116,11 +129,11 @@
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h6 class="mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>Metric Performance Distribution
+                        <i class="fas fa-chart-bar me-2"></i>90 Day Average Score per Account Manager
                     </h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="metricDistributionChart" width="400" height="200"></canvas>
+                    <canvas id="accountManagerChart" width="400" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -147,9 +160,6 @@
                                     <th class="sortable" data-sort="metric_name">
                                         <i class="fas fa-sort me-1"></i>Metric
                                     </th>
-                                    <th class="sortable text-center" data-sort="performance_percentage">
-                                        <i class="fas fa-sort me-1"></i>Unweighted %
-                                    </th>
                                     <th class="sortable text-center" data-sort="weighted_percentage">
                                         <i class="fas fa-sort me-1"></i>Weighted %
                                     </th>
@@ -171,20 +181,6 @@
                                         {% if metric.weight > 1 %}
                                         <small class="text-muted">(Weight: {{ metric.weight }})</small>
                                         {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="progress mb-1" style="height: 20px;" 
-                                             title="{% if metric.name == 'Cross Selling' %}Cross Selling: {{ metric.average_score }}/5 actual max → {{ metric.performance_percentage }}% (relative to highest score achieved){% else %}{{ metric.name }}: {{ metric.average_score }}/1 scale → {{ metric.performance_percentage }}% (0-1 scale metrics){% endif %}"
-                                             data-bs-toggle="tooltip" data-bs-placement="top">
-                                            <div class="progress-bar bg-{{ metric.color }}" 
-                                                 role="progressbar" 
-                                                 style="width: {{ metric.performance_percentage }}%"
-                                                 aria-valuenow="{{ metric.performance_percentage }}" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                                {{ metric.performance_percentage }}%
-                                            </div>
-                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="progress mb-1" style="height: 18px;" 
@@ -449,41 +445,37 @@ new Chart(monthlyCtx, {
                 },
                 title: {
                     display: true,
-                    text: 'Balanced Scoresheet Total (Points)'
+                    text: 'Weighted Score Total (Points)'
                 }
             }
         }
     }
 });
 
-// Metric Distribution Chart
-const metricCtx = document.getElementById('metricDistributionChart').getContext('2d');
-new Chart(metricCtx, {
+// Account Manager Chart
+const accountManagerCtx = document.getElementById('accountManagerChart').getContext('2d');
+new Chart(accountManagerCtx, {
     type: 'bar',
     data: {
-        labels: {{ chart_data.metric_distribution.labels | tojson }},
+        labels: {{ account_owner_performance | map(attribute='name') | list | tojson }},
         datasets: [{
-            label: 'Average Scoresheet Total',
-            data: {{ chart_data.metric_distribution.data | tojson }},
+            label: '90-Day Average Score',
+            data: {{ account_owner_performance | map(attribute='avg_scoresheet_total') | list | tojson }},
             backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 205, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)',
-                'rgba(199, 199, 199, 0.2)',
-                'rgba(83, 102, 255, 0.2)'
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)'
             ],
             borderColor: [
-                'rgba(255, 99, 132, 1)',
                 'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
                 'rgba(255, 205, 86, 1)',
                 'rgba(75, 192, 192, 1)',
                 'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)',
-                'rgba(199, 199, 199, 1)',
-                'rgba(83, 102, 255, 1)'
+                'rgba(255, 159, 64, 1)'
             ],
             borderWidth: 1
         }]
@@ -493,19 +485,19 @@ new Chart(metricCtx, {
         plugins: {
             title: {
                 display: true,
-                text: 'Client Performance Distribution'
+                text: '90 Day Average Score per Account Manager'
             }
         },
         scales: {
             y: {
-                min: 5,
-                max: 30,
+                beginAtZero: true,
+                max: 72,
                 ticks: {
-                    stepSize: 3
+                    stepSize: 10
                 },
                 title: {
                     display: true,
-                    text: 'Balanced Scoresheet Total (Points)'
+                    text: 'Average Weighted Score'
                 }
             }
         }
