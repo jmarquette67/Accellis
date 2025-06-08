@@ -487,24 +487,43 @@ def generate_ai_trend_insights(all_scores):
                 'confidence': 80
             })
     
-    # Add additional insights to ensure we always have multiple recommendations
+    # Data-driven trend insights based on actual patterns
     if len(insights) < 3:
-        insights.append({
-            'type': 'info',
-            'title': 'Performance Monitoring Active',
-            'description': 'Continuous tracking of client engagement metrics helps identify trends early and maintain strong relationships.',
-            'confidence': 75
-        })
+        # Analyze metric trend patterns
+        trending_up_metrics = []
+        trending_down_metrics = []
         
-    if len(insights) < 4:
-        insights.append({
-            'type': 'info', 
-            'title': 'Account Manager Excellence',
-            'description': 'Regular scoresheet completion and metric tracking demonstrates commitment to client success and relationship management.',
-            'confidence': 80
-        })
+        for metric_name, data in retention_metrics.items():
+            if len(data) >= 4:  # Need sufficient data points
+                recent_scores = [score for score, _ in data[-2:]]  # Last 2 scores
+                older_scores = [score for score, _ in data[:-2]]   # Earlier scores
+                
+                if recent_scores and older_scores:
+                    recent_avg = sum(recent_scores) / len(recent_scores)
+                    older_avg = sum(older_scores) / len(older_scores)
+                    
+                    if recent_avg > older_avg * 1.1:  # 10% improvement
+                        trending_up_metrics.append(metric_name)
+                    elif recent_avg < older_avg * 0.9:  # 10% decline
+                        trending_down_metrics.append(metric_name)
+        
+        if trending_up_metrics:
+            insights.append({
+                'type': 'success',
+                'title': 'Improving Performance Trends',
+                'description': f'Recent improvements detected in: {", ".join(trending_up_metrics[:3])}. These positive trends indicate strengthening client relationships.',
+                'confidence': 85
+            })
+        
+        if trending_down_metrics:
+            insights.append({
+                'type': 'warning',
+                'title': 'Declining Performance Alert',
+                'description': f'Performance decline observed in: {", ".join(trending_down_metrics[:3])}. Early intervention recommended to prevent client satisfaction issues.',
+                'confidence': 80
+            })
     
-    return insights  # Return all insights for comprehensive analysis
+    return insights[:4]  # Return top 4 data-driven insights
 
 def prepare_chart_data(all_scores):
     """Prepare data for charts and visualizations using scoresheet totals"""
