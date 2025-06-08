@@ -5,11 +5,8 @@ from flask_login import current_user
 from app import app, db
 from models import Client, HealthCheck, Alert, User, UserRole, Score, Metric
 from forms import ClientRegistrationForm, HealthCheckForm
-from replit_auth import require_login, require_role, make_replit_blueprint
+from auth import require_login, require_role
 from scoring_calculations import get_maximum_possible_score, get_performance_grade, calculate_score_percentage
-
-# Register Replit Auth blueprint
-app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
 
 # Score entry redirect for manager routes
 @app.route('/scores/new')
@@ -43,6 +40,23 @@ def dashboard():
     
     # Fallback for unauthenticated users
     return render_template('landing.html')
+
+@app.route('/admin')
+@require_login
+def admin_console():
+    """Admin console page"""
+    if not current_user.has_role(UserRole.MANAGER):
+        abort(403)
+    
+    # Get basic stats
+    stats = {
+        'total_users': User.query.count(),
+        'total_clients': Client.query.filter_by(is_active=True).count(),
+        'total_metrics': Metric.query.count(),
+        'total_scores': Score.query.count()
+    }
+    
+    return render_template('admin_dashboard.html', stats=stats)
 
 @app.route('/api/dashboard-data')
 def dashboard_data():

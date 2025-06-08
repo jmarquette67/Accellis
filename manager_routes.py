@@ -3,7 +3,7 @@ from app import db
 from models import Client, HealthCheck, Alert, User, UserRole, Metric, Score, SiteSetting
 import os
 from werkzeug.utils import secure_filename
-from replit_auth import require_login
+from auth import require_login, require_role
 from flask_login import current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func

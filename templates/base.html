@@ -47,9 +47,28 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i>
+                            {{ current_user.first_name or current_user.email.split('@')[0] if current_user.email else 'User' }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if current_user.role and current_user.role.value in ['ADMIN', 'MANAGER'] %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin_console') }}">
+                                <i class="fas fa-cog me-2"></i>Admin Console
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <span class="navbar-text">
-                            <i data-feather="clock" class="me-1"></i>
+                            <i class="fas fa-clock me-1"></i>
                             <span id="current-time"></span>
                         </span>
                     </li>
