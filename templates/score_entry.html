@@ -146,10 +146,10 @@ select {
                                                                id="metric_{{ metric.id }}"
                                                                min="0" 
                                                                max="{{ metric.max_score or 10 }}" 
-                                                               step="0.1"
+                                                               step="{% if metric.name == 'Cross Selling' %}1{% else %}0.1{% endif %}"
                                                                data-weight="{{ metric.weight }}"
                                                                data-max="{{ metric.max_score or 10 }}"
-                                                               placeholder="{% if metric.name == 'Help Desk Usage' %}0.0-5.0 tickets/user/month{% else %}0-{{ metric.max_score or 10 }}{% endif %}">
+                                                               placeholder="{% if metric.name == 'Help Desk Usage' %}0.0-5.0 tickets/user/month{% elif metric.name == 'Cross Selling' %}Number of additional services (0-{{ metric.max_score or 5 }}){% else %}0-{{ metric.max_score or 10 }}{% endif %}">
                                                         {% if metric.name == 'Help Desk Usage' %}
                                                         <small class="text-muted">Tickets per end user per month (0.25-1.0 = optimal)</small>
                                                         {% endif %}
