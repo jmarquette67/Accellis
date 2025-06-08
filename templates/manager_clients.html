@@ -76,8 +76,8 @@
                                             <span class="text-muted">Not set</span>
                                         {% endif %}
                                     </td>
-                                    <td data-value="{% if client_scores[client.id] is not none %}{{ client_scores[client.id] }}{% else %}0{% endif %}">
-                                        {% if client_scores[client.id] is not none %}
+                                    <td data-value="{% if client.id in client_scores and client_scores[client.id] is not none %}{{ client_scores[client.id] }}{% else %}0{% endif %}">
+                                        {% if client.id in client_scores and client_scores[client.id] is not none %}
                                             <span class="badge bg-{% if client_scores[client.id] >= 50 %}success{% elif client_scores[client.id] >= 30 %}warning{% else %}danger{% endif %}">
                                                 {{ client_scores[client.id] }}
                                             </span>
