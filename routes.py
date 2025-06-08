@@ -45,7 +45,6 @@ def dashboard():
     return render_template('landing.html')
 
 @app.route('/api/dashboard-data')
-@require_login
 def dashboard_data():
     """Optimized API endpoint for dashboard data"""
     try:
@@ -88,45 +87,34 @@ def dashboard_data():
                 'grade_color': grade_info['color']
             })
         
-        # Calculate trending using monthly comparison with available data
+        # Calculate trending using 90-day comparison with recent vs earlier periods
         trending_query = text("""
-            WITH monthly_scores AS (
+            WITH client_trends AS (
                 SELECT 
                     c.id,
                     c.name,
-                    DATE_TRUNC('month', s.taken_at) as score_month,
-                    AVG(s.value * m.weight) as avg_weighted_score,
-                    COUNT(*) as score_count
+                    AVG(CASE WHEN s.taken_at >= CURRENT_DATE - INTERVAL '30 days' 
+                        THEN s.value * m.weight END) as recent_avg,
+                    AVG(CASE WHEN s.taken_at BETWEEN CURRENT_DATE - INTERVAL '90 days' 
+                        AND CURRENT_DATE - INTERVAL '60 days' 
+                        THEN s.value * m.weight END) as earlier_avg
                 FROM client c
                 JOIN score s ON c.id = s.client_id
                 JOIN metric m ON s.metric_id = m.id
                 WHERE c.is_active = true AND s.status = 'final'
-                  AND s.taken_at >= CURRENT_DATE - INTERVAL '3 months'
-                GROUP BY c.id, c.name, DATE_TRUNC('month', s.taken_at)
-                HAVING COUNT(*) >= 3
-            ),
-            client_trends AS (
-                SELECT 
-                    ms1.id,
-                    ms1.name,
-                    ms1.avg_weighted_score as recent_avg,
-                    ms2.avg_weighted_score as previous_avg
-                FROM monthly_scores ms1
-                LEFT JOIN monthly_scores ms2 ON ms1.id = ms2.id 
-                    AND ms2.score_month = ms1.score_month - INTERVAL '1 month'
-                WHERE ms1.score_month = (
-                    SELECT MAX(score_month) FROM monthly_scores WHERE id = ms1.id
-                )
+                  AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
+                GROUP BY c.id, c.name
+                HAVING COUNT(s.id) >= 10
             )
             SELECT 
                 id, name,
                 CASE 
-                    WHEN previous_avg > 0 AND previous_avg IS NOT NULL
-                    THEN ((recent_avg - previous_avg) / previous_avg) * 100 
+                    WHEN earlier_avg > 0 AND earlier_avg IS NOT NULL
+                    THEN ((recent_avg - earlier_avg) / earlier_avg) * 100 
                     ELSE 0 
                 END as trend_percent
             FROM client_trends
-            WHERE previous_avg IS NOT NULL AND recent_avg IS NOT NULL
+            WHERE recent_avg IS NOT NULL AND earlier_avg IS NOT NULL
             ORDER BY trend_percent DESC
             LIMIT 10
         """)
