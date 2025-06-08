@@ -51,7 +51,7 @@ def dashboard_data():
         # Use a single efficient query with joins to get recent scoresheets
         from sqlalchemy import text
         
-        # Get recent scoresheets with proper total calculation (latest scoresheet per client)
+        # Get recent scoresheets with proper weighted total calculation (latest scoresheet per client)
         recent_query = text("""
             WITH latest_scoresheets AS (
                 SELECT 
@@ -60,13 +60,14 @@ def dashboard_data():
                     DATE(s.taken_at) as score_date,
                     MAX(DATE(s.taken_at)) OVER (PARTITION BY c.id) as latest_date,
                     MAX(s.taken_at) as taken_at,
-                    COALESCE(SUM(s.value), 0) as total_raw_score
+                    COALESCE(SUM(s.value * m.weight), 0) as total_weighted_score
                 FROM score s
                 JOIN client c ON s.client_id = c.id
+                JOIN metric m ON s.metric_id = m.id
                 WHERE s.status = 'final'
                 GROUP BY c.id, c.name, DATE(s.taken_at)
             )
-            SELECT client_id, client_name, score_date, taken_at, total_raw_score
+            SELECT client_id, client_name, score_date, taken_at, total_weighted_score
             FROM latest_scoresheets 
             WHERE score_date = latest_date
             ORDER BY taken_at DESC
@@ -78,7 +79,7 @@ def dashboard_data():
         max_score = get_maximum_possible_score()
         
         for row in result:
-            percentage = calculate_score_percentage(row.total_weighted, max_score)
+            percentage = calculate_score_percentage(row.total_weighted_score, max_score)
             grade_info = get_performance_grade(percentage)
             
             recent_data.append({
@@ -87,7 +88,7 @@ def dashboard_data():
                 'date': row.taken_at.strftime('%m/%d'),
                 'date_key': row.score_date.strftime('%Y-%m-%d'),
                 'user_name': 'System',
-                'total_score': f"{row.total_weighted:.1f}",
+                'total_score': f"{row.total_weighted_score:.0f}",
                 'max_score': f"{max_score:.0f}",
                 'grade_color': grade_info['color']
             })
