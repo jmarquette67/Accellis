@@ -735,19 +735,27 @@ def score_entry():
             db.session.rollback()
             flash(f'Error saving scoresheet: {str(e)}', 'error')
     
-    # GET request - show form
-    clients = Client.query.order_by(Client.name).all()
-    metrics = Metric.query.order_by(Metric.name).all()
+    # GET request - optimized form loading
+    from scoring_calculations import get_maximum_possible_score
     
-    # Calculate max possible points for display
-    max_points = 68  # Based on authentic Q1 2025 specifications
+    # Only load active clients with minimal data
+    clients = db.session.query(Client.id, Client.name).filter_by(is_active=True).order_by(Client.name).all()
+    
+    # Load metrics with their options efficiently  
+    metrics = db.session.query(Metric).options(
+        db.joinedload(Metric.metric_options)
+    ).order_by(Metric.name).all()
+    
+    # Calculate max possible points dynamically
+    max_points = get_maximum_possible_score()
     
     return render_template("score_entry.html", 
                          clients=clients, 
                          metrics=metrics, 
                          user=current_user,
                          today=datetime.now().strftime('%Y-%m-%d'),
-                         max_points=max_points)
+                         max_points=max_points,
+                         max_possible_score=max_points)
 
 @manager_bp.route("/scores/")
 @require_login  

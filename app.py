@@ -37,32 +37,30 @@ with app.app_context():
     
     db.create_all()
 
-# Context processor to make site settings and dynamic scoring available in all templates
+# Optimized context processor with caching
 @app.context_processor
 def inject_site_settings():
-    from models import SiteSetting
-    from scoring_calculations import get_maximum_possible_score, get_metric_breakdown
-    
     try:
-        logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
-        logo_path = logo_setting.value if logo_setting else 'images/accellis-logo.png'
+        # Cache values to avoid repeated database calls
+        if not hasattr(app, '_cached_settings'):
+            from models import SiteSetting
+            from scoring_calculations import get_maximum_possible_score
+            
+            logo_setting = SiteSetting.query.filter_by(key='header_logo').first()
+            logo_path = logo_setting.value if logo_setting else 'images/accellis-logo.png'
+            max_score = get_maximum_possible_score()
+            
+            app._cached_settings = {
+                'site_logo': logo_path,
+                'max_possible_score': max_score
+            }
         
-        # Add dynamic scoring information
-        max_score = get_maximum_possible_score()
-        metric_breakdown = get_metric_breakdown()
-        
-        return dict(
-            site_logo=logo_path,
-            max_possible_score=max_score,
-            metric_breakdown=metric_breakdown
-        )
+        return app._cached_settings
     except:
-        # Fallback if database not available
-        return dict(
-            site_logo='images/accellis-logo.png',
-            max_possible_score=68,  # Fallback to current system max
-            metric_breakdown=[]
-        )
+        return {
+            'site_logo': 'images/accellis-logo.png',
+            'max_possible_score': 72
+        }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
