@@ -26,6 +26,11 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String, nullable=True)
     profile_image_url = db.Column(db.String, nullable=True)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.TAM)
+    
+    # User status tracking
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    deactivated_date = db.Column(db.DateTime, nullable=True)
+    deactivation_reason = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

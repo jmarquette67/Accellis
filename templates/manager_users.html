@@ -37,6 +37,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Status</th>
                                     <th>Created</th>
                                     <th>Last Updated</th>
                                     <th>Actions</th>
@@ -69,6 +70,16 @@
                                         </span>
                                     </td>
                                     <td>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% if user.deactivated_date %}
+                                        <small class="text-muted d-block">Since: {{ user.deactivated_date.strftime('%Y-%m-%d') }}</small>
+                                        {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         {% if user.created_at %}
                                         {{ user.created_at.strftime('%Y-%m-%d') }}
                                         {% else %}
@@ -87,6 +98,15 @@
                                             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
+                                            {% if user.is_active %}
+                                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateUserModal{{ user.id }}">
+                                                <i class="fas fa-user-slash"></i> Deactivate
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#activateUserModal{{ user.id }}">
+                                                <i class="fas fa-user-check"></i> Activate
+                                            </button>
+                                            {% endif %}
                                             <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#transferClientsModal{{ user.id }}">
                                                 <i class="fas fa-exchange-alt"></i> Transfer Clients
                                             </button>
@@ -192,6 +212,76 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                                     <button type="submit" class="btn btn-warning">Transfer Clients</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Deactivate User Modal -->
+                                <div class="modal fade" id="deactivateUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deactivateUserModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{{ url_for('manager.deactivate_user', user_id=user.id) }}">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deactivateUserModalLabel{{ user.id }}">Deactivate User</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        <strong>Warning:</strong> You are about to deactivate {{ user.first_name or user.email.split('@')[0] if user.email else 'this user' }}.
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="deactivationDate{{ user.id }}" class="form-label">Deactivation Date <span class="text-danger">*</span></label>
+                                                        <input type="date" class="form-control" id="deactivationDate{{ user.id }}" name="deactivation_date" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="deactivationReason{{ user.id }}" class="form-label">Reason for Deactivation</label>
+                                                        <textarea class="form-control" id="deactivationReason{{ user.id }}" name="deactivation_reason" rows="3" placeholder="Enter reason for deactivation (optional)"></textarea>
+                                                    </div>
+                                                    <div class="alert alert-info">
+                                                        <strong>Note:</strong> Deactivated users will not be able to log in, but their historical data will be preserved.
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">Deactivate User</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Activate User Modal -->
+                                <div class="modal fade" id="activateUserModal{{ user.id }}" tabindex="-1" aria-labelledby="activateUserModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{{ url_for('manager.activate_user', user_id=user.id) }}">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="activateUserModalLabel{{ user.id }}">Activate User</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-success">
+                                                        <i class="fas fa-user-check me-2"></i>
+                                                        <strong>Confirm:</strong> You are about to activate {{ user.first_name or user.email.split('@')[0] if user.email else 'this user' }}.
+                                                    </div>
+                                                    {% if user.deactivated_date %}
+                                                    <div class="mb-3">
+                                                        <strong>Previously Deactivated:</strong> {{ user.deactivated_date.strftime('%Y-%m-%d') }}
+                                                        {% if user.deactivation_reason %}
+                                                        <br><strong>Reason:</strong> {{ user.deactivation_reason }}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="alert alert-info">
+                                                        <strong>Note:</strong> Activated users will regain access to the platform and their previous permissions.
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-success">Activate User</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -313,12 +403,21 @@ function toggleAllClients(selectAllCheckbox, userId) {
     });
 }
 
-// Load clients when transfer modal is shown
+// Load clients when transfer modal is shown and set default deactivation date
 document.addEventListener('DOMContentLoaded', function() {
     {% for user in users %}
     document.getElementById('transferClientsModal{{ user.id }}').addEventListener('show.bs.modal', function() {
         loadUserClients('{{ user.id }}');
     });
+    
+    // Set default deactivation date to today when modal opens
+    const deactivateModal{{ user.id }} = document.getElementById('deactivateUserModal{{ user.id }}');
+    if (deactivateModal{{ user.id }}) {
+        deactivateModal{{ user.id }}.addEventListener('show.bs.modal', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('deactivationDate{{ user.id }}').value = today;
+        });
+    }
     {% endfor %}
 });
 

@@ -1972,6 +1972,88 @@ def transfer_clients():
     
     return redirect(url_for('manager.user_management'))
 
+@manager_bp.route("/users/deactivate/<user_id>", methods=['POST'])
+@require_login
+def deactivate_user(user_id):
+    """Deactivate a user with specific date and reason"""
+    user = require_manager()
+    
+    # Only admins can deactivate users
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        target_user = User.query.get(user_id)
+        if not target_user:
+            flash('User not found.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Get deactivation details from form
+        deactivation_date_str = request.form.get('deactivation_date')
+        deactivation_reason = request.form.get('deactivation_reason', '').strip()
+        
+        if not deactivation_date_str:
+            flash('Deactivation date is required.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Parse the date
+        from datetime import datetime
+        try:
+            deactivation_date = datetime.strptime(deactivation_date_str, '%Y-%m-%d')
+        except ValueError:
+            flash('Invalid date format.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Update user status
+        target_user.is_active = False
+        target_user.deactivated_date = deactivation_date
+        target_user.deactivation_reason = deactivation_reason or None
+        target_user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        user_name = target_user.first_name or target_user.email.split('@')[0] if target_user.email else 'User'
+        flash(f'Successfully deactivated {user_name} as of {deactivation_date.strftime("%Y-%m-%d")}.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deactivating user: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
+
+@manager_bp.route("/users/activate/<user_id>", methods=['POST'])
+@require_login
+def activate_user(user_id):
+    """Activate a previously deactivated user"""
+    user = require_manager()
+    
+    # Only admins can activate users
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        target_user = User.query.get(user_id)
+        if not target_user:
+            flash('User not found.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Update user status
+        target_user.is_active = True
+        target_user.deactivated_date = None
+        target_user.deactivation_reason = None
+        target_user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        user_name = target_user.first_name or target_user.email.split('@')[0] if target_user.email else 'User'
+        flash(f'Successfully activated {user_name}. User can now access the platform.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error activating user: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
+
 @manager_bp.route("/metric-configuration")
 @require_login
 def metric_configuration():
