@@ -51,20 +51,25 @@ def dashboard_data():
         # Use a single efficient query with joins to get recent scoresheets
         from sqlalchemy import text
         
-        # Get recent scoresheets with proper total calculation
+        # Get recent scoresheets with proper total calculation (latest scoresheet per client)
         recent_query = text("""
-            SELECT 
-                c.id as client_id,
-                c.name as client_name,
-                DATE(s.taken_at) as score_date,
-                MAX(s.taken_at) as taken_at,
-                COALESCE(SUM(s.value * m.weight), 0) as total_weighted
-            FROM score s
-            JOIN client c ON s.client_id = c.id
-            JOIN metric m ON s.metric_id = m.id
-            WHERE s.status = 'final'
-            GROUP BY c.id, c.name, DATE(s.taken_at)
-            ORDER BY MAX(s.taken_at) DESC
+            WITH latest_scoresheets AS (
+                SELECT 
+                    c.id as client_id,
+                    c.name as client_name,
+                    DATE(s.taken_at) as score_date,
+                    MAX(DATE(s.taken_at)) OVER (PARTITION BY c.id) as latest_date,
+                    MAX(s.taken_at) as taken_at,
+                    COALESCE(SUM(s.value), 0) as total_raw_score
+                FROM score s
+                JOIN client c ON s.client_id = c.id
+                WHERE s.status = 'final'
+                GROUP BY c.id, c.name, DATE(s.taken_at)
+            )
+            SELECT client_id, client_name, score_date, taken_at, total_raw_score
+            FROM latest_scoresheets 
+            WHERE score_date = latest_date
+            ORDER BY taken_at DESC
             LIMIT 5
         """)
         
