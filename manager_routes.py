@@ -2054,6 +2054,55 @@ def activate_user(user_id):
     
     return redirect(url_for('manager.user_management'))
 
+@manager_bp.route("/users/set-password/<user_id>", methods=['POST'])
+@require_login
+def set_user_password(user_id):
+    """Set or update a user's password"""
+    user = require_manager()
+    
+    # Only admins can set passwords
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        target_user = User.query.get(user_id)
+        if not target_user:
+            flash('User not found.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        # Validate passwords
+        if not new_password or not confirm_password:
+            flash('Both password fields are required.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        if len(new_password) < 8:
+            flash('Password must be at least 8 characters long.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        if new_password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Hash and set the password
+        from werkzeug.security import generate_password_hash
+        target_user.password_hash = generate_password_hash(new_password)
+        target_user.password_set_date = datetime.utcnow()
+        target_user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        user_name = target_user.first_name or target_user.email.split('@')[0] if target_user.email else 'User'
+        flash(f'Successfully set password for {user_name}. Username for login is: {target_user.email}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error setting password: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
+
 @manager_bp.route("/metric-configuration")
 @require_login
 def metric_configuration():

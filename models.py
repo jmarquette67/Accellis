@@ -27,6 +27,10 @@ class User(UserMixin, db.Model):
     profile_image_url = db.Column(db.String, nullable=True)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.TAM)
     
+    # Password management (for local authentication if needed)
+    password_hash = db.Column(db.String(256), nullable=True)
+    password_set_date = db.Column(db.DateTime, nullable=True)
+    
     # User status tracking
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     deactivated_date = db.Column(db.DateTime, nullable=True)
