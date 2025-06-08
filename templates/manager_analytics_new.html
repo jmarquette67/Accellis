@@ -383,8 +383,8 @@
                 <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>All Company Monthly Scoresheet Trends</h6>
                 </div>
-                <div class="card-body">
-                    <canvas id="monthlyTrendsChart" width="400" height="300"></canvas>
+                <div class="card-body" style="height: 300px;">
+                    <canvas id="monthlyTrendsChart"></canvas>
                 </div>
             </div>
         </div>
@@ -393,8 +393,8 @@
                 <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>90 Day Average Score per Account Manager</h6>
                 </div>
-                <div class="card-body">
-                    <canvas id="accountManagerChart" width="400" height="300"></canvas>
+                <div class="card-body" style="height: 300px;">
+                    <canvas id="accountManagerChart"></canvas>
                 </div>
             </div>
         </div>
@@ -442,36 +442,46 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <h6 class="text-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>High Risk Clients
+                        <h6 class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Attention Needed
                         </h6>
                         <div class="list-group list-group-flush">
-                            {% set high_risk_clients = account_owner_performance | selectattr('avg_scoresheet_total', 'lt', 40) | list %}
-                            {% if high_risk_clients %}
-                                {% for client in high_risk_clients[:3] %}
+                            {% set low_performers = company_metrics.all_metrics | selectattr('performance_level', 'equalto', 'Needs Improvement') | list %}
+                            {% if low_performers %}
+                                {% for metric in low_performers[:3] %}
                                 <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <span>{{ client.name }}</span>
-                                    <span class="badge bg-danger">{{ client.avg_scoresheet_total }}%</span>
+                                    <span>{{ metric.metric_name }}</span>
+                                    <span class="badge bg-warning">{{ metric.weighted_average }}%</span>
                                 </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="text-muted small">No high-risk clients identified</div>
+                                <div class="text-muted small">All metrics performing well</div>
                             {% endif %}
                         </div>
                     </div>
                     <div class="mb-3">
                         <h6 class="text-success">
-                            <i class="fas fa-check-circle me-2"></i>Top Performers
+                            <i class="fas fa-star me-2"></i>Strengths
                         </h6>
                         <div class="list-group list-group-flush">
-                            {% set top_performers = account_owner_performance | sort(attribute='avg_scoresheet_total', reverse=true) | list %}
-                            {% for client in top_performers[:3] %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <span>{{ client.name }}</span>
-                                <span class="badge bg-success">{{ client.avg_scoresheet_total }}%</span>
-                            </div>
-                            {% endfor %}
+                            {% set top_metrics = company_metrics.all_metrics | selectattr('performance_level', 'equalto', 'Excellent') | list %}
+                            {% if top_metrics %}
+                                {% for metric in top_metrics[:3] %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span>{{ metric.metric_name }}</span>
+                                    <span class="badge bg-success">{{ metric.weighted_average }}%</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted small">Building strengths...</div>
+                            {% endif %}
                         </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Risk Indicators:</strong> Metrics below 70% require focused attention for client retention.
+                        </small>
                     </div>
                 </div>
             </div>
@@ -570,12 +580,7 @@ new Chart(monthlyCtx, {
     },
     options: {
         responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Monthly Performance Trends'
-            }
-        },
+        maintainAspectRatio: false,
         scales: {
             y: {
                 min: 5,
@@ -622,12 +627,7 @@ new Chart(accountManagerCtx, {
     },
     options: {
         responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: '90 Day Average Score per Account Manager'
-            }
-        },
+        maintainAspectRatio: false,
         scales: {
             y: {
                 beginAtZero: true,
