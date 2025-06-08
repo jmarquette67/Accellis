@@ -132,8 +132,8 @@
                         <i class="fas fa-chart-bar me-2"></i>90 Day Average Score per Account Manager
                     </h6>
                 </div>
-                <div class="card-body">
-                    <canvas id="accountManagerChart" width="400" height="200"></canvas>
+                <div class="card-body" style="height: 250px;">
+                    <canvas id="topAccountManagerChart"></canvas>
                 </div>
             </div>
         </div>
@@ -597,7 +597,74 @@ new Chart(monthlyCtx, {
     }
 });
 
-// Account Manager Chart
+// Top Account Manager Chart
+const topAccountManagerElement = document.getElementById('topAccountManagerChart');
+if (topAccountManagerElement) {
+    const topAccountManagerCtx = topAccountManagerElement.getContext('2d');
+    new Chart(topAccountManagerCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ account_owner_performance | map(attribute='name') | list | tojson }},
+        datasets: [{
+            label: '90-Day Average Score',
+            data: {{ account_owner_performance | map(attribute='avg_scoresheet_total') | list | tojson }},
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)'
+            ],
+            borderColor: [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 205, 86, 1)',
+                'rgba(75, 192, 192, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 72,
+                ticks: {
+                    stepSize: 10
+                },
+                title: {
+                    display: true,
+                    text: 'Average Score'
+                }
+            }
+        },
+        animation: {
+            onComplete: function() {
+                const ctx = this.chart.ctx;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 12px Arial';
+                
+                this.data.datasets.forEach((dataset, i) => {
+                    const meta = this.chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        const data = dataset.data[index];
+                        ctx.fillText(data.toFixed(1), bar.x, bar.y - 5);
+                    });
+                });
+            }
+        }
+    });
+}
+
+// Account Manager Chart (for charts section)
 const accountManagerCtx = document.getElementById('accountManagerChart').getContext('2d');
 new Chart(accountManagerCtx, {
     type: 'bar',
@@ -628,6 +695,18 @@ new Chart(accountManagerCtx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                formatter: function(value) {
+                    return value.toFixed(1);
+                },
+                font: {
+                    weight: 'bold'
+                }
+            }
+        },
         scales: {
             y: {
                 beginAtZero: true,
@@ -640,6 +719,19 @@ new Chart(accountManagerCtx, {
                     text: 'Average Weighted Score'
                 }
             }
+        },
+        onComplete: function(chart) {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const data = dataset.data[index];
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(data.toFixed(1), bar.x, bar.y - 5);
+                });
+            });
         }
     }
 });

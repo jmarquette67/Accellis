@@ -487,7 +487,24 @@ def generate_ai_trend_insights(all_scores):
                 'confidence': 80
             })
     
-    return insights[:5]  # Return top 5 retention-focused insights
+    # Add additional insights to ensure we always have multiple recommendations
+    if len(insights) < 3:
+        insights.append({
+            'type': 'info',
+            'title': 'Performance Monitoring Active',
+            'description': 'Continuous tracking of client engagement metrics helps identify trends early and maintain strong relationships.',
+            'confidence': 75
+        })
+        
+    if len(insights) < 4:
+        insights.append({
+            'type': 'info', 
+            'title': 'Account Manager Excellence',
+            'description': 'Regular scoresheet completion and metric tracking demonstrates commitment to client success and relationship management.',
+            'confidence': 80
+        })
+    
+    return insights  # Return all insights for comprehensive analysis
 
 def prepare_chart_data(all_scores):
     """Prepare data for charts and visualizations using scoresheet totals"""
