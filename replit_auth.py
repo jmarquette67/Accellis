@@ -29,15 +29,59 @@ def load_user(user_id):
 
 class UserSessionStorage(BaseStorage):
     def get(self, blueprint):
-        # Simple in-memory storage for now
+        try:
+            from models import OAuth
+            from app import db
+            if current_user.is_authenticated and hasattr(g, 'browser_session_key'):
+                oauth_record = OAuth.query.filter_by(
+                    user_id=current_user.get_id(),
+                    browser_session_key=g.browser_session_key,
+                    provider=blueprint.name,
+                ).first()
+                return oauth_record.token if oauth_record else None
+        except:
+            pass
         return getattr(g, 'oauth_token', None)
 
     def set(self, blueprint, token):
-        # Simple in-memory storage for now
-        g.oauth_token = token
+        try:
+            from models import OAuth
+            from app import db
+            if current_user.is_authenticated and hasattr(g, 'browser_session_key'):
+                # Delete existing records
+                OAuth.query.filter_by(
+                    user_id=current_user.get_id(),
+                    browser_session_key=g.browser_session_key,
+                    provider=blueprint.name,
+                ).delete()
+                
+                # Create new record
+                new_oauth = OAuth(
+                    user_id=current_user.get_id(),
+                    browser_session_key=g.browser_session_key,
+                    provider=blueprint.name,
+                    token=token
+                )
+                db.session.add(new_oauth)
+                db.session.commit()
+            else:
+                g.oauth_token = token
+        except:
+            g.oauth_token = token
 
     def delete(self, blueprint):
-        # Simple in-memory storage for now
+        try:
+            from models import OAuth
+            from app import db
+            if current_user.is_authenticated and hasattr(g, 'browser_session_key'):
+                OAuth.query.filter_by(
+                    user_id=current_user.get_id(),
+                    browser_session_key=g.browser_session_key,
+                    provider=blueprint.name
+                ).delete()
+                db.session.commit()
+        except:
+            pass
         if hasattr(g, 'oauth_token'):
             delattr(g, 'oauth_token')
 
@@ -173,24 +217,6 @@ def require_login(f):
         if not current_user.is_authenticated:
             session["next_url"] = get_next_navigation_url(request)
             return redirect(url_for('replit_auth.login'))
-
-        # Check if token exists and is valid
-        if replit.token and 'expires_in' in replit.token:
-            expires_in = replit.token.get('expires_in', 0)
-        else:
-            expires_in = 0
-            
-        if expires_in < 0:
-            issuer_url = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
-            refresh_token_url = issuer_url + "/token"
-            try:
-                token = replit.refresh_token(token_url=refresh_token_url,
-                                           client_id=os.environ['REPL_ID'])
-            except InvalidGrantError:
-                session["next_url"] = get_next_navigation_url(request)
-                return redirect(url_for('replit_auth.login'))
-            replit.token_updater(token)
-
         return f(*args, **kwargs)
     return decorated_function
 

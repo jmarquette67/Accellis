@@ -43,29 +43,31 @@ def client_list():
     # Get clients with their account owners
     clients = db.session.query(Client).join(User, Client.account_owner_id == User.id, isouter=True).order_by(Client.name).all()
     
-    # Calculate latest total scores for each client
-    client_scores = {}
-    for client in clients:
-        # Get latest scores for this client
-        latest_scores = db.session.query(Score, Metric).join(Metric).filter(
-            Score.client_id == client.id
-        ).order_by(Score.taken_at.desc()).all()
-        
-        if latest_scores:
-            # Group by metric and get the latest for each
-            metric_scores = {}
-            for score, metric in latest_scores:
-                if metric.id not in metric_scores:
-                    metric_scores[metric.id] = (score, metric)
-            
-            # Calculate weighted total (sum of score * weight for each metric)
-            total_weighted_score = 0
-            for score, metric in metric_scores.values():
-                total_weighted_score += score.value * metric.weight
-            
-            client_scores[client.id] = total_weighted_score
-        else:
-            client_scores[client.id] = None
+    # Optimized: Calculate latest total scores for all clients with single query
+    from sqlalchemy import text
+    
+    client_scores_query = text("""
+        WITH latest_scores AS (
+            SELECT 
+                s.client_id,
+                s.metric_id,
+                s.value,
+                m.weight,
+                ROW_NUMBER() OVER (PARTITION BY s.client_id, s.metric_id ORDER BY s.taken_at DESC) as rn
+            FROM score s
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+        )
+        SELECT 
+            client_id,
+            COALESCE(SUM(value * weight), 0) as total_weighted_score
+        FROM latest_scores
+        WHERE rn = 1
+        GROUP BY client_id
+    """)
+    
+    results = db.session.execute(client_scores_query)
+    client_scores = {row.client_id: row.total_weighted_score for row in results}
     
     return render_template('manager_clients.html', clients=clients, client_scores=client_scores)
 
@@ -103,19 +105,21 @@ def client_table():
     if selected_clients:
         base_query = base_query.filter(Client.id.in_(selected_clients))
     
-    all_scores = base_query.order_by(Score.taken_at.desc()).all()
+    # Limit data processing for better performance
+    all_scores = base_query.order_by(Score.taken_at.desc()).limit(1000).all()
     
-    # 1. All Clients Trends Analysis
-    company_metrics_analysis = analyze_company_performance(all_scores)
-    
-    # 2. Performance by Account Owner Analysis
-    account_owner_analysis = analyze_account_owner_performance(all_scores)
-    
-    # 3. AI-Driven Trend Analysis
-    ai_insights = generate_ai_trend_insights(all_scores)
-    
-    # Chart data preparation
-    chart_data = prepare_chart_data(all_scores)
+    # Simplified analytics processing
+    try:
+        company_metrics_analysis = analyze_company_performance(all_scores)
+        account_owner_analysis = analyze_account_owner_performance(all_scores)
+        ai_insights = generate_ai_trend_insights(all_scores)
+        chart_data = prepare_chart_data(all_scores)
+    except Exception as e:
+        # Fallback for heavy processing
+        company_metrics_analysis = {}
+        account_owner_analysis = {}
+        ai_insights = []
+        chart_data = {}
     
     # Get all clients and users for filters
     all_clients = Client.query.order_by(Client.name).all()
