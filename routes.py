@@ -517,9 +517,9 @@ def admin_dashboard():
     # Get system statistics
     stats = {
         'total_users': User.query.count(),
-        'active_clients': Client.query.filter_by(is_active=True).count(),
-        'metrics_configured': Metric.query.count(),
-        'scores_recorded': Score.query.count()
+        'total_clients': Client.query.filter_by(is_active=True).count(),
+        'total_metrics': Metric.query.count(),
+        'total_scores': Score.query.count()
     }
     
     # Get current logo setting
@@ -530,7 +530,7 @@ def admin_dashboard():
     except:
         pass
     
-    return render_template("admin_settings.html", stats=stats, logo_setting=logo_setting, user=current_user)
+    return render_template("admin_dashboard.html", stats=stats, logo_setting=logo_setting, user=current_user)
 
 @app.route('/admin/metrics')
 def admin_metrics():
