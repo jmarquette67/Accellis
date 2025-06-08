@@ -1874,6 +1874,115 @@ def update_user(user_id):
     
     return redirect(url_for('manager.user_management'))
 
+@manager_bp.route("/api/user/<user_id>/clients")
+@require_login
+def get_user_clients(user_id):
+    """Get clients assigned to a specific user"""
+    user = require_manager()
+    
+    # Only admins can view user client assignments
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        # Get clients assigned to this user
+        clients = (
+            db.session.query(Client, db.func.count(Score.id).label('scores_count'))
+            .outerjoin(Score, Client.id == Score.client_id)
+            .filter(Client.account_manager == user_id)
+            .group_by(Client.id)
+            .all()
+        )
+        
+        client_list = []
+        for client, scores_count in clients:
+            client_list.append({
+                'id': client.id,
+                'name': client.name,
+                'industry': client.industry,
+                'scores_count': scores_count or 0
+            })
+        
+        return jsonify({'clients': client_list})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@manager_bp.route("/users/transfer-clients", methods=['POST'])
+@require_login
+def transfer_clients():
+    """Transfer clients from one user to another with complete history"""
+    user = require_manager()
+    
+    # Only admins can transfer clients
+    if user.role != UserRole.ADMIN:
+        abort(403)
+    
+    try:
+        from_user_id = request.form.get('from_user_id')
+        to_user_id = request.form.get('to_user_id')
+        client_ids = request.form.getlist('client_ids')
+        transfer_reason = request.form.get('transfer_reason', '').strip()
+        
+        # Validate inputs
+        if not from_user_id or not to_user_id:
+            flash('Source and destination users are required.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        if not client_ids:
+            flash('Please select at least one client to transfer.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Verify users exist
+        from_user = User.query.get(from_user_id)
+        to_user = User.query.get(to_user_id)
+        
+        if not from_user or not to_user:
+            flash('Invalid user selection.', 'error')
+            return redirect(url_for('manager.user_management'))
+        
+        # Transfer clients and update all related records
+        transferred_count = 0
+        for client_id in client_ids:
+            client = Client.query.get(client_id)
+            if client and client.account_manager == from_user_id:
+                # Update client's account manager
+                client.account_manager = to_user_id
+                client.updated_at = datetime.utcnow()
+                
+                # Update all scores for this client to reflect new user
+                scores_updated = Score.query.filter_by(client_id=client.id).update({
+                    'user_id': to_user_id,
+                    'updated_at': datetime.utcnow()
+                })
+                
+                transferred_count += 1
+        
+        # Create audit log entry
+        try:
+            from models import AuditLog
+            audit_log = AuditLog()
+            audit_log.user_id = user.id
+            audit_log.action = 'CLIENT_TRANSFER'
+            audit_log.details = f'Transferred {transferred_count} clients from {from_user.email} to {to_user.email}. Reason: {transfer_reason or "Not specified"}'
+            audit_log.timestamp = datetime.utcnow()
+            db.session.add(audit_log)
+        except:
+            pass  # Continue even if audit logging fails
+        
+        db.session.commit()
+        
+        from_name = from_user.first_name or from_user.email.split('@')[0] if from_user.email else 'User'
+        to_name = to_user.first_name or to_user.email.split('@')[0] if to_user.email else 'User'
+        
+        flash(f'Successfully transferred {transferred_count} clients from {from_name} to {to_name}. All historical data has been preserved.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error transferring clients: {str(e)}', 'error')
+    
+    return redirect(url_for('manager.user_management'))
+
 @manager_bp.route("/metric-configuration")
 @require_login
 def metric_configuration():

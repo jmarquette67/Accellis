@@ -87,6 +87,9 @@
                                             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
+                                            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#transferClientsModal{{ user.id }}">
+                                                <i class="fas fa-exchange-alt"></i> Transfer Clients
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -127,6 +130,68 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                                     <button type="submit" class="btn btn-primary" onclick="this.disabled=true; this.form.submit();">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Transfer Clients Modal -->
+                                <div class="modal fade" id="transferClientsModal{{ user.id }}" tabindex="-1" aria-labelledby="transferClientsModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="transferClientsModalLabel{{ user.id }}">Transfer Clients from {{ user.first_name or user.email.split('@')[0] if user.email else 'User' }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('manager.transfer_clients') }}">
+                                                <input type="hidden" name="from_user_id" value="{{ user.id }}">
+                                                <div class="modal-body">
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>Transfer clients with complete history:</strong> All scoresheet data, notes, and historical records will be transferred to the new user.
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="toUser{{ user.id }}" class="form-label">Transfer to User <span class="text-danger">*</span></label>
+                                                        <select class="form-select" id="toUser{{ user.id }}" name="to_user_id" required>
+                                                            <option value="">Select destination user...</option>
+                                                            {% for target_user in users %}
+                                                                {% if target_user.id != user.id %}
+                                                                <option value="{{ target_user.id }}">
+                                                                    {{ target_user.first_name or 'N/A' }} {{ target_user.last_name or '' }} 
+                                                                    ({{ target_user.email or 'No email' }}) - {{ target_user.role.value if target_user.role else 'TAM' }}
+                                                                </option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Select Clients to Transfer</label>
+                                                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="checkbox" id="selectAll{{ user.id }}" onchange="toggleAllClients(this, '{{ user.id }}')">
+                                                                <label class="form-check-label fw-bold" for="selectAll{{ user.id }}">
+                                                                    Select All Clients
+                                                                </label>
+                                                            </div>
+                                                            <hr>
+                                                            <div id="clientsList{{ user.id }}">
+                                                                <!-- Clients will be loaded dynamically -->
+                                                                <div class="text-muted">Loading clients...</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="transferReason{{ user.id }}" class="form-label">Transfer Reason</label>
+                                                        <textarea class="form-control" id="transferReason{{ user.id }}" name="transfer_reason" rows="3" placeholder="Optional: Reason for client transfer"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-warning">Transfer Clients</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -239,4 +304,54 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleAllClients(selectAllCheckbox, userId) {
+    const clientCheckboxes = document.querySelectorAll(`#clientsList${userId} input[type="checkbox"]`);
+    clientCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+// Load clients when transfer modal is shown
+document.addEventListener('DOMContentLoaded', function() {
+    {% for user in users %}
+    document.getElementById('transferClientsModal{{ user.id }}').addEventListener('show.bs.modal', function() {
+        loadUserClients('{{ user.id }}');
+    });
+    {% endfor %}
+});
+
+function loadUserClients(userId) {
+    const clientsList = document.getElementById(`clientsList${userId}`);
+    clientsList.innerHTML = '<div class="text-muted">Loading clients...</div>';
+    
+    fetch(`/manager/api/user/${userId}/clients`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.clients && data.clients.length > 0) {
+                let html = '';
+                data.clients.forEach(client => {
+                    html += `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="client_ids" value="${client.id}" id="client${client.id}_${userId}">
+                            <label class="form-check-label" for="client${client.id}_${userId}">
+                                <strong>${client.name}</strong>
+                                <small class="text-muted d-block">${client.industry || 'No industry'} | ${client.scores_count || 0} scoresheets</small>
+                            </label>
+                        </div>
+                    `;
+                });
+                clientsList.innerHTML = html;
+            } else {
+                clientsList.innerHTML = '<div class="text-muted">No clients assigned to this user.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading clients:', error);
+            clientsList.innerHTML = '<div class="text-danger">Error loading clients. Please try again.</div>';
+        });
+}
+</script>
+
 {% endblock %}
