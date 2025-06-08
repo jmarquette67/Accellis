@@ -456,40 +456,46 @@
 
 <!-- Chart.js Scripts -->
 <script>
-// Monthly Trends Chart
-const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
-if (monthlyTrendsElement) {
-    const monthlyCtx = monthlyTrendsElement.getContext('2d');
-    new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: {{ chart_data.monthly_trends.labels | tojson }},
-            datasets: [{
-                label: 'Average Scoresheet Total',
-                data: {{ chart_data.monthly_trends.data | tojson }},
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.1
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                min: 5,
-                max: 30,
-                ticks: {
-                    stepSize: 3
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly Trends Chart
+    const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
+    if (monthlyTrendsElement) {
+        try {
+            const monthlyCtx = monthlyTrendsElement.getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ chart_data.monthly_trends.labels | tojson | safe }},
+                    datasets: [{
+                        label: 'Average Scoresheet Total',
+                        data: {{ chart_data.monthly_trends.data | tojson | safe }},
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
                 },
-                title: {
-                    display: true,
-                    text: 'Weighted Score Total (Points)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 5,
+                            max: 30,
+                            ticks: {
+                                stepSize: 3
+                            },
+                            title: {
+                                display: true,
+                                text: 'Weighted Score Total (Points)'
+                            }
+                        }
+                    }
                 }
-            }
+            });
+        } catch (error) {
+            console.error('Error creating monthly trends chart:', error);
         }
-    });
-}
+    }
 
 // Top Account Manager Chart
 const topAccountManagerElement = document.getElementById('topAccountManagerChart');
@@ -633,6 +639,7 @@ new Chart(accountManagerCtx, {
     }
 });
 }
+});
 
 // Table sorting functionality with toggle
 let sortState = {}; // Track sort direction for each column
