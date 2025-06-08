@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import render_template, request, jsonify, redirect, url_for, flash, abort
 from sqlalchemy import desc, func
-from flask_login import current_user
+from flask_login import current_user, logout_user
 from app import app, db
 from models import Client, HealthCheck, Alert, User, UserRole, Score, Metric
 from forms import ClientRegistrationForm, HealthCheckForm
@@ -24,22 +24,19 @@ def make_session_permanent():
 @app.route('/')
 def dashboard():
     """Main dashboard view"""
-    # Check if user is authenticated (with fallback for missing login manager)
-    try:
-        user_authenticated = current_user.is_authenticated
-        if user_authenticated:
-            user = current_user
-            # Use the full dashboard template now that authentication is working
-            return render_template('dashboard.html', user=user)
-    except Exception as e:
-        user_authenticated = False
-        app.logger.error(f"Authentication check failed: {e}")
-    
-    if not user_authenticated:
+    # Check if user is authenticated
+    if current_user.is_authenticated:
+        # Check if user is active
+        if not current_user.is_active:
+            logout_user()
+            flash('Your account has been deactivated. Please contact an administrator.', 'error')
+            return redirect(url_for('login'))
+        
+        # User is authenticated and active, show dashboard
+        return render_template('dashboard.html', user=current_user)
+    else:
+        # User is not authenticated, show landing page
         return render_template('landing.html')
-    
-    # Fallback for unauthenticated users
-    return render_template('landing.html')
 
 @app.route('/admin')
 @require_login
