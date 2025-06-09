@@ -361,9 +361,13 @@ const chart = new Chart(ctx, {
         scales: {
             y: {
                 beginAtZero: true,
+                max: 57,
+                ticks: {
+                    stepSize: 5
+                },
                 title: {
                     display: true,
-                    text: 'Monthly Scoresheet Total'
+                    text: 'Monthly Scoresheet Total (Max: 57 points)'
                 }
             },
             x: {
