@@ -95,7 +95,6 @@
     </div>
 
     <!-- AI-Powered Performance Analysis -->
-    {% if ai_insights %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -105,6 +104,7 @@
                     </h5>
                     <small class="text-muted">Intelligent insights based on performance patterns and trends</small>
                 </div>
+                {% if ai_insights %}
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
@@ -179,8 +179,58 @@
             </div>
         </div>
     </div>
-    {% else %}
-    <!-- Fallback Performance Insights -->
+                {% else %}
+                <div class="card-body">
+                    <div class="alert alert-info border-start border-4 border-info">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-info me-3"></i>
+                            <div>
+                                <h6 class="mb-1">AI Insights Not Available</h6>
+                                <p class="mb-0">AI insights require at least 3 scoresheets to generate meaningful analysis. This client currently has {{ data|length if data else 0 }} scoresheet(s).</p>
+                                <small class="text-muted">Add more monthly scoresheets to unlock AI-powered performance insights and recommendations.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    {% if ai_insights %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Strategic Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ai_insights.recommendations %}
+                        <div class="row">
+                            {% for recommendation in ai_insights.recommendations %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-arrow-right text-primary me-2 mt-1"></i>
+                                    <span>{{ recommendation }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No specific recommendations at this time. Continue monitoring performance.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if data %}
+    <!-- Fallback Performance Insights when AI is not available but data exists -->
+    {% if not ai_insights %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">

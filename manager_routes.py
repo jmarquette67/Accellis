@@ -607,7 +607,7 @@ def prepare_chart_data(all_scores):
 def generate_client_ai_insights(client, trend_data, declining_metrics, improving_metrics):
     """Generate AI-powered insights for client performance analysis"""
     print(f"DEBUG: Generating insights for {client.name}, data length: {len(trend_data) if trend_data else 0}")
-    if not trend_data or len(trend_data) < 1:  # Allow single data point
+    if not trend_data or len(trend_data) < 3:  # Require at least 3 data points for meaningful insights
         print(f"DEBUG: Not enough data - returning None")
         return None
     
