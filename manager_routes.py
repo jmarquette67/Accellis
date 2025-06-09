@@ -130,12 +130,21 @@ def client_table():
         account_owner_analysis = analyze_account_owner_performance(all_scores)
         ai_insights = generate_ai_trend_insights(all_scores)
         chart_data = prepare_chart_data(all_scores)
+        
+        # Client risk assessment
+        at_risk_clients = get_at_risk_clients()
+        stable_clients = get_stable_clients()
+        stagnant_clients = get_stagnant_clients()
+        
     except Exception as e:
         # Fallback for heavy processing
         company_metrics_analysis = {}
         account_owner_analysis = {}
         ai_insights = []
         chart_data = {}
+        at_risk_clients = []
+        stable_clients = []
+        stagnant_clients = []
     
     # Get all clients and users for filters
     all_clients = Client.query.order_by(Client.name).all()
@@ -148,9 +157,221 @@ def client_table():
                          chart_data=chart_data,
                          all_clients=all_clients,
                          all_users=all_users,
+                         at_risk_clients=at_risk_clients,
+                         stable_clients=stable_clients,
+                         stagnant_clients=stagnant_clients,
                          start_date=start_date,
                          end_date=end_date,
                          selected_clients=selected_clients)
+
+def get_at_risk_clients():
+    """Get clients at risk based on declining scores and low performance"""
+    from sqlalchemy import text
+    
+    query = text("""
+        WITH latest_scores AS (
+            SELECT 
+                s.client_id,
+                s.metric_id,
+                s.value,
+                m.weight,
+                s.taken_at,
+                ROW_NUMBER() OVER (PARTITION BY s.client_id, s.metric_id ORDER BY s.taken_at DESC) as rn
+            FROM score s
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+            AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
+        ),
+        client_totals AS (
+            SELECT 
+                client_id,
+                SUM(value * weight) as total_score,
+                COUNT(*) as metric_count,
+                MAX(taken_at) as last_scoresheet
+            FROM latest_scores
+            WHERE rn = 1
+            GROUP BY client_id
+        ),
+        trend_analysis AS (
+            SELECT 
+                s.client_id,
+                AVG(CASE WHEN s.taken_at >= CURRENT_DATE - INTERVAL '30 days' THEN s.value * m.weight END) as recent_avg,
+                AVG(CASE WHEN s.taken_at < CURRENT_DATE - INTERVAL '30 days' THEN s.value * m.weight END) as older_avg
+            FROM score s
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+            AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
+            GROUP BY s.client_id
+        )
+        SELECT 
+            c.id,
+            c.name,
+            ct.total_score,
+            ct.last_scoresheet,
+            COALESCE(((ta.recent_avg - ta.older_avg) / NULLIF(ta.older_avg, 0) * 100), 0) as trend_percentage
+        FROM client c
+        JOIN client_totals ct ON c.id = ct.client_id
+        LEFT JOIN trend_analysis ta ON c.id = ta.client_id
+        WHERE c.is_active = true
+        AND (ct.total_score < 35 OR (ta.recent_avg < ta.older_avg AND ta.older_avg > 0))
+        ORDER BY ct.total_score ASC, trend_percentage ASC
+        LIMIT 5
+    """)
+    
+    results = db.session.execute(query)
+    at_risk_clients = []
+    
+    for row in results:
+        at_risk_clients.append({
+            'id': row.id,
+            'name': row.name,
+            'total_score': round(row.total_score or 0, 1),
+            'last_scoresheet': row.last_scoresheet,
+            'trend_percentage': round(row.trend_percentage or 0, 1),
+            'risk_reason': get_risk_reason(row.total_score or 0, row.trend_percentage or 0)
+        })
+    
+    return at_risk_clients
+
+def get_stable_clients():
+    """Get stable clients with consistent good performance"""
+    from sqlalchemy import text
+    
+    query = text("""
+        WITH latest_scores AS (
+            SELECT 
+                s.client_id,
+                s.metric_id,
+                s.value,
+                m.weight,
+                s.taken_at,
+                ROW_NUMBER() OVER (PARTITION BY s.client_id, s.metric_id ORDER BY s.taken_at DESC) as rn
+            FROM score s
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+            AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
+        ),
+        client_totals AS (
+            SELECT 
+                client_id,
+                SUM(value * weight) as total_score,
+                COUNT(*) as metric_count,
+                MAX(taken_at) as last_scoresheet
+            FROM latest_scores
+            WHERE rn = 1
+            GROUP BY client_id
+        ),
+        stability_analysis AS (
+            SELECT 
+                s.client_id,
+                STDDEV(s.value * m.weight) as score_volatility,
+                AVG(s.value * m.weight) as avg_score,
+                COUNT(DISTINCT DATE(s.taken_at)) as scoresheet_count
+            FROM score s
+            JOIN metric m ON s.metric_id = m.id
+            WHERE s.status = 'final'
+            AND s.taken_at >= CURRENT_DATE - INTERVAL '90 days'
+            GROUP BY s.client_id
+        )
+        SELECT 
+            c.id,
+            c.name,
+            ct.total_score,
+            ct.last_scoresheet,
+            COALESCE(sa.score_volatility, 0) as volatility,
+            sa.scoresheet_count
+        FROM client c
+        JOIN client_totals ct ON c.id = ct.client_id
+        LEFT JOIN stability_analysis sa ON c.id = sa.client_id
+        WHERE c.is_active = true
+        AND ct.total_score >= 40
+        AND COALESCE(sa.score_volatility, 0) < 5
+        AND sa.scoresheet_count >= 3
+        ORDER BY ct.total_score DESC, sa.score_volatility ASC
+        LIMIT 5
+    """)
+    
+    results = db.session.execute(query)
+    stable_clients = []
+    
+    for row in results:
+        stable_clients.append({
+            'id': row.id,
+            'name': row.name,
+            'total_score': round(row.total_score or 0, 1),
+            'last_scoresheet': row.last_scoresheet,
+            'volatility': round(row.volatility or 0, 1),
+            'scoresheet_count': row.scoresheet_count or 0,
+            'stability_reason': get_stability_reason(row.total_score or 0, row.volatility or 0)
+        })
+    
+    return stable_clients
+
+def get_stagnant_clients():
+    """Get clients without scoresheets in 90+ days"""
+    from sqlalchemy import text
+    
+    query = text("""
+        SELECT 
+            c.id,
+            c.name,
+            MAX(s.taken_at) as last_scoresheet,
+            CURRENT_DATE - MAX(DATE(s.taken_at)) as days_since_last
+        FROM client c
+        LEFT JOIN score s ON c.id = s.client_id AND s.status = 'final'
+        WHERE c.is_active = true
+        GROUP BY c.id, c.name
+        HAVING MAX(s.taken_at) IS NULL OR MAX(s.taken_at) < CURRENT_DATE - INTERVAL '90 days'
+        ORDER BY MAX(s.taken_at) ASC NULLS FIRST
+        LIMIT 10
+    """)
+    
+    results = db.session.execute(query)
+    stagnant_clients = []
+    
+    for row in results:
+        stagnant_clients.append({
+            'id': row.id,
+            'name': row.name,
+            'last_scoresheet': row.last_scoresheet,
+            'days_since_last': row.days_since_last or 9999,
+            'stagnation_reason': get_stagnation_reason(row.days_since_last or 9999)
+        })
+    
+    return stagnant_clients
+
+def get_risk_reason(total_score, trend_percentage):
+    """Generate AI explanation for why client is at risk"""
+    if total_score < 25:
+        return "Critical performance scores below acceptable thresholds indicate immediate intervention needed"
+    elif total_score < 35:
+        return "Below-average performance scores suggest declining client satisfaction and potential churn risk"
+    elif trend_percentage < -10:
+        return "Significant downward trend in recent scores indicates deteriorating service quality"
+    elif trend_percentage < -5:
+        return "Moderate decline in performance metrics suggests emerging issues requiring attention"
+    else:
+        return "Multiple performance indicators show concerning patterns requiring proactive management"
+
+def get_stability_reason(total_score, volatility):
+    """Generate AI explanation for why client is stable"""
+    if total_score >= 50 and volatility < 2:
+        return "Consistently high performance with minimal variation indicates excellent service delivery"
+    elif total_score >= 45:
+        return "Strong performance scores with stable trends demonstrate reliable service quality"
+    elif volatility < 3:
+        return "Low performance volatility shows predictable and consistent service delivery"
+    else:
+        return "Balanced performance metrics with steady trends indicate well-managed client relationship"
+
+def get_stagnation_reason(days_since_last):
+    """Generate AI explanation for account stagnation"""
+    if days_since_last >= 180:
+        return "Extended period without engagement indicates potential account abandonment or service discontinuation"
+    elif days_since_last >= 120:
+        return "Prolonged absence of scoresheets suggests reduced service utilization or account manager transition"
+    else:
+        return "Recent gap in performance tracking may indicate operational changes or delayed reporting"
 
 def analyze_company_performance(all_scores):
     """Analyze company-wide performance trends by metric with relative rankings"""

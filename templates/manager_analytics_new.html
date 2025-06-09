@@ -111,6 +111,104 @@
         </div>
     </div>
 
+    <!-- Client Risk Assessment Section -->
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>At Risk Clients
+                    </h6>
+                    <small class="text-muted">Clients requiring immediate attention</small>
+                </div>
+                <div class="card-body">
+                    {% if at_risk_clients %}
+                        {% for client in at_risk_clients %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <strong>{{ client.name }}</strong>
+                                <br><small class="text-muted">Score: {{ client.total_score }}</small>
+                                {% if client.trend_percentage < 0 %}
+                                <br><small class="text-danger">{{ client.trend_percentage }}% trend</small>
+                                {% endif %}
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="showClientSummary('{{ client.id }}', 'risk', '{{ client.risk_reason }}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No at-risk clients identified</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-check-circle text-success me-2"></i>Stable Clients
+                    </h6>
+                    <small class="text-muted">Consistently performing well</small>
+                </div>
+                <div class="card-body">
+                    {% if stable_clients %}
+                        {% for client in stable_clients %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <strong>{{ client.name }}</strong>
+                                <br><small class="text-muted">Score: {{ client.total_score }}</small>
+                                <br><small class="text-success">{{ client.scoresheet_count }} scoresheets</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-success" onclick="showClientSummary('{{ client.id }}', 'stable', '{{ client.stability_reason }}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No stable clients identified</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock text-warning me-2"></i>Stagnant Accounts
+                    </h6>
+                    <small class="text-muted">No scoresheets in 90+ days</small>
+                </div>
+                <div class="card-body">
+                    {% if stagnant_clients %}
+                        {% for client in stagnant_clients %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <strong>{{ client.name }}</strong>
+                                <br><small class="text-muted">
+                                    {% if client.last_scoresheet %}
+                                        Last: {{ client.last_scoresheet.strftime('%m/%d/%Y') }}
+                                    {% else %}
+                                        No scoresheets
+                                    {% endif %}
+                                </small>
+                                <br><small class="text-warning">{{ client.days_since_last }} days ago</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-warning" onclick="showClientSummary('{{ client.id }}', 'stagnant', '{{ client.stagnation_reason }}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">All clients have recent activity</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Section -->
     <div class="row mb-4">
         <div class="col-lg-6 mb-3">
