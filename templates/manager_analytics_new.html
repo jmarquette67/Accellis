@@ -796,7 +796,9 @@ new Chart(accountManagerCtx, {
 });
 }
 
-// Global Client Summary Modal Functions (outside DOMContentLoaded)
+});
+
+// Global Client Summary Modal Functions (must be outside all event listeners)
 function showClientSummary(clientId, category, reason) {
     const modal = new bootstrap.Modal(document.getElementById('clientSummaryModal'));
     const clientName = getClientName(clientId);
