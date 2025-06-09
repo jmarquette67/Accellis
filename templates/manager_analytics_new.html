@@ -933,4 +933,43 @@ function exportReport(format) {
     }
 }
 </script>
+
+<!-- Client Summary Modal -->
+<div class="modal fade" id="clientSummaryModal" tabindex="-1" aria-labelledby="clientSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientSummaryModalLabel">
+                    <span id="modalIcon"></span>
+                    <span id="modalClientName"></span>
+                    <span id="modalCategory" class="badge ms-2"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent" class="mb-3">
+                    <h6>AI Analysis:</h6>
+                    <p id="modalReason"></p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Recommended Actions:</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul id="modalActions" class="mb-0">
+                            <!-- Actions will be populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="modalViewClient" class="btn btn-primary">
+                    <i class="fas fa-chart-line me-1"></i>View Client Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
