@@ -610,40 +610,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
     if (monthlyTrendsElement) {
         try {
-            const monthlyCtx = monthlyTrendsElement.getContext('2d');
-            new Chart(monthlyCtx, {
-                type: 'line',
-                data: {
-                    labels: {{ chart_data.monthly_trends.labels | tojson | safe }},
-                    datasets: [{
-                        label: 'Average Scoresheet Total',
-                        data: {{ chart_data.monthly_trends.data | tojson | safe }},
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 5,
-                            max: 30,
-                            ticks: {
-                                stepSize: 3
-                            },
-                            title: {
-                                display: true,
-                                text: 'Weighted Score Total (Points)'
+            const chartLabels = {{ chart_data.monthly_trends.labels | tojson | safe }};
+            const chartData = {{ chart_data.monthly_trends.data | tojson | safe }};
+            
+            console.log('Chart labels:', chartLabels);
+            console.log('Chart data:', chartData);
+            
+            if (chartLabels && chartData && chartLabels.length > 0 && chartData.length > 0) {
+                const monthlyCtx = monthlyTrendsElement.getContext('2d');
+                new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Average Scoresheet Total',
+                            data: chartData,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            pointBackgroundColor: 'rgb(75, 192, 192)',
+                            pointBorderColor: 'rgb(75, 192, 192)',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 55,
+                                ticks: {
+                                    stepSize: 10
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Weighted Score Total (Range: 3-53)'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                console.error('Chart data is empty or invalid');
+                monthlyTrendsElement.innerHTML = '<div class="text-center text-muted p-4">No monthly trend data available</div>';
+            }
         } catch (error) {
             console.error('Error creating monthly trends chart:', error);
+            monthlyTrendsElement.innerHTML = '<div class="text-center text-danger p-4">Chart failed to load</div>';
         }
+    } else {
+        console.error('monthlyTrendsChart element not found');
     }
 
 // Top Account Manager Chart
@@ -683,13 +705,13 @@ if (topAccountManagerElement) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 72,
+                    max: 55,
                     ticks: {
                         stepSize: 10
                     },
                     title: {
                         display: true,
-                        text: 'Average Score'
+                        text: 'Average Score (Range: 3-53)'
                     }
                 }
             },
