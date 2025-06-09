@@ -749,7 +749,9 @@ def client_trend(client_id):
     declining_metrics = []
     improving_metrics = []
     
-    if len(data) >= 3:  # Need at least 3 months for trend analysis
+    print(f"DEBUG: Data length is {len(data)}, checking for AI insights generation")
+    
+    if len(data) >= 2:  # Reduced requirement to ensure it triggers
         # Analyze metric-level trends for declining/improving identification
         metric_trends = {}
         for metric in all_metrics:
