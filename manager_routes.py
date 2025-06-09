@@ -792,6 +792,9 @@ def client_trend(client_id):
         
         # Generate AI insights based on the data patterns
         ai_insights = generate_client_ai_insights(client, data, declining_metrics, improving_metrics)
+        print(f"DEBUG: AI insights generated for client {client_id}: {ai_insights is not None}")
+        if ai_insights:
+            print(f"DEBUG: Recommendations: {len(ai_insights.get('recommendations', []))}")
     
     return render_template("client_trend.html", 
                          client=client, 
