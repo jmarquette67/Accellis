@@ -2,6 +2,27 @@
 
 {% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
 
+{% block extra_head %}
+<style>
+.client-card:hover {
+    background-color: var(--bs-gray-100);
+    border-color: var(--bs-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.client-card:hover .text-primary {
+    color: var(--bs-primary) !important;
+    text-decoration: underline !important;
+}
+
+.client-card:hover .fa-chevron-right {
+    color: var(--bs-primary) !important;
+    transform: translateX(2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- Page Header -->
@@ -124,17 +145,18 @@
                 <div class="card-body">
                     {% if at_risk_clients %}
                         {% for client in at_risk_clients %}
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div class="mb-3 p-3 border rounded position-relative client-card" style="cursor: pointer; transition: all 0.2s;" onclick="showClientSummary('{{ client.id }}', 'risk', '{{ client.risk_reason|replace("'", "\\'") }}')">
                             <div>
-                                <strong>{{ client.name }}</strong>
+                                <strong class="text-primary" style="text-decoration: underline;">{{ client.name }}</strong>
+                                <i class="fas fa-external-link-alt ms-1 text-muted small"></i>
                                 <br><small class="text-muted">Score: {{ client.total_score }}</small>
                                 {% if client.trend_percentage < 0 %}
                                 <br><small class="text-danger">{{ client.trend_percentage }}% trend</small>
                                 {% endif %}
                             </div>
-                            <button class="btn btn-sm btn-outline-danger" onclick="showClientSummary('{{ client.id }}', 'risk', '{{ client.risk_reason }}')">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
+                            <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
                         </div>
                         {% endfor %}
                     {% else %}
@@ -155,15 +177,16 @@
                 <div class="card-body">
                     {% if stable_clients %}
                         {% for client in stable_clients %}
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div class="mb-3 p-3 border rounded position-relative client-card" style="cursor: pointer; transition: all 0.2s;" onclick="showClientSummary('{{ client.id }}', 'stable', '{{ client.stability_reason|replace("'", "\\'") }}')">
                             <div>
-                                <strong>{{ client.name }}</strong>
+                                <strong class="text-primary" style="text-decoration: underline;">{{ client.name }}</strong>
+                                <i class="fas fa-external-link-alt ms-1 text-muted small"></i>
                                 <br><small class="text-muted">Score: {{ client.total_score }}</small>
                                 <br><small class="text-success">{{ client.scoresheet_count }} scoresheets</small>
                             </div>
-                            <button class="btn btn-sm btn-outline-success" onclick="showClientSummary('{{ client.id }}', 'stable', '{{ client.stability_reason }}')">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
+                            <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
                         </div>
                         {% endfor %}
                     {% else %}
@@ -184,9 +207,10 @@
                 <div class="card-body">
                     {% if stagnant_clients %}
                         {% for client in stagnant_clients %}
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div class="mb-3 p-3 border rounded position-relative client-card" style="cursor: pointer; transition: all 0.2s;" onclick="showClientSummary('{{ client.id }}', 'stagnant', '{{ client.stagnation_reason|replace("'", "\\'") }}')">
                             <div>
-                                <strong>{{ client.name }}</strong>
+                                <strong class="text-primary" style="text-decoration: underline;">{{ client.name }}</strong>
+                                <i class="fas fa-external-link-alt ms-1 text-muted small"></i>
                                 <br><small class="text-muted">
                                     {% if client.last_scoresheet %}
                                         Last: {{ client.last_scoresheet.strftime('%m/%d/%Y') }}
@@ -196,9 +220,9 @@
                                 </small>
                                 <br><small class="text-warning">{{ client.days_since_last }} days ago</small>
                             </div>
-                            <button class="btn btn-sm btn-outline-warning" onclick="showClientSummary('{{ client.id }}', 'stagnant', '{{ client.stagnation_reason }}')">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
+                            <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
                         </div>
                         {% endfor %}
                     {% else %}
@@ -772,7 +796,7 @@ new Chart(accountManagerCtx, {
 });
 }
 
-// Client Summary Modal Functions
+// Global Client Summary Modal Functions (outside DOMContentLoaded)
 function showClientSummary(clientId, category, reason) {
     const modal = new bootstrap.Modal(document.getElementById('clientSummaryModal'));
     const clientName = getClientName(clientId);
@@ -829,7 +853,7 @@ function getClientName(clientId) {
     // Extract client name from the page elements
     const clientElements = document.querySelectorAll(`[onclick*="${clientId}"]`);
     if (clientElements.length > 0) {
-        const parentDiv = clientElements[0].closest('.d-flex');
+        const parentDiv = clientElements[0].closest('.client-card');
         if (parentDiv) {
             const nameElement = parentDiv.querySelector('strong');
             if (nameElement) return nameElement.textContent;
