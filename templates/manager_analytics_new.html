@@ -796,10 +796,8 @@ new Chart(accountManagerCtx, {
 });
 }
 
-});
-
-// Global Client Summary Modal Functions (must be outside all event listeners)
-function showClientSummary(clientId, category, reason) {
+// Global Client Summary Modal Functions (defined at script level)
+window.showClientSummary = function(clientId, category, reason) {
     const modal = new bootstrap.Modal(document.getElementById('clientSummaryModal'));
     const clientName = getClientName(clientId);
     
@@ -849,9 +847,9 @@ function showClientSummary(clientId, category, reason) {
     }
     
     modal.show();
-}
+};
 
-function getClientName(clientId) {
+window.getClientName = function(clientId) {
     // Extract client name from the page elements
     const clientElements = document.querySelectorAll(`[onclick*="${clientId}"]`);
     if (clientElements.length > 0) {
@@ -862,7 +860,7 @@ function getClientName(clientId) {
         }
     }
     return `Client ${clientId}`;
-}
+};
 
 });
 
