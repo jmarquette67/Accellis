@@ -69,7 +69,23 @@ def client_list():
     results = db.session.execute(client_scores_query)
     client_scores = {row.client_id: row.total_weighted_score for row in results}
     
-    return render_template('manager_clients.html', clients=clients, client_scores=client_scores)
+    # Get scoresheet counts for each client
+    scoresheet_counts_query = text("""
+        SELECT 
+            client_id,
+            COUNT(DISTINCT DATE(taken_at)) as scoresheet_count
+        FROM score 
+        WHERE status = 'final'
+        GROUP BY client_id
+    """)
+    
+    scoresheet_results = db.session.execute(scoresheet_counts_query)
+    client_scoresheet_counts = {row.client_id: row.scoresheet_count for row in scoresheet_results}
+    
+    return render_template('manager_clients.html', 
+                         clients=clients, 
+                         client_scores=client_scores,
+                         client_scoresheet_counts=client_scoresheet_counts)
 
 @manager_bp.route("/clients/analytics")
 @require_login
@@ -591,7 +607,7 @@ def prepare_chart_data(all_scores):
 def generate_client_ai_insights(client, trend_data, declining_metrics, improving_metrics):
     """Generate AI-powered insights for client performance analysis"""
     print(f"DEBUG: Generating insights for {client.name}, data length: {len(trend_data) if trend_data else 0}")
-    if not trend_data or len(trend_data) < 2:  # Reduced requirement
+    if not trend_data or len(trend_data) < 1:  # Allow single data point
         print(f"DEBUG: Not enough data - returning None")
         return None
     

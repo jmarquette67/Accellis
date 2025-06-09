@@ -46,6 +46,10 @@
                                         Last Total Score 
                                         <i class="fas fa-sort text-muted"></i>
                                     </th>
+                                    <th class="sortable" data-column="scoresheets">
+                                        Scoresheets 
+                                        <i class="fas fa-sort text-muted"></i>
+                                    </th>
                                     <th class="sortable" data-column="status">
                                         Status 
                                         <i class="fas fa-sort text-muted"></i>
@@ -83,6 +87,15 @@
                                             </span>
                                         {% else %}
                                             <span class="text-muted">No scores</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-value="{% if client.id in client_scoresheet_counts %}{{ client_scoresheet_counts[client.id] }}{% else %}0{% endif %}">
+                                        {% if client.id in client_scoresheet_counts and client_scoresheet_counts[client.id] > 0 %}
+                                            <span class="badge bg-info">
+                                                {{ client_scoresheet_counts[client.id] }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
                                         {% endif %}
                                     </td>
                                     <td data-value="Active">
@@ -221,9 +234,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         aVal = parseInt(a.querySelector('td:nth-child(4)').dataset.value) || 0;
                         bVal = parseInt(b.querySelector('td:nth-child(4)').dataset.value) || 0;
                         break;
+                    case 'scoresheets':
+                        aVal = parseInt(a.querySelector('td:nth-child(5)').dataset.value) || 0;
+                        bVal = parseInt(b.querySelector('td:nth-child(5)').dataset.value) || 0;
+                        break;
                     case 'status':
-                        aVal = a.querySelector('td:nth-child(5)').dataset.value.toLowerCase();
-                        bVal = b.querySelector('td:nth-child(5)').dataset.value.toLowerCase();
+                        aVal = a.querySelector('td:nth-child(6)').dataset.value.toLowerCase();
+                        bVal = b.querySelector('td:nth-child(6)').dataset.value.toLowerCase();
                         break;
                     default:
                         return 0;
