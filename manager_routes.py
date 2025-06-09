@@ -663,7 +663,7 @@ def client_trend(client_id):
         .join(Metric, Score.metric_id == Metric.id)
         .filter(Score.client_id == client_id)
         .group_by(db.func.date_trunc('month', Score.taken_at))
-        .order_by(db.desc('month'))
+        .order_by(db.func.date_trunc('month', Score.taken_at).desc())
         .limit(12)
         .all()
     )
