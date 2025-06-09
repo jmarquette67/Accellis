@@ -552,6 +552,40 @@
 
 </div>
 
+<!-- Client Summary Modal -->
+<div class="modal fade" id="clientSummaryModal" tabindex="-1" aria-labelledby="clientSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientSummaryModalLabel">AI Client Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div id="modalIcon" class="me-3 fs-2"></div>
+                    <div>
+                        <h6 id="modalClientName" class="mb-1"></h6>
+                        <span id="modalCategory" class="badge"></span>
+                    </div>
+                </div>
+                <div class="alert" id="modalContent">
+                    <h6 class="fw-bold mb-2">Analysis Summary</h6>
+                    <p id="modalReason" class="mb-0"></p>
+                </div>
+                <div class="mt-3">
+                    <h6 class="fw-bold mb-2">Recommended Actions</h6>
+                    <ul id="modalActions" class="mb-0">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modalViewClient" href="#" class="btn btn-primary">View Client Details</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Chart.js Scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -737,6 +771,73 @@ new Chart(accountManagerCtx, {
     }
 });
 }
+
+// Client Summary Modal Functions
+function showClientSummary(clientId, category, reason) {
+    const modal = new bootstrap.Modal(document.getElementById('clientSummaryModal'));
+    const clientName = getClientName(clientId);
+    
+    // Set modal content based on category
+    document.getElementById('modalClientName').textContent = clientName;
+    document.getElementById('modalReason').textContent = reason;
+    document.getElementById('modalViewClient').href = `/manager/client/${clientId}/trend`;
+    
+    const modalIcon = document.getElementById('modalIcon');
+    const modalCategory = document.getElementById('modalCategory');
+    const modalContent = document.getElementById('modalContent');
+    const modalActions = document.getElementById('modalActions');
+    
+    if (category === 'risk') {
+        modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i>';
+        modalCategory.textContent = 'At Risk Client';
+        modalCategory.className = 'badge bg-danger';
+        modalContent.className = 'alert alert-danger';
+        modalActions.innerHTML = `
+            <li>Schedule immediate client review meeting</li>
+            <li>Analyze service delivery pain points</li>
+            <li>Develop targeted improvement plan</li>
+            <li>Increase communication frequency</li>
+        `;
+    } else if (category === 'stable') {
+        modalIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+        modalCategory.textContent = 'Stable Client';
+        modalCategory.className = 'badge bg-success';
+        modalContent.className = 'alert alert-success';
+        modalActions.innerHTML = `
+            <li>Maintain current service quality</li>
+            <li>Explore expansion opportunities</li>
+            <li>Request testimonials and referrals</li>
+            <li>Continue regular check-ins</li>
+        `;
+    } else if (category === 'stagnant') {
+        modalIcon.innerHTML = '<i class="fas fa-clock text-warning"></i>';
+        modalCategory.textContent = 'Stagnant Account';
+        modalCategory.className = 'badge bg-warning text-dark';
+        modalContent.className = 'alert alert-warning';
+        modalActions.innerHTML = `
+            <li>Contact client to assess current needs</li>
+            <li>Schedule account status review</li>
+            <li>Verify contact information is current</li>
+            <li>Determine if account is still active</li>
+        `;
+    }
+    
+    modal.show();
+}
+
+function getClientName(clientId) {
+    // Extract client name from the page elements
+    const clientElements = document.querySelectorAll(`[onclick*="${clientId}"]`);
+    if (clientElements.length > 0) {
+        const parentDiv = clientElements[0].closest('.d-flex');
+        if (parentDiv) {
+            const nameElement = parentDiv.querySelector('strong');
+            if (nameElement) return nameElement.textContent;
+        }
+    }
+    return `Client ${clientId}`;
+}
+
 });
 
 // Table sorting functionality with toggle
