@@ -588,6 +588,54 @@ def prepare_chart_data(all_scores):
     
     return chart_data
 
+def generate_client_ai_insights(client, trend_data, declining_metrics, improving_metrics):
+    """Generate AI-powered insights for client performance analysis"""
+    if not trend_data or len(trend_data) < 3:
+        return None
+    
+    # Calculate trend statistics
+    latest_score = trend_data[-1]['y']
+    earliest_score = trend_data[0]['y']
+    avg_score = sum(point['y'] for point in trend_data) / len(trend_data)
+    
+    # Calculate volatility (standard deviation)
+    variance = sum((point['y'] - avg_score) ** 2 for point in trend_data) / len(trend_data)
+    volatility = variance ** 0.5
+    
+    # Determine overall trend
+    overall_change = ((latest_score - earliest_score) / earliest_score * 100) if earliest_score > 0 else 0
+    
+    # Generate insights based on patterns
+    insights = {
+        'overall_health': 'excellent' if latest_score >= 45 else ('good' if latest_score >= 35 else ('needs_attention' if latest_score >= 25 else 'critical')),
+        'trend_direction': 'improving' if overall_change > 5 else ('declining' if overall_change < -5 else 'stable'),
+        'volatility_level': 'high' if volatility > 8 else ('moderate' if volatility > 4 else 'low'),
+        'risk_level': 'low' if latest_score >= 40 and len(declining_metrics) == 0 else ('medium' if latest_score >= 30 or len(declining_metrics) <= 2 else 'high'),
+        'key_strengths': [metric['name'] for metric in improving_metrics[:3]] if improving_metrics else [],
+        'areas_of_concern': [metric['name'] for metric in declining_metrics[:3]] if declining_metrics else [],
+        'recommendations': []
+    }
+    
+    # Generate specific recommendations
+    if insights['trend_direction'] == 'declining':
+        insights['recommendations'].append("Schedule immediate client check-in to address declining performance")
+        insights['recommendations'].append("Review recent service delivery and identify improvement opportunities")
+    
+    if len(declining_metrics) > 0:
+        insights['recommendations'].append(f"Focus on improving {declining_metrics[0]['name']} - showing {declining_metrics[0]['trend']} decline")
+    
+    if insights['volatility_level'] == 'high':
+        insights['recommendations'].append("Performance consistency needs improvement - establish regular review cadence")
+    
+    if insights['overall_health'] in ['needs_attention', 'critical']:
+        insights['recommendations'].append("Consider escalation to senior management for intervention strategy")
+    
+    if not insights['recommendations']:
+        insights['recommendations'].append("Continue current engagement strategy - performance is stable")
+        insights['recommendations'].append("Look for opportunities to exceed client expectations")
+    
+    return insights
+
 @manager_bp.route("/client/<int:client_id>/trend")
 @require_login
 def client_trend(client_id):
@@ -682,12 +730,69 @@ def client_trend(client_id):
                     'score_id': None
                 })
     
+    # Calculate max possible score for percentage calculations
+    all_metrics = Metric.query.all()
+    max_possible_score = sum(metric.max_score * metric.weight for metric in all_metrics)
+    
+    # Generate AI insights if we have sufficient data
+    ai_insights = None
+    declining_metrics = []
+    improving_metrics = []
+    
+    if len(data) >= 3:  # Need at least 3 months for trend analysis
+        # Analyze metric-level trends for declining/improving identification
+        metric_trends = {}
+        for metric in all_metrics:
+            metric_scores = (
+                db.session.query(
+                    db.func.date_trunc('month', Score.taken_at).label('month'),
+                    db.func.avg(Score.value).label('avg_score')
+                )
+                .filter(Score.client_id == client_id, Score.metric_id == metric.id)
+                .group_by(db.func.date_trunc('month', Score.taken_at))
+                .order_by(db.desc('month'))
+                .limit(6)  # Last 6 months
+                .all()
+            )
+            
+            if len(metric_scores) >= 3:
+                scores = [float(ms.avg_score) for ms in reversed(metric_scores)]
+                # Calculate trend slope
+                x_vals = list(range(len(scores)))
+                if len(x_vals) > 1:
+                    slope = sum((x - sum(x_vals)/len(x_vals)) * (y - sum(scores)/len(scores)) 
+                               for x, y in zip(x_vals, scores)) / sum((x - sum(x_vals)/len(x_vals))**2 for x in x_vals)
+                    
+                    trend_percentage = (slope / (sum(scores)/len(scores))) * 100 if sum(scores) > 0 else 0
+                    
+                    if trend_percentage < -5:  # Declining by more than 5%
+                        declining_metrics.append({
+                            'name': metric.name,
+                            'trend': f"{trend_percentage:.1f}%",
+                            'latest_score': scores[-1] if scores else 0,
+                            'max_score': metric.max_score
+                        })
+                    elif trend_percentage > 5:  # Improving by more than 5%
+                        improving_metrics.append({
+                            'name': metric.name,
+                            'trend': f"+{trend_percentage:.1f}%",
+                            'latest_score': scores[-1] if scores else 0,
+                            'max_score': metric.max_score
+                        })
+        
+        # Generate AI insights based on the data patterns
+        ai_insights = generate_client_ai_insights(client, data, declining_metrics, improving_metrics)
+    
     return render_template("client_trend.html", 
                          client=client, 
                          data=data,
                          recent_scores=recent_scores,
                          total_weighted_score=total_weighted_score,
-                         scoresheet_date=scoresheet_date)
+                         max_possible_score=max_possible_score,
+                         scoresheet_date=scoresheet_date,
+                         ai_insights=ai_insights,
+                         declining_metrics=declining_metrics,
+                         improving_metrics=improving_metrics)
 
 @manager_bp.route("/scores/new", methods=['GET', 'POST'])
 @require_login

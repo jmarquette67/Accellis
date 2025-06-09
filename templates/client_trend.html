@@ -90,7 +90,93 @@
         </div>
     </div>
 
-    <!-- Performance Insights -->
+    <!-- AI-Powered Performance Analysis -->
+    {% if ai_insights %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain text-primary me-2"></i>AI Performance Analysis
+                    </h5>
+                    <small class="text-muted">Intelligent insights based on performance patterns and trends</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Overall Health Assessment</h6>
+                            {% set health_color = 'success' if ai_insights.overall_health == 'excellent' else ('warning' if ai_insights.overall_health == 'good' else ('danger' if ai_insights.overall_health in ['needs_attention', 'critical'] else 'secondary')) %}
+                            <div class="alert alert-{{ health_color }} border-start border-4 border-{{ health_color }}">
+                                <strong>{{ ai_insights.overall_health|title|replace('_', ' ') }}</strong>
+                                <br><small>Risk Level: {{ ai_insights.risk_level|title }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Trending Metrics</h6>
+                            {% if improving_metrics %}
+                                <div class="mb-2">
+                                    <strong class="text-success">Improving:</strong>
+                                    {% for metric in improving_metrics[:2] %}
+                                        <span class="badge bg-success me-1">{{ metric.name }} {{ metric.trend }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if declining_metrics %}
+                                <div class="mb-2">
+                                    <strong class="text-danger">Declining:</strong>
+                                    {% for metric in declining_metrics[:2] %}
+                                        <span class="badge bg-danger me-1">{{ metric.name }} {{ metric.trend }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-muted">
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                    No declining metrics detected
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Performance Stability</h6>
+                            {% set volatility_color = 'danger' if ai_insights.volatility_level == 'high' else ('warning' if ai_insights.volatility_level == 'moderate' else 'success') %}
+                            <span class="badge bg-{{ volatility_color }} fs-6">{{ ai_insights.volatility_level|title }} Volatility</span>
+                            <br><small class="text-muted mt-1">Consistency of performance over time</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Strategic Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ai_insights.recommendations %}
+                        <div class="row">
+                            {% for recommendation in ai_insights.recommendations %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-arrow-right text-primary me-2 mt-1"></i>
+                                    <span>{{ recommendation }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No specific recommendations at this time. Continue monitoring performance.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Fallback Performance Insights -->
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -101,10 +187,10 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Recent Performance</h6>
-                            {% if latest_score >= 80 %}
-                                <p class="text-success">Excellent performance with a score of {{ latest_score }}. Client is exceeding expectations.</p>
-                            {% elif latest_score >= 60 %}
-                                <p class="text-warning">Good performance with room for improvement. Current score: {{ latest_score }}.</p>
+                            {% if latest_score >= 40 %}
+                                <p class="text-success">Good performance with a score of {{ latest_score }}. Client is meeting expectations.</p>
+                            {% elif latest_score >= 30 %}
+                                <p class="text-warning">Moderate performance with room for improvement. Current score: {{ latest_score }}.</p>
                             {% else %}
                                 <p class="text-danger">Performance needs attention. Current score of {{ latest_score }} requires action.</p>
                             {% endif %}
@@ -124,6 +210,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Recent Scoresheet Section -->
     <div class="row mt-4">
