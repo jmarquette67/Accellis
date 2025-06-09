@@ -590,7 +590,9 @@ def prepare_chart_data(all_scores):
 
 def generate_client_ai_insights(client, trend_data, declining_metrics, improving_metrics):
     """Generate AI-powered insights for client performance analysis"""
-    if not trend_data or len(trend_data) < 3:
+    print(f"DEBUG: Generating insights for {client.name}, data length: {len(trend_data) if trend_data else 0}")
+    if not trend_data or len(trend_data) < 2:  # Reduced requirement
+        print(f"DEBUG: Not enough data - returning None")
         return None
     
     # Calculate trend statistics
@@ -793,10 +795,18 @@ def client_trend(client_id):
                         })
         
         # Generate AI insights based on the data patterns
-        ai_insights = generate_client_ai_insights(client, data, declining_metrics, improving_metrics)
-        print(f"DEBUG: AI insights generated for client {client_id}: {ai_insights is not None}")
-        if ai_insights:
-            print(f"DEBUG: Recommendations: {len(ai_insights.get('recommendations', []))}")
+        try:
+            ai_insights = generate_client_ai_insights(client, data, declining_metrics, improving_metrics)
+            print(f"DEBUG: AI insights generated for client {client_id}: {ai_insights is not None}")
+            if ai_insights:
+                print(f"DEBUG: Recommendations: {len(ai_insights.get('recommendations', []))}")
+                print(f"DEBUG: Overall health: {ai_insights.get('overall_health')}")
+            else:
+                print("DEBUG: AI insights is None - checking data requirements")
+                print(f"DEBUG: Data length: {len(data)}, Client: {client.name}")
+        except Exception as e:
+            print(f"DEBUG: Error generating AI insights: {e}")
+            ai_insights = None
     
     return render_template("client_trend.html", 
                          client=client, 
