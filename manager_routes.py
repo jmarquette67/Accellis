@@ -616,23 +616,33 @@ def generate_client_ai_insights(client, trend_data, declining_metrics, improving
         'recommendations': []
     }
     
-    # Generate specific recommendations
+    # Generate conversational, detailed recommendations
     if insights['trend_direction'] == 'declining':
-        insights['recommendations'].append("Schedule immediate client check-in to address declining performance")
-        insights['recommendations'].append("Review recent service delivery and identify improvement opportunities")
+        insights['recommendations'].append(f"We're seeing a concerning downward trend with {client.name}. I'd recommend scheduling a face-to-face meeting within the next week to understand what's driving this decline and how we can course-correct together.")
+        insights['recommendations'].append("Let's take a close look at our recent service delivery. Have there been any changes in their business, our team, or external factors that might be impacting their satisfaction?")
     
     if len(declining_metrics) > 0:
-        insights['recommendations'].append(f"Focus on improving {declining_metrics[0]['name']} - showing {declining_metrics[0]['trend']} decline")
+        metric_name = declining_metrics[0]['name']
+        trend_val = declining_metrics[0]['trend']
+        insights['recommendations'].append(f"The {metric_name} area needs immediate attention - we're seeing a {trend_val} decline here. This could be an early warning sign that requires proactive intervention before it impacts other areas.")
     
     if insights['volatility_level'] == 'high':
-        insights['recommendations'].append("Performance consistency needs improvement - establish regular review cadence")
+        insights['recommendations'].append("This client's performance has been quite inconsistent lately. Consider implementing more frequent check-ins (maybe bi-weekly instead of monthly) to catch issues earlier and maintain steadier engagement.")
     
     if insights['overall_health'] in ['needs_attention', 'critical']:
-        insights['recommendations'].append("Consider escalation to senior management for intervention strategy")
+        insights['recommendations'].append("Given the current performance level, this might be a good time to loop in senior leadership. Sometimes a fresh perspective or executive-level attention can help turn things around.")
+    
+    if insights['overall_health'] == 'excellent':
+        insights['recommendations'].append(f"{client.name} is performing exceptionally well! This is a great opportunity to ask for referrals, expand services, or use them as a case study for other clients.")
+        insights['recommendations'].append("Consider documenting what's working so well here - it could be a blueprint for improving other client relationships.")
+    
+    if len(improving_metrics) > 0 and insights['trend_direction'] != 'declining':
+        improving_area = improving_metrics[0]['name']
+        insights['recommendations'].append(f"Great news - we're seeing real improvement in {improving_area}! Let's build on this momentum and see if we can apply similar strategies to other metrics.")
     
     if not insights['recommendations']:
-        insights['recommendations'].append("Continue current engagement strategy - performance is stable")
-        insights['recommendations'].append("Look for opportunities to exceed client expectations")
+        insights['recommendations'].append(f"{client.name} is maintaining steady performance, which is actually quite good in today's environment. Keep doing what you're doing, but stay alert for opportunities to add extra value.")
+        insights['recommendations'].append("Steady doesn't mean stagnant - consider proposing new initiatives or services that could help them achieve their next level of growth.")
     
     return insights
 

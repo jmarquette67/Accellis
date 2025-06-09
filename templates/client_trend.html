@@ -49,25 +49,27 @@
         {% set avg_score = (data | sum(attribute='y') / data | length) | round if data else 0 %}
 
         <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-primary">{{ latest_score }}</h3>
-                    <p class="card-text">Latest Score</p>
+            <div class="card text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h3 class="text-primary mb-2">{{ latest_score }}</h3>
+                    <p class="card-text mb-0">Latest Score</p>
+                    <small class="text-muted">Current Performance</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-info">{{ avg_score }}</h3>
-                    <p class="card-text">Average Score</p>
+            <div class="card text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h3 class="text-info mb-2">{{ avg_score }}</h3>
+                    <p class="card-text mb-0">Average Score</p>
+                    <small class="text-muted">Historical Average</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-{{ 'success' if trend_direction == 'improving' else ('danger' if trend_direction == 'declining' else 'secondary') }}">
+            <div class="card text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h3 class="text-{{ 'success' if trend_direction == 'improving' else ('danger' if trend_direction == 'declining' else 'secondary') }} mb-2">
                         {% if trend_direction == 'improving' %}
                             <i class="fas fa-arrow-up"></i>
                         {% elif trend_direction == 'declining' %}
@@ -76,15 +78,17 @@
                             <i class="fas fa-minus"></i>
                         {% endif %}
                     </h3>
-                    <p class="card-text">{{ trend_direction|title }}</p>
+                    <p class="card-text mb-0">{{ trend_direction|title }}</p>
+                    <small class="text-muted">Trend Direction</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-warning">{{ data|length }}</h3>
-                    <p class="card-text">Data Points</p>
+            <div class="card text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h3 class="text-warning mb-2">{{ data|length }}</h3>
+                    <p class="card-text mb-0">Data Points</p>
+                    <small class="text-muted">Months Analyzed</small>
                 </div>
             </div>
         </div>
