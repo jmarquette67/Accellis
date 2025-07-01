@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}ConnectWise Setup - Client Engagement{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-cog me-2"></i>ConnectWise Integration Setup</h1>
+                    <p class="text-muted">Configure your ConnectWise PSA integration</p>
+                </div>
+                <a href="{{ url_for('connectwise.integration_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Steps -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Setup Process</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Step 1: Prerequisites -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-primary">
+                            <span class="badge bg-primary me-2">1</span>
+                            Prerequisites Check
+                        </h6>
+                        <div class="ms-4">
+                            <p>Before proceeding, ensure you have the following from your ConnectWise administrator:</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>ConnectWise server URL</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Company ID</li>
+                                <li><i class="fas fa-check text-success me-2"></i>API Public Key (Member ID)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>API Private Key (Member Password)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Client ID</li>
+                            </ul>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Need help?</strong> Refer to the 
+                                <a href="/static/CONNECTWISE_INTEGRATION_GUIDE.md" target="_blank">integration guide</a> 
+                                for detailed setup instructions.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Environment Variables -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-primary">
+                            <span class="badge bg-primary me-2">2</span>
+                            Configure Environment Variables
+                        </h6>
+                        <div class="ms-4">
+                            <p>Add the following environment variables in your Replit Secrets:</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Variable Name</th>
+                                            <th>Description</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>CONNECTWISE_BASE_URL</code></td>
+                                            <td>ConnectWise server URL</td>
+                                            <td><code>https://api-na.myconnectwise.net</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CONNECTWISE_COMPANY_ID</code></td>
+                                            <td>Your company identifier</td>
+                                            <td><code>YourCompanyID</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CONNECTWISE_PUBLIC_KEY</code></td>
+                                            <td>API public key</td>
+                                            <td><code>YourPublicKey</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CONNECTWISE_PRIVATE_KEY</code></td>
+                                            <td>API private key</td>
+                                            <td><code>YourPrivateKey</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CONNECTWISE_CLIENT_ID</code></td>
+                                            <td>Application client ID</td>
+                                            <td><code>YourClientID</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Database Setup -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-primary">
+                            <span class="badge bg-primary me-2">3</span>
+                            Initialize Database Schema
+                        </h6>
+                        <div class="ms-4">
+                            <p>Initialize the database schema to support ConnectWise integration:</p>
+                            <form method="POST">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-database me-1"></i>Initialize Database Schema
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Test Connection -->
+                    <div class="step-section mb-4">
+                        <h6 class="text-primary">
+                            <span class="badge bg-primary me-2">4</span>
+                            Test API Connection
+                        </h6>
+                        <div class="ms-4">
+                            <p>Verify your ConnectWise API credentials are working:</p>
+                            <button class="btn btn-primary" onclick="testConnection()">
+                                <i class="fas fa-wifi me-1"></i>Test Connection
+                            </button>
+                            <div id="connectionResult" class="mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Initial Sync -->
+                    <div class="step-section">
+                        <h6 class="text-primary">
+                            <span class="badge bg-primary me-2">5</span>
+                            Initial Data Synchronization
+                        </h6>
+                        <div class="ms-4">
+                            <p>After successful connection, perform initial client data sync:</p>
+                            <a href="{{ url_for('connectwise.integration_dashboard') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-sync me-1"></i>Go to Integration Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Features -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">Integration Features</h4>
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fs-1 text-primary mb-3"></i>
+                            <h5>Client Synchronization</h5>
+                            <p class="text-muted">Automatic import of companies and contacts from ConnectWise</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fs-1 text-success mb-3"></i>
+                            <h5>Auto-Generated Scores</h5>
+                            <p class="text-muted">Calculate engagement scores from ticket and time data</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fs-1 text-warning mb-3"></i>
+                            <h5>Real-Time Updates</h5>
+                            <p class="text-muted">Webhook integration for live data synchronization</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function testConnection() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    const resultDiv = document.getElementById('connectionResult');
+    
+    // Show loading state
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('{{ url_for("connectwise.test_connection") }}');
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.status === 'success') {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Connection Successful!</strong>
+                    <p class="mb-0">Your ConnectWise API credentials are working correctly.</p>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Connection Failed</strong>
+                    <p class="mb-0">${data.message || 'Unable to connect to ConnectWise API'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Connection Error</strong>
+                <p class="mb-0">Failed to test connection. Please check your network and try again.</p>
+            </div>
+        `;
+    } finally {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+</script>
+{% endblock %}
