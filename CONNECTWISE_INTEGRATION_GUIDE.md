@@ -50,7 +50,7 @@ Based on ConnectWise data, the system automatically calculates:
 |--------|-------------|-------------------|
 | **Help Desk Usage** | Service Tickets | Ticket volume: 2+ tickets = 1 point (max 5) |
 | **First Touch Resolution** | Ticket Resolution Time | Tickets resolved within 4 hours |
-| **Support Satisfaction** | Average Resolution Time | ≤4hrs=5pts, ≤24hrs=4pts, ≤72hrs=3pts, >72hrs=2pts |
+| **Support Satisfaction** | CrewHu CSAT Data | Requires separate CrewHu integration |
 | **Project Engagement** | Time Entries | Billable hours: 40+hrs=5pts, 20+hrs=4pts, 10+hrs=3pts |
 | **Procurement** | Agreement Changes | Recent agreements/additions |
 
@@ -140,11 +140,11 @@ score = min(5, quick_resolutions)
 
 #### Support Satisfaction (Weight: 4)
 ```python
-avg_hours = calculate_average_resolution_time(tickets)
-if avg_hours <= 4: score = 5
-elif avg_hours <= 24: score = 4
-elif avg_hours <= 72: score = 3
-else: score = 2
+# Note: This metric requires CrewHu CSAT integration
+# ConnectWise integration skips this metric
+# Scores pulled from separate CrewHu API
+csat_score = get_csat_from_crewhu(client_id)
+score = csat_score  # 1-5 scale from CrewHu
 ```
 
 #### Project Engagement (Weight: 5)

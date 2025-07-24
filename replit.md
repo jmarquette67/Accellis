@@ -13,9 +13,11 @@ An advanced organizational performance tracking platform that enables comprehens
 - **Charts**: Chart.js for data visualization
 
 ## Recent Changes
+- **2025-07-24**: Implemented dual integration architecture with ConnectWise PSA and CrewHu CSAT
+- **2025-07-24**: Created comprehensive integration guides and setup wizards
+- **2025-07-24**: Separated Support Satisfaction scoring to use CrewHu instead of ConnectWise resolution times
 - **2025-07-01**: Fixed analytics dashboard layout, compressed client lists, moved stagnant accounts to AI trend analysis
 - **2025-07-01**: Created realistic score data with wide variation (3-53 range) for meaningful chart visualization
-- **2025-07-01**: Implemented clickable client names with AI analysis modals for At Risk, Stable, and Stagnant clients
 
 ## Key Features
 - Multi-metric client scoring system (13 weighted metrics)
@@ -25,13 +27,13 @@ An advanced organizational performance tracking platform that enables comprehens
 - Comprehensive scoresheet management
 - Export capabilities (PDF/Excel)
 
-## ConnectWise Integration (Completed)
-**Full PSA Integration Implementation**
-- Complete REST API client for ConnectWise authentication and data sync
-- Auto-generation of engagement scores from ticket/time data
-- Real-time webhook integration for live updates
-- Web interface for setup, monitoring, and client mapping
-- Comprehensive setup wizard and documentation
+## Dual Integration Architecture (Completed)
+**ConnectWise PSA + CrewHu CSAT Integration**
+- ConnectWise handles operational metrics: tickets, time entries, agreements, first touch resolution
+- CrewHu handles Support Engagement Satisfaction via CSAT scores
+- Combined auto-scoring from both systems for comprehensive client engagement metrics
+- Separate setup wizards and management interfaces for each integration
+- Real-time webhook support and comprehensive documentation guides
 
 ## User Preferences
 - Prioritize functional improvements over cosmetic changes

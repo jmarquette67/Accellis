@@ -248,16 +248,9 @@ class ConnectWiseDataSync:
             quick_resolutions = sum(1 for t in tickets if self._is_quick_resolution(t))
             metrics['First Touch Resolution/Escalation'] = min(5, quick_resolutions)
             
-            # Support Engagement Satisfaction (based on ticket closure times)
-            avg_resolution_time = self._calculate_avg_resolution_time(tickets)
-            if avg_resolution_time <= 4:  # 4 hours or less
-                metrics['Support Engagement Satisfaction'] = 5
-            elif avg_resolution_time <= 24:  # 1 day
-                metrics['Support Engagement Satisfaction'] = 4
-            elif avg_resolution_time <= 72:  # 3 days
-                metrics['Support Engagement Satisfaction'] = 3
-            else:
-                metrics['Support Engagement Satisfaction'] = 2
+            # Support Engagement Satisfaction - NOT included in ConnectWise integration
+            # This metric requires CrewHu CSAT data integration
+            # metrics['Support Engagement Satisfaction'] = None  # Handled by CrewHu
             
             # Project Engagement (based on billable time)
             total_hours = sum(entry.get('actualHours', 0) for entry in time_entries)
