@@ -87,6 +87,7 @@ def client_list():
                          client_scores=client_scores,
                          client_scoresheet_counts=client_scoresheet_counts)
 
+@manager_bp.route("/analytics")
 @manager_bp.route("/clients/analytics")
 @require_login
 def client_table():
