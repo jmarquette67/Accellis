@@ -3,10 +3,16 @@
 {% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
 
 {% block extra_head %}
-<!-- Cache busting timestamp: {{ moment().format() }} -->
+<!-- Force refresh: Version 2.0 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<script>
+// Force page refresh if cached version detected
+if (document.querySelector('select[name="client_compare"]')) {
+    window.location.reload(true);
+}
+</script>
 <style>
 .client-card:hover {
     background-color: var(--bs-gray-100);
