@@ -146,13 +146,13 @@ select {
                                                                id="metric_{{ metric.id }}"
                                                                min="0" 
                                                                max="{{ metric.max_score or 10 }}" 
-                                                               step="{% if metric.name == '1. Help Desk Usage' %}0.1{% elif metric.name == '4. Cross Selling' %}1{% else %}1{% endif %}"
+                                                               step="{% if metric.name == 'Help Desk Usage' %}0.1{% elif metric.name == 'Cross Selling' %}1{% else %}1{% endif %}"
                                                                data-weight="{{ metric.weight }}"
                                                                data-max="{{ metric.max_score or 10 }}"
-                                                               placeholder="{% if metric.name == '1. Help Desk Usage' %}0.0-5.0 tickets/user/month{% elif metric.name == '4. Cross Selling' %}Number of additional services (0-{{ metric.max_score or 10 }}){% else %}0 or 1{% endif %}">
-                                                        {% if metric.name == '1. Help Desk Usage' %}
+                                                               placeholder="{% if metric.name == 'Help Desk Usage' %}0.0-5.0 tickets/user/month{% elif metric.name == 'Cross Selling' %}Number of additional services (0-{{ metric.max_score or 10 }}){% else %}0 or 1{% endif %}">
+                                                        {% if metric.name == 'Help Desk Usage' %}
                                                         <small class="text-muted">Tickets per end user per month (0.25-1.0 = optimal)</small>
-                                                        {% elif metric.name == '4. Cross Selling' %}
+                                                        {% elif metric.name == 'Cross Selling' %}
                                                         <small class="text-muted">Enter number of additional service lines beyond MITS (0-10)</small>
                                                         {% else %}
                                                         <small class="text-muted">Binary: 0 = No, 1 = Yes</small>
