@@ -669,6 +669,76 @@ def admin_reports():
 
 # Admin settings moved to manager_routes.py
 
+@app.route('/test-checkboxes')
+@require_login
+def test_checkboxes():
+    """Simple test route for checkbox interface"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        flash("Access denied.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    from flask import render_template_string
+    
+    template = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Checkbox Test Interface</title>
+        <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+        <style>
+        .test-interface { 
+            border: 3px solid #28a745; 
+            background: #f8f9fa; 
+            padding: 30px; 
+            margin: 30px; 
+            border-radius: 10px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="text-success">CHECKBOX INTERFACE TEST</h1>
+            <div class="test-interface">
+                <h3>Individual Client Selection Working</h3>
+                <p class="text-success">This interface shows individual checkboxes - no Ctrl key needed!</p>
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Select Clients:</h5>
+                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: white;">
+                            {% for client in clients %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="clients" value="{{ client.id }}" id="client{{ client.id }}">
+                                <label class="form-check-label" for="client{{ client.id }}">
+                                    <strong>{{ client.name }}</strong>
+                                    {% if client.industry %}
+                                    <span class="badge bg-info ms-2">{{ client.industry }}</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success">Apply Selection</button>
+                            <button class="btn btn-outline-secondary" onclick="toggleAll()">Toggle All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+        function toggleAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+        </script>
+    </body>
+    </html>
+    '''
+    
+    all_clients = Client.query.order_by(Client.name).all()
+    return render_template_string(template, clients=all_clients)
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', error_message='Page not found'), 404
