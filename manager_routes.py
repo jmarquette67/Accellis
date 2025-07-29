@@ -89,7 +89,6 @@ def client_list():
 
 @manager_bp.route("/analytics")
 @manager_bp.route("/clients/analytics")
-@manager_bp.route("/dashboard-analytics")
 @require_login
 def client_table():
     """Comprehensive analytics dashboard with multi-dimensional analysis"""
@@ -152,7 +151,7 @@ def client_table():
     all_clients = Client.query.order_by(Client.name).all()
     all_users = User.query.filter(User.role.in_([UserRole.MANAGER, UserRole.ADMIN])).order_by(User.first_name).all()
     
-    return render_template("manager_analytics_fresh.html", 
+    return render_template("manager_analytics.html", 
                          company_metrics=company_metrics_analysis,
                          account_owner_performance=account_owner_analysis,
                          ai_insights=ai_insights,

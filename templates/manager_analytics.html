@@ -77,8 +77,8 @@ if (document.querySelector('select[name="client_compare"]')) {
                         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
                     </div>
                     <div class="col-lg-4 col-md-8">
-                        <label class="form-label">Select Clients (Optional)</label>
-                        <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto; background-color: var(--bs-light);">
+                        <label class="form-label">🔥 NEW: Individual Client Selection 🔥</label>
+                        <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto; background-color: var(--bs-light); border: 2px solid #007bff !important;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="selectAllClients" onchange="toggleAllClients()">
@@ -86,13 +86,13 @@ if (document.querySelector('select[name="client_compare"]')) {
                                         Select All
                                     </label>
                                 </div>
-                                <small class="text-muted">
+                                <small class="text-success fw-bold">
                                     <span id="selectedCount">{{ selected_clients|length }}</span> selected
                                 </small>
                             </div>
                             <div class="mb-2">
                                 <input type="text" class="form-control form-control-sm" id="clientSearch" 
-                                       placeholder="Search clients..." onkeyup="filterClients()">
+                                       placeholder="🔍 Search clients by name..." onkeyup="filterClients()">
                             </div>
                             <div class="mb-2">
                                 <div class="btn-group btn-group-sm w-100" role="group">
@@ -130,7 +130,7 @@ if (document.querySelector('select[name="client_compare"]')) {
                                 {% endfor %}
                             </div>
                         </div>
-                        <small class="text-muted">Individual client selection for focused analysis</small>
+                        <small class="text-success fw-bold">✅ Individual checkboxes - no Ctrl key needed!</small>
                     </div>
                     <div class="col-lg-2 col-md-4 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
