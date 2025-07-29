@@ -67,14 +67,60 @@
                         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
                     </div>
                     <div class="col-lg-4 col-md-8">
-                        <label for="clients" class="form-label">Select Clients (Optional)</label>
-                        <select multiple class="form-select" id="clients" name="clients" size="3">
-                            {% for client in all_clients %}
-                            <option value="{{ client.id }}" {% if client.id|string in selected_clients %}selected{% endif %}>
-                                {{ client.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label">Select Clients (Optional)</label>
+                        <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto; background-color: var(--bs-light);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllClients" onchange="toggleAllClients()">
+                                    <label class="form-check-label fw-bold" for="selectAllClients">
+                                        Select All
+                                    </label>
+                                </div>
+                                <small class="text-muted">
+                                    <span id="selectedCount">{{ selected_clients|length }}</span> selected
+                                </small>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" id="clientSearch" 
+                                       placeholder="Search clients..." onkeyup="filterClients()">
+                            </div>
+                            <div class="mb-2">
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="selectNone()" title="Deselect all clients">
+                                        <i class="fas fa-times"></i> None
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" onclick="selectAtRisk()" title="Select at-risk clients">
+                                        <i class="fas fa-exclamation-triangle"></i> At Risk
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" onclick="selectStable()" title="Select stable clients">
+                                        <i class="fas fa-check-circle"></i> Stable
+                                    </button>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <div id="clientCheckboxes">
+                                {% for client in all_clients %}
+                                <div class="form-check mb-1" data-client-type="{% if client.id in (at_risk_clients|map(attribute='id')|list) %}at-risk{% elif client.id in (stable_clients|map(attribute='id')|list) %}stable{% else %}standard{% endif %}">
+                                    <input class="form-check-input client-checkbox" type="checkbox" 
+                                           name="clients" value="{{ client.id }}" id="client{{ client.id }}"
+                                           {% if client.id|string in selected_clients %}checked{% endif %}
+                                           onchange="updateClientSelection()">
+                                    <label class="form-check-label small" for="client{{ client.id }}">
+                                        {{ client.name }}
+                                        {% if client.industry %}
+                                        <span class="badge bg-secondary ms-1" style="font-size: 0.7em;">{{ client.industry|title }}</span>
+                                        {% endif %}
+                                        {% if client.id in (at_risk_clients|map(attribute='id')|list) %}
+                                        <i class="fas fa-exclamation-triangle text-warning ms-1" title="At Risk"></i>
+                                        {% elif client.id in (stable_clients|map(attribute='id')|list) %}
+                                        <i class="fas fa-check-circle text-success ms-1" title="Stable"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">Individual client selection for focused analysis</small>
                     </div>
                     <div class="col-lg-2 col-md-4 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
@@ -937,6 +983,104 @@ document.addEventListener('DOMContentLoaded', function() {
             header.classList.add('sort-active');
         });
     });
+});
+
+// Client Selection Functions
+function toggleAllClients() {
+    const selectAllCheckbox = document.getElementById('selectAllClients');
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    
+    clientCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateClientSelection() {
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllClients');
+    
+    const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+    const totalBoxes = clientCheckboxes.length;
+    
+    // Update "Select All" checkbox state
+    if (checkedBoxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedBoxes.length === totalBoxes) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+    const countElement = document.getElementById('selectedCount');
+    if (countElement) {
+        countElement.textContent = checkedBoxes.length;
+    }
+}
+
+function filterClients() {
+    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+    const clientCheckboxes = document.querySelectorAll('#clientCheckboxes .form-check');
+    
+    clientCheckboxes.forEach(clientDiv => {
+        const label = clientDiv.querySelector('label');
+        const clientName = label.textContent.toLowerCase();
+        
+        if (clientName.includes(searchTerm)) {
+            clientDiv.style.display = 'block';
+        } else {
+            clientDiv.style.display = 'none';
+        }
+    });
+    
+    // Update "Select All" state after filtering
+    updateClientSelection();
+}
+
+function selectNone() {
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    clientCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateClientSelection();
+}
+
+function selectAtRisk() {
+    // First uncheck all
+    selectNone();
+    
+    // Then check only at-risk clients
+    const atRiskClients = document.querySelectorAll('[data-client-type="at-risk"] .client-checkbox');
+    atRiskClients.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateClientSelection();
+}
+
+function selectStable() {
+    // First uncheck all
+    selectNone();
+    
+    // Then check only stable clients
+    const stableClients = document.querySelectorAll('[data-client-type="stable"] .client-checkbox');
+    stableClients.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateClientSelection();
+}
+
+// Initialize client selection on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateClientSelection();
 });
 
 // Export functions
