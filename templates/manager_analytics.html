@@ -3,13 +3,16 @@
 {% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
 
 {% block extra_head %}
-<!-- Force refresh: Version 2.0 -->
+<!-- Force refresh: Version 3.0 TIMESTAMP: {{ moment().timestamp() if moment else '12345' }} -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-// Force page refresh if cached version detected
-if (document.querySelector('select[name="client_compare"]')) {
+// Force cache bust and detect old interface
+window.ANALYTICS_VERSION = "3.0";
+console.log("Analytics Template Version 3.0 Loaded");
+if (document.querySelector('select[multiple]')) {
+    alert('Old template detected - forcing refresh!');
     window.location.reload(true);
 }
 </script>

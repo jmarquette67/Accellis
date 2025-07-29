@@ -87,10 +87,61 @@ def client_list():
                          client_scores=client_scores,
                          client_scoresheet_counts=client_scoresheet_counts)
 
-@manager_bp.route("/analytics")
-@manager_bp.route("/clients/analytics")
+@manager_bp.route("/analytics-fresh")
 @require_login
-def client_table():
+def analytics_fresh():
+    """Fresh analytics dashboard bypassing cache"""
+    require_manager()
+    
+    from flask import render_template_string
+    
+    # Simple template with checkbox interface
+    template = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>NEW Analytics Interface</title>
+        <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+        <style>
+        .new-interface { border: 3px solid #007bff; background: #f8f9fa; padding: 20px; margin: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="text-primary">NEW ANALYTICS INTERFACE</h1>
+            <div class="new-interface">
+                <h3>Individual Client Selection</h3>
+                <p class="text-success">This is the enhanced interface with individual checkboxes - no Ctrl key needed!</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Select Clients:</h5>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                            {% for client in clients %}
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="clients" value="{{ client.id }}" id="client{{ client.id }}">
+                                <label class="form-check-label" for="client{{ client.id }}">{{ client.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary">Apply Filters</button>
+                    <a href="/manager/clients/analytics" class="btn btn-secondary">Back to Original</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    all_clients = Client.query.order_by(Client.name).all()
+    return render_template_string(template, clients=all_clients)
+
+@manager_bp.route("/analytics")
+@manager_bp.route("/clients/analytics") 
+@require_login
+def client_table_original():
     """Comprehensive analytics dashboard with multi-dimensional analysis"""
     require_manager()
     
