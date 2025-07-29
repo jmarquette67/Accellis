@@ -21,6 +21,94 @@ def make_session_permanent():
     from flask import session
     session.permanent = True
 
+@app.route('/demo')
+def demo():
+    """Demo checkbox interface - no login required"""
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Demo: Individual Client Checkboxes</title>
+        <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container mt-4">
+            <div class="alert alert-success">
+                <h2>DEMO: Individual Client Selection Interface</h2>
+                <p>This demonstrates the enhanced analytics interface you requested - individual checkboxes instead of multi-select dropdown.</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h4>Select Clients for Analysis</h4>
+                </div>
+                <div class="card-body">
+                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: white;">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="demo1">
+                            <label class="form-check-label" for="demo1"><strong>Acme Corporation</strong> <span class="badge bg-info">Technology</span></label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="demo2">
+                            <label class="form-check-label" for="demo2"><strong>Global Solutions Inc</strong> <span class="badge bg-warning">At Risk</span></label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="demo3">
+                            <label class="form-check-label" for="demo3"><strong>Enterprise Partners</strong> <span class="badge bg-success">Stable</span></label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="demo4">
+                            <label class="form-check-label" for="demo4"><strong>Innovation Labs</strong> <span class="badge bg-info">Healthcare</span></label>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-primary">Apply Selection</button>
+                        <button class="btn btn-outline-secondary" onclick="toggleAll()">Select All</button>
+                        <button class="btn btn-outline-warning" onclick="selectAtRisk()">Select At Risk</button>
+                        <span class="ms-3 align-self-center">Selected: <span id="count">0</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <strong>Key Benefits:</strong><br>
+                ✓ Individual checkboxes - no Ctrl key needed<br>
+                ✓ Visual status indicators<br>
+                ✓ Quick selection buttons<br>
+                ✓ Real-time selection counter
+            </div>
+        </div>
+        
+        <script>
+        function updateCount() {
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            document.getElementById('count').textContent = checked;
+        }
+        
+        function toggleAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+                cb.dispatchEvent(new Event('change'));
+            });
+        }
+        
+        function selectAtRisk() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('demo2').checked = true;
+            updateCount();
+        }
+        
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', updateCount);
+        });
+        </script>
+    </body>
+    </html>
+    '''
+
 @app.route('/')
 def dashboard():
     """Main dashboard view"""

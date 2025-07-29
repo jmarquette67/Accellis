@@ -3,16 +3,23 @@ Create admin user for metrics management
 """
 from app import app, db
 from models import User, UserRole
+from werkzeug.security import generate_password_hash
 
 def create_admin_user():
     """Create an admin user for the platform"""
     
     with app.app_context():
         # Check if admin already exists
-        admin_user = User.query.filter_by(role=UserRole.ADMIN).first()
+        admin_user = User.query.filter_by(email="admin@accellis.com").first()
         
         if admin_user:
-            print(f"Admin user already exists: {admin_user.email or admin_user.id}")
+            # Update password if it doesn't exist
+            if not admin_user.password_hash:
+                admin_user.password_hash = generate_password_hash("admin123")
+                db.session.commit()
+                print(f"Updated password for existing admin user: {admin_user.email}")
+            else:
+                print(f"Admin user already exists with password: {admin_user.email}")
             return admin_user
         
         # Create a new admin user
@@ -21,7 +28,9 @@ def create_admin_user():
             email="admin@accellis.com", 
             first_name="Admin",
             last_name="User",
-            role=UserRole.ADMIN
+            role=UserRole.ADMIN,
+            password_hash=generate_password_hash("admin123"),
+            is_active=True
         )
         
         db.session.add(admin)
