@@ -2,178 +2,533 @@
 
 {% block title %}Comprehensive Analytics - Client Engagement{% endblock %}
 
+{% block extra_head %}
+<!-- Cache busting timestamp: {{ moment().format() }} -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<style>
+.client-card:hover {
+    background-color: var(--bs-gray-100);
+    border-color: var(--bs-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.client-card:hover .text-primary {
+    color: var(--bs-primary) !important;
+    text-decoration: underline !important;
+}
+
+.client-card:hover .fa-chevron-right {
+    color: var(--bs-primary) !important;
+    transform: translateX(2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1><i data-feather="bar-chart-2" class="me-2"></i>Comprehensive Analytics</h1>
-                    <p class="text-muted">Advanced reporting with client rankings, trends, and insights</p>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                <div class="mb-3 mb-md-0">
+                    <h1><i class="fas fa-chart-line me-2"></i>Analytics Dashboard</h1>
+                    <p class="text-muted d-none d-lg-block">Advanced multi-dimensional performance analysis and insights</p>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="exportReport('pdf')">
-                        <i data-feather="download" class="me-1"></i>Export PDF
+                <div class="btn-group-vertical btn-group-md-horizontal d-grid d-md-flex gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="exportReport('pdf')">
+                        <i class="fas fa-download me-1"></i><span class="d-none d-sm-inline">Export </span>PDF
                     </button>
-                    <button class="btn btn-outline-primary" onclick="exportReport('excel')">
-                        <i data-feather="file-text" class="me-1"></i>Export Excel
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel me-1"></i><span class="d-none d-sm-inline">Export </span>Excel
                     </button>
-                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary">
-                        <i data-feather="arrow-left" class="me-1"></i>Back to Clients
+                    <a href="{{ url_for('manager.client_list') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i><span class="d-none d-sm-inline">Back to </span>Clients
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Advanced Filter Controls -->
+    <!-- Filters Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5><i data-feather="filter" class="me-2"></i>Advanced Filters & Date Range Analysis</h5>
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Analysis Filters & Date Range
+            </h5>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ url_for('manager.client_table') }}">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label for="date_from" class="form-label">From Date</label>
-                        <input type="month" class="form-control" name="date_from" id="date_from" 
-                               value="{{ request.args.get('date_from', '') }}">
+            <form method="GET" id="analyticsForm">
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
                     </div>
-                    <div class="col-md-3">
-                        <label for="date_to" class="form-label">To Date</label>
-                        <input type="month" class="form-control" name="date_to" id="date_to" 
-                               value="{{ request.args.get('date_to', '') }}">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
                     </div>
-                    <div class="col-md-3">
-                        <label for="metric_filter" class="form-label">Focus Metric</label>
-                        <select class="form-select" name="metric_filter" id="metric_filter" onchange="filterByMetric()">
-                            <option value="">All Metrics</option>
-                            {% if rows and rows[0] and rows[0].metric_scores %}
-                                {% for metric_name in rows[0].metric_scores.keys() %}
-                                <option value="{{ metric_name }}" {{ 'selected' if request.args.get('metric_filter') == metric_name }}>{{ metric_name }}</option>
+                    <div class="col-lg-4 col-md-8">
+                        <label class="form-label">Select Clients (Optional)</label>
+                        <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto; background-color: var(--bs-light);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllClients" onchange="toggleAllClients()">
+                                    <label class="form-check-label fw-bold" for="selectAllClients">
+                                        Select All
+                                    </label>
+                                </div>
+                                <small class="text-muted">
+                                    <span id="selectedCount">{{ selected_clients|length }}</span> selected
+                                </small>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" id="clientSearch" 
+                                       placeholder="Search clients..." onkeyup="filterClients()">
+                            </div>
+                            <div class="mb-2">
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="selectNone()" title="Deselect all clients">
+                                        <i class="fas fa-times"></i> None
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" onclick="selectAtRisk()" title="Select at-risk clients">
+                                        <i class="fas fa-exclamation-triangle"></i> At Risk
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" onclick="selectStable()" title="Select stable clients">
+                                        <i class="fas fa-check-circle"></i> Stable
+                                    </button>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <div id="clientCheckboxes">
+                                {% for client in all_clients %}
+                                <div class="form-check mb-1" data-client-type="{% if client.id in (at_risk_clients|map(attribute='id')|list) %}at-risk{% elif client.id in (stable_clients|map(attribute='id')|list) %}stable{% else %}standard{% endif %}">
+                                    <input class="form-check-input client-checkbox" type="checkbox" 
+                                           name="clients" value="{{ client.id }}" id="client{{ client.id }}"
+                                           {% if client.id|string in selected_clients %}checked{% endif %}
+                                           onchange="updateClientSelection()">
+                                    <label class="form-check-label small" for="client{{ client.id }}">
+                                        {{ client.name }}
+                                        {% if client.industry %}
+                                        <span class="badge bg-secondary ms-1" style="font-size: 0.7em;">{{ client.industry|title }}</span>
+                                        {% endif %}
+                                        {% if client.id in (at_risk_clients|map(attribute='id')|list) %}
+                                        <i class="fas fa-exclamation-triangle text-warning ms-1" title="At Risk"></i>
+                                        {% elif client.id in (stable_clients|map(attribute='id')|list) %}
+                                        <i class="fas fa-check-circle text-success ms-1" title="Stable"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
                                 {% endfor %}
-                            {% endif %}
-                        </select>
+                            </div>
+                        </div>
+                        <small class="text-muted">Individual client selection for focused analysis</small>
                     </div>
-                    <div class="col-md-3">
-                        <label for="client_compare" class="form-label">Compare Clients</label>
-                        <select class="form-select" name="client_compare" id="client_compare" multiple size="3" onchange="updateComparison()">
-                            {% for row in rows %}
-                            <option value="{{ row.client.id }}">{{ row.client.name }} ({{ row.weighted_score }}%)</option>
-                            {% endfor %}
-                        </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple clients</small>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="search" class="me-1"></i>Apply Filters
+                    <div class="col-lg-2 col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i><span class="d-none d-md-inline">Analyze</span><span class="d-md-none">Go</span>
                         </button>
-                        <a href="{{ url_for('manager.client_table') }}" class="btn btn-outline-secondary">
-                            <i data-feather="refresh-cw" class="me-1"></i>Reset
-                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Executive Summary Dashboard -->
+    <!-- AI-Driven Trend Analysis (moved to top) -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body d-flex flex-column justify-content-center text-center">
-                    <h4 class="mb-2">{{ rows|length }}</h4>
-                    <p class="mb-0">Total Clients</p>
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2"></i>AI-Driven Trend Analysis
+                        <small class="ms-2 text-muted d-none d-md-inline">Patterns and insights you might not see</small>
+                    </h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body d-flex flex-column justify-content-center text-center">
-                    <h4 class="mb-2">{{ rows | selectattr('weighted_score', '>=', 80) | list | length if rows else 0 }}</h4>
-                    <p class="mb-0">High Performers</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white h-100">
-                <div class="card-body d-flex flex-column justify-content-center text-center">
-                    <h4 class="mb-2">{{ rows | selectattr('weighted_score', '<', 60) | list | length if rows else 0 }}</h4>
-                    <p class="mb-0">Need Attention</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body d-flex flex-column justify-content-center text-center">
-                    <h4 class="mb-2">{{ ((rows | sum(attribute='weighted_score') / rows|length) | round) if rows and rows|length > 0 else 0 }}%</h4>
-                    <p class="mb-0">Average Score</p>
+                <div class="card-body">
+                    <div class="row">
+                        {% for insight in ai_insights %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title text-{% if insight.type == 'success' %}success{% elif insight.type == 'warning' %}warning{% elif insight.type == 'danger' %}danger{% else %}info{% endif %}">
+                                            <i class="fas fa-{{ insight.icon }} me-1"></i>{{ insight.title }}
+                                        </h6>
+                                        <span class="badge bg-{{ insight.type }}">{{ insight.confidence }}%</span>
+                                    </div>
+                                    <p class="card-text small">{{ insight.description }}</p>
+                                    {% if insight.action %}
+                                    <div class="alert alert-light py-2 mb-0">
+                                        <small><strong>Suggested Action:</strong> {{ insight.action }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not ai_insights %}
+                        <div class="col-12">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-lightbulb fs-1 mb-3"></i>
+                                <p>AI insights will appear here once sufficient data is available for analysis.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Stagnant Accounts Alert -->
+                        {% if stagnant_clients %}
+                        <div class="col-12 mt-3">
+                            <div class="alert alert-warning border-start border-warning border-4">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="alert-heading mb-2">
+                                            <i class="fas fa-clock me-2"></i>Stagnant Account Alert
+                                        </h6>
+                                        <p class="mb-2">{{ stagnant_clients|length }} client(s) have not submitted scoresheets in 90+ days</p>
+                                        <div class="row">
+                                            {% for client in stagnant_clients %}
+                                            <div class="col-md-6 mb-2">
+                                                <span class="badge bg-warning text-dark me-2">{{ client.name }}</span>
+                                                <small class="text-muted">({{ client.days_since_last }} days)</small>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-outline-warning btn-sm ms-3" onclick="window.location.href='{{ url_for('manager.client_list') }}'">
+                                        <i class="fas fa-eye me-1"></i>Review
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {% if rows %}
-    <div class="row">
+    <!-- Compact Client Assessment Section -->
+    <div class="row mb-3">
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0">Latest Client Scores ({{ rows|length }} clients)</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-users me-2"></i>Client Risk Assessment
+                        </h6>
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='{{ url_for('manager.client_list') }}'">
+                            <i class="fas fa-list me-1"></i>View All Clients
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body py-3">
+                    <div class="row">
+                        <!-- At Risk Clients -->
+                        <div class="col-lg-6 mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                <strong class="text-danger">At Risk ({{ at_risk_clients|length }})</strong>
+                            </div>
+                            {% if at_risk_clients %}
+                                <div style="max-height: 120px; overflow-y: auto;">
+                                    {% for client in at_risk_clients %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded client-card small" style="cursor: pointer;" onclick="window.showClientSummary('{{ client.id }}', 'risk', '{{ client.risk_reason|replace("'", "\\'") }}')">
+                                        <div>
+                                            <strong class="text-primary">{{ client.name }}</strong>
+                                            <br><span class="text-muted">Score: {{ client.total_score }}</span>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <small class="text-muted">No at-risk clients identified</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Stable Clients -->
+                        <div class="col-lg-6 mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong class="text-success">Stable ({{ stable_clients|length }})</strong>
+                            </div>
+                            {% if stable_clients %}
+                                <div style="max-height: 120px; overflow-y: auto;">
+                                    {% for client in stable_clients %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded client-card small" style="cursor: pointer;" onclick="window.showClientSummary('{{ client.id }}', 'stable', '{{ client.stability_reason|replace("'", "\\'") }}')">
+                                        <div>
+                                            <strong class="text-primary">{{ client.name }}</strong>
+                                            <br><span class="text-muted">Score: {{ client.total_score }}</span>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <small class="text-muted">No stable clients identified</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>All Company Monthly Scoresheet Trends
+                    </h6>
                 </div>
                 <div class="card-body">
+                    <canvas id="monthlyTrendsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>90 Day Average Score per Account Manager
+                    </h6>
+                </div>
+                <div class="card-body" style="height: 250px;">
+                    <canvas id="topAccountManagerChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Sections -->
+    
+    <!-- Section 1: All Clients Trends (Company Performance) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>Company-Wide Performance Analysis
+                        <small class="ms-2 text-muted d-none d-md-inline">What we do well vs. areas for improvement</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Complete Metrics Performance Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover" id="metricsTable">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Client Name</th>
-                                    <th>Overall Score</th>
-                                    <th>Performance Level</th>
-                                    <th>Actions</th>
+                                    <th class="sortable" data-sort="metric_name">
+                                        <i class="fas fa-sort me-1"></i>Metric
+                                    </th>
+                                    <th class="sortable text-center" data-sort="weighted_percentage">
+                                        <i class="fas fa-sort me-1"></i>Weighted %
+                                    </th>
+                                    <th class="sortable text-center" data-sort="trend_direction">
+                                        <i class="fas fa-sort me-1"></i>Trend
+                                    </th>
+                                    <th class="sortable text-center" data-sort="relative_performance">
+                                        <i class="fas fa-sort me-1"></i>Relative Ranking
+                                    </th>
+                                    <th class="text-center">Raw Score</th>
+                                    <th class="text-center">Data Points</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for r in rows %}
+                                {% for metric in company_metrics.metrics_summary %}
                                 <tr>
                                     <td>
-                                        <strong>{{ r.client.name }}</strong>
-                                        {% if r.client.description %}
-                                        <br>
-                                        <small class="text-muted">{{ r.client.description[:40] }}{% if r.client.description|length > 40 %}...{% endif %}</small>
+                                        <strong>{{ metric.metric_name }}</strong>
+                                        {% if metric.weight > 1 %}
+                                        <small class="text-muted">(Weight: {{ metric.weight }})</small>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <span class="h4 
-                                            {% if r.overall >= 80 %}text-success
-                                            {% elif r.overall >= 60 %}text-warning
-                                            {% else %}text-danger{% endif %}">
-                                            {{ r.overall }}
-                                        </span>
-                                        <small class="text-muted">/100</small>
+                                    <td class="text-center">
+                                        <div class="progress mb-1" style="height: 18px;" 
+                                             title="Weighted %: {{ metric.performance_percentage }}% performance × weight {{ metric.weight }} = {{ metric.weighted_percentage }}% of maximum possible for this metric"
+                                             data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <div class="progress-bar bg-info" 
+                                                 role="progressbar" 
+                                                 style="width: {{ metric.weighted_percentage }}%"
+                                                 aria-valuenow="{{ metric.weighted_percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ metric.weighted_percentage }}%
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td>
-                                        {% if r.overall >= 80 %}
-                                            <span class="badge bg-success">Excellent</span>
-                                        {% elif r.overall >= 60 %}
-                                            <span class="badge bg-warning">Good</span>
-                                        {% elif r.overall >= 40 %}
-                                            <span class="badge bg-warning">Needs Attention</span>
+                                    <td class="text-center">
+                                        {% if metric.trend_direction == 'trending_up' %}
+                                        <i class="fas fa-arrow-up text-success" 
+                                           title="Trending Up: Recent half of scores show 15%+ improvement vs older half"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
+                                        <small class="text-success">Improving</small>
+                                        {% elif metric.trend_direction == 'trending_down' %}
+                                        <i class="fas fa-arrow-down text-danger" 
+                                           title="Trending Down: Recent half of scores show 15%+ decline vs older half"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
+                                        <small class="text-danger">Declining</small>
                                         {% else %}
-                                            <span class="badge bg-danger">Critical</span>
+                                        <i class="fas fa-minus text-muted" 
+                                           title="Stable: Less than 15% change between recent vs older score averages (min 6 scores needed)"
+                                           data-bs-toggle="tooltip" data-bs-placement="top"></i>
+                                        <small class="text-muted">Stable</small>
                                         {% endif %}
                                     </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-{{ metric.color }}" 
+                                              title="Relative ranking (normalized): All metrics compared on 0-1 scale. {% if metric.relative_performance == 'Our Strength' %}Top 33% performers{% elif metric.relative_performance == 'Moderate Performance' %}Middle 33% - steady performance{% else %}Bottom 33% - improvement needed{% endif %}. Cross Selling: score÷5 (actual max), others: 0-1 scale."
+                                              data-bs-toggle="tooltip" data-bs-placement="top">
+                                            {{ metric.relative_performance }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ metric.average_score }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ metric.total_entries }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <!-- Summary Cards -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Our Strengths</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for strength in company_metrics.top_strengths %}
+                                    <div class="mb-2">
+                                        <strong>{{ strength.metric_name }}</strong>
+                                        <span class="float-end text-success">{{ strength.performance_percentage }}%</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-focus me-2"></i>Focus Areas</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for area in company_metrics.focus_areas %}
+                                    <div class="mb-2">
+                                        <strong>{{ area.metric_name }}</strong>
+                                        <span class="float-end text-info">{{ area.performance_percentage }}%</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                    <!-- All Metrics Overview -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">Complete Metrics Performance Overview</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Average Score</th>
+                                        <th>Weighted Score</th>
+                                        <th>Performance Level</th>
+                                        <th>Total Entries</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for metric in company_metrics.all_metrics %}
+                                    <tr>
+                                        <td><strong>{{ metric.metric_name }}</strong></td>
+                                        <td>{{ metric.average_score }}</td>
+                                        <td>{{ metric.weighted_average }}</td>
+                                        <td><span class="badge bg-{{ metric.color }}">{{ metric.performance_level }}</span></td>
+                                        <td>{{ metric.total_entries }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Performance by Account Owner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Performance by Account Owner
+                        <small class="ms-2 text-muted d-none d-md-inline">Individual strengths and improvement areas</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Account Owner</th>
+                                    <th>Avg Scoresheet</th>
+                                    <th>Clients Managed</th>
+                                    <th>Scoresheets</th>
+                                    <th>Strongest Area</th>
+                                    <th>Needs Focus</th>
+                                    <th>Normalized Breakdown</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for owner in account_owner_performance %}
+                                <tr>
+                                    <td><strong>{{ owner.name }}</strong></td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ url_for('manager.client_scoresheet', client_id=r.client.id) }}" 
-                                               class="btn btn-outline-primary" title="View Client Scoresheet">
-                                                <i data-feather="user"></i> Scoresheet
-                                            </a>
-                                            <a href="{{ url_for('manager.client_trend', client_id=r.client.id) }}" 
-                                               class="btn btn-outline-info" title="Performance Trends">
-                                                <i data-feather="trending-up"></i> Trends
-                                            </a>
+                                        <span class="badge bg-{% if owner.avg_scoresheet_total >= 25 %}success{% elif owner.avg_scoresheet_total >= 18 %}warning{% else %}danger{% endif %} fs-6">
+                                            {{ owner.avg_scoresheet_total }} pts
+                                        </span>
+                                        <small class="d-block text-muted">per scoresheet</small>
+                                    </td>
+                                    <td>{{ owner.client_count }}</td>
+                                    <td>{{ owner.scoresheet_count }}</td>
+                                    <td>
+                                        <small class="text-success">
+                                            <strong>{{ owner.strongest_metric }}</strong><br>
+                                            {{ owner.strongest_percentage }}%
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="text-warning">
+                                            <strong>{{ owner.weakest_metric }}</strong><br>
+                                            {{ owner.weakest_percentage }}%
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#breakdown{{ loop.index }}">
+                                            View Normalized %
+                                        </button>
+                                        <div class="collapse mt-2" id="breakdown{{ loop.index }}">
+                                            {% for metric, percentage in owner.normalized_metrics.items() %}
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <small>{{ metric }}:</small>
+                                                <small><strong>{{ percentage }}%</strong></small>
+                                            </div>
+                                            {% endfor %}
                                         </div>
                                     </td>
                                 </tr>
@@ -186,511 +541,598 @@
         </div>
     </div>
 
-    <!-- Enhanced Performance Trends Section -->
+
+
+
+
+    <!-- Performance Grading System (moved to bottom) -->
     <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5><i data-feather="bar-chart-2" class="me-2"></i>Individual Metrics Trends</h5>
-                    <div class="btn-group btn-group-sm">
-                        <select class="form-select form-select-sm" id="clientSelector" onchange="updateCharts()">
-                            <option value="">All Clients Average</option>
-                            {% for row in rows %}
-                            <option value="{{ row.client.id }}">{{ row.client.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <canvas id="metricsChart" width="400" height="200"></canvas>
-                    <small class="text-muted">Click any data point to view detailed monthly scores</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i data-feather="trending-up" class="me-2"></i>Aggregate Performance Trends</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="aggregateChart" width="400" height="200"></canvas>
-                    <small class="text-muted">Overall weighted performance across all metrics</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Monthly Drill-Down Modal -->
-    <div class="modal fade" id="monthlyDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Monthly Score Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="monthlyDetails">
-                        <!-- Dynamic content will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Performance Summary -->
-    <div class="row mt-4">
-        {% set excellent_count = rows | selectattr('overall', 'ge', 80) | list | length %}
-        {% set good_count = rows | selectattr('overall', 'ge', 60) | rejectattr('overall', 'ge', 80) | list | length %}
-        {% set needs_attention_count = rows | selectattr('overall', 'ge', 40) | rejectattr('overall', 'ge', 60) | list | length %}
-        {% set critical_count = rows | rejectattr('overall', 'ge', 40) | list | length %}
-
-        <div class="col-md-3">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <h3 class="text-success">{{ excellent_count }}</h3>
-                    <p class="card-text">Excellent (80+)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <h3 class="text-warning">{{ good_count }}</h3>
-                    <p class="card-text">Good (60-79)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <h3 class="text-warning">{{ needs_attention_count }}</h3>
-                    <p class="card-text">Needs Attention (40-59)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-danger">
-                <div class="card-body">
-                    <h3 class="text-danger">{{ critical_count }}</h3>
-                    <p class="card-text">Critical (<40)</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {% else %}
-    <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <h5 class="text-muted">No Scoring Data Available</h5>
-                    <p class="text-muted">Client scores will appear here once metrics and scoring data are entered.</p>
-                    <a href="{{ url_for('manager.dashboard') }}" class="btn btn-primary">
-                        <i class="fas fa-tachometer-alt"></i> Return to Dashboard
-                    </a>
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>Performance Grading System
+                        <small class="ms-2 text-muted d-none d-md-inline">Understanding score ranges and performance levels</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>Excellent Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-success fs-6">90-100%</span>
+                                        <span class="text-muted">65-72 points</span>
+                                    </div>
+                                    <p class="small mb-0">Strong client engagement across all metrics with consistent high performance.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Good Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-warning fs-6">70-89%</span>
+                                        <span class="text-muted">50-64 points</span>
+                                    </div>
+                                    <p class="small mb-0">Solid client relationships with opportunities for targeted improvements.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Needs Improvement</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-danger fs-6">&lt;70%</span>
+                                        <span class="text-muted">Below 50 points</span>
+                                    </div>
+                                    <p class="small mb-0">Requires focused attention and action plans to strengthen client engagement.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2"><i class="fas fa-info-circle me-2"></i>Scoring Method</h6>
+                                <p class="mb-0 small">Weighted scores based on metric importance and client impact assessment.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-2"></i>Maximum Score</h6>
+                                <p class="mb-0 small">72 points total - representing optimal performance across all engagement metrics.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Chart instances
-let metricsChart, aggregateChart;
+<!-- Client Summary Modal -->
+<div class="modal fade" id="clientSummaryModal" tabindex="-1" aria-labelledby="clientSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientSummaryModalLabel">AI Client Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div id="modalIcon" class="me-3 fs-2"></div>
+                    <div>
+                        <h6 id="modalClientName" class="mb-1"></h6>
+                        <span id="modalCategory" class="badge"></span>
+                    </div>
+                </div>
+                <div class="alert" id="modalContent">
+                    <h6 class="fw-bold mb-2">Analysis Summary</h6>
+                    <p id="modalReason" class="mb-0"></p>
+                </div>
+                <div class="mt-3">
+                    <h6 class="fw-bold mb-2">Recommended Actions</h6>
+                    <ul id="modalActions" class="mb-0">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modalViewClient" href="#" class="btn btn-primary">View Client Details</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-// Initialize charts with your authentic client data
+<!-- Chart.js Scripts -->
+<script>
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
+    // Monthly Trends Chart
+    const monthlyTrendsElement = document.getElementById('monthlyTrendsChart');
+    if (monthlyTrendsElement) {
+        try {
+            const chartLabels = {{ chart_data.monthly_trends.labels | tojson | safe }};
+            const chartData = {{ chart_data.monthly_trends.data | tojson | safe }};
+            
+            console.log('Chart labels:', chartLabels);
+            console.log('Chart data:', chartData);
+            
+            if (chartLabels && chartData && chartLabels.length > 0 && chartData.length > 0) {
+                const monthlyCtx = monthlyTrendsElement.getContext('2d');
+                new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Average Scoresheet Total',
+                            data: chartData,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            pointBackgroundColor: 'rgb(75, 192, 192)',
+                            pointBorderColor: 'rgb(75, 192, 192)',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 55,
+                                ticks: {
+                                    stepSize: 10
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Weighted Score Total (Range: 3-53)'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.error('Chart data is empty or invalid');
+                monthlyTrendsElement.innerHTML = '<div class="text-center text-muted p-4">No monthly trend data available</div>';
+            }
+        } catch (error) {
+            console.error('Error creating monthly trends chart:', error);
+            monthlyTrendsElement.innerHTML = '<div class="text-center text-danger p-4">Chart failed to load</div>';
+        }
+    } else {
+        console.error('monthlyTrendsChart element not found');
+    }
+
+// Top Account Manager Chart
+const topAccountManagerElement = document.getElementById('topAccountManagerChart');
+if (topAccountManagerElement) {
+    const topAccountManagerCtx = topAccountManagerElement.getContext('2d');
+    new Chart(topAccountManagerCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ account_owner_performance | map(attribute='name') | list | tojson }},
+            datasets: [{
+                label: '90-Day Average Score',
+                data: {{ account_owner_performance | map(attribute='avg_scoresheet_total') | list | tojson }},
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 55,
+                    ticks: {
+                        stepSize: 10
+                    },
+                    title: {
+                        display: true,
+                        text: 'Average Score (Range: 3-53)'
+                    }
+                }
+            },
+            animation: {
+                onComplete: function() {
+                    const ctx = this.chart.ctx;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 12px Arial';
+                    
+                    this.data.datasets.forEach((dataset, i) => {
+                        const meta = this.chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            const data = dataset.data[index];
+                            ctx.fillText(data.toFixed(1), bar.x, bar.y - 5);
+                        });
+                    });
+                }
+            }
+        }
+    });
+}
+
+// Account Manager Chart (for charts section)
+const accountManagerElement = document.getElementById('accountManagerChart');
+if (accountManagerElement) {
+    const accountManagerCtx = accountManagerElement.getContext('2d');
+new Chart(accountManagerCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ account_owner_performance | map(attribute='name') | list | tojson }},
+        datasets: [{
+            label: '90-Day Average Score',
+            data: {{ account_owner_performance | map(attribute='avg_scoresheet_total') | list | tojson }},
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)'
+            ],
+            borderColor: [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 205, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                formatter: function(value) {
+                    return value.toFixed(1);
+                },
+                font: {
+                    weight: 'bold'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 55,
+                ticks: {
+                    stepSize: 10
+                },
+                title: {
+                    display: true,
+                    text: 'Weighted Score (Range: 3-53)'
+                }
+            }
+        },
+        onComplete: function(chart) {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const data = dataset.data[index];
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(data.toFixed(1), bar.x, bar.y - 5);
+                });
+            });
+        }
+    }
+});
+}
+
+// Global Client Summary Modal Functions (defined at script level)
+window.showClientSummary = function(clientId, category, reason) {
+    const modal = new bootstrap.Modal(document.getElementById('clientSummaryModal'));
+    const clientName = getClientName(clientId);
+    
+    // Set modal content based on category
+    document.getElementById('modalClientName').textContent = clientName;
+    document.getElementById('modalReason').textContent = reason;
+    document.getElementById('modalViewClient').href = `/manager/client/${clientId}/trend`;
+    
+    const modalIcon = document.getElementById('modalIcon');
+    const modalCategory = document.getElementById('modalCategory');
+    const modalContent = document.getElementById('modalContent');
+    const modalActions = document.getElementById('modalActions');
+    
+    if (category === 'risk') {
+        modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i>';
+        modalCategory.textContent = 'At Risk Client';
+        modalCategory.className = 'badge bg-danger';
+        modalContent.className = 'alert alert-danger';
+        modalActions.innerHTML = `
+            <li>Schedule immediate client review meeting</li>
+            <li>Analyze service delivery pain points</li>
+            <li>Develop targeted improvement plan</li>
+            <li>Increase communication frequency</li>
+        `;
+    } else if (category === 'stable') {
+        modalIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+        modalCategory.textContent = 'Stable Client';
+        modalCategory.className = 'badge bg-success';
+        modalContent.className = 'alert alert-success';
+        modalActions.innerHTML = `
+            <li>Maintain current service quality</li>
+            <li>Explore expansion opportunities</li>
+            <li>Request testimonials and referrals</li>
+            <li>Continue regular check-ins</li>
+        `;
+    } else if (category === 'stagnant') {
+        modalIcon.innerHTML = '<i class="fas fa-clock text-warning"></i>';
+        modalCategory.textContent = 'Stagnant Account';
+        modalCategory.className = 'badge bg-warning text-dark';
+        modalContent.className = 'alert alert-warning';
+        modalActions.innerHTML = `
+            <li>Contact client to assess current needs</li>
+            <li>Schedule account status review</li>
+            <li>Verify contact information is current</li>
+            <li>Determine if account is still active</li>
+        `;
+    }
+    
+    modal.show();
+};
+
+window.getClientName = function(clientId) {
+    // Extract client name from the page elements
+    const clientElements = document.querySelectorAll(`[onclick*="${clientId}"]`);
+    if (clientElements.length > 0) {
+        const parentDiv = clientElements[0].closest('.client-card');
+        if (parentDiv) {
+            const nameElement = parentDiv.querySelector('strong');
+            if (nameElement) return nameElement.textContent;
+        }
+    }
+    return `Client ${clientId}`;
+};
+
 });
 
-function initializeCharts() {
-    // Individual Metrics Chart
-    const metricsCtx = document.getElementById('metricsChart');
-    if (metricsCtx) {
-        metricsChart = new Chart(metricsCtx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025'],
-                datasets: [
-                    {
-                        label: 'Strategic Planning',
-                        data: [65, 68, 70, 72, 75, 78, 80, 82],
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'QBR Completion',
-                        data: [45, 50, 55, 60, 62, 65, 68, 70],
-                        borderColor: '#198754',
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'Help Desk Usage',
-                        data: [75, 72, 78, 80, 85, 82, 88, 90],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'VCIO Engagement',
-                        data: [55, 58, 62, 65, 68, 70, 72, 75],
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'Cross Selling',
-                        data: [25, 28, 30, 32, 35, 38, 40, 42],
-                        borderColor: '#6f42c1',
-                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'point'
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y + '%';
-                            }
-                        }
-                    }
-                },
-                onClick: function(event, elements) {
-                    if (elements.length > 0) {
-                        const dataIndex = elements[0].index;
-                        const datasetIndex = elements[0].datasetIndex;
-                        const metric = this.data.datasets[datasetIndex].label;
-                        const month = this.data.labels[dataIndex];
-                        const score = this.data.datasets[datasetIndex].data[dataIndex];
-                        showMonthlyDetails(month, metric, score);
-                    }
-                }
-            }
-        });
-    }
+// Table sorting functionality with toggle
+let sortState = {}; // Track sort direction for each column
 
-    // Aggregate Performance Chart
-    const aggregateCtx = document.getElementById('aggregateChart');
-    if (aggregateCtx) {
-        aggregateChart = new Chart(aggregateCtx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025'],
-                datasets: [{
-                    label: 'Overall Performance',
-                    data: [58, 61, 64, 67, 70, 72, 75, 78],
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 8,
-                    pointHoverRadius: 10,
-                    pointBackgroundColor: '#0d6efd',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'point'
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Aggregate Score: ' + context.parsed.y + '%';
-                            }
-                        }
-                    }
-                },
-                onClick: function(event, elements) {
-                    if (elements.length > 0) {
-                        const dataIndex = elements[0].index;
-                        const month = this.data.labels[dataIndex];
-                        const score = this.data.datasets[0].data[dataIndex];
-                        showAggregateDetails(month, score);
-                    }
-                }
-            }
-        });
-    }
-}
-
-// Show monthly details modal for individual metrics
-function showMonthlyDetails(month, metric, score) {
-    document.getElementById('modalTitle').textContent = `${metric} - ${month}`;
-    document.getElementById('monthlyDetails').innerHTML = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Metric Performance</h6>
-                <div class="card bg-light">
-                    <div class="card-body">
-                        <h4 class="text-primary">${score}%</h4>
-                        <p class="mb-0">${metric} engagement score for ${month}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h6>Performance Analysis</h6>
-                <ul class="list-unstyled">
-                    <li><i class="text-success me-2" data-feather="check-circle"></i>Client engagement tracked</li>
-                    <li><i class="text-info me-2" data-feather="trending-up"></i>Monthly assessment complete</li>
-                    <li><i class="text-warning me-2" data-feather="clock"></i>Regular monitoring in place</li>
-                </ul>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-12">
-                <h6>Client Performance for ${month}</h6>
-                <p class="text-muted">Detailed breakdown of ${metric} performance across your client portfolio</p>
-                <div class="alert alert-info">
-                    <i data-feather="info" class="me-2"></i>
-                    This shows authentic engagement data from your Q1 2025 client assessments
-                </div>
-            </div>
-        </div>
-    `;
+function sortTable(columnIndex, sortType) {
+    const table = document.getElementById('metricsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
     
-    // Reinitialize feather icons
-    if (typeof feather !== 'undefined') {
-        feather.replace();
+    // Toggle sort direction
+    if (!sortState[columnIndex]) {
+        sortState[columnIndex] = 'desc';
+    } else {
+        sortState[columnIndex] = sortState[columnIndex] === 'desc' ? 'asc' : 'desc';
     }
     
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('monthlyDetailModal'));
-    modal.show();
-}
-
-// Show aggregate performance details
-function showAggregateDetails(month, score) {
-    document.getElementById('modalTitle').textContent = `Aggregate Performance - ${month}`;
-    document.getElementById('monthlyDetails').innerHTML = `
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card bg-primary text-white text-center">
-                    <div class="card-body">
-                        <h3>${score}%</h3>
-                        <p class="mb-0">Overall Score</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8">
-                <h6>Performance Composition</h6>
-                <p class="text-muted">Weighted combination of all engagement metrics for ${month}</p>
-                <div class="list-group">
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        Strategic Planning & QBR
-                        <span class="badge bg-primary rounded-pill">High Priority</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        Help Desk & VCIO Engagement
-                        <span class="badge bg-info rounded-pill">Regular Monitoring</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        Cross Selling Opportunities
-                        <span class="badge bg-success rounded-pill">Growth Focus</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-success">
-                    <h6 class="alert-heading">Q1 2025 Authentic Data</h6>
-                    <p class="mb-0">This aggregate score reflects your actual client engagement metrics with proper weighting based on your business priorities.</p>
-                </div>
-            </div>
-        </div>
-    `;
+    const isAscending = sortState[columnIndex] === 'asc';
     
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('monthlyDetailModal'));
-    modal.show();
-}
-
-// Update charts based on client selection
-function updateCharts() {
-    const selectedClient = document.getElementById('clientSelector').value;
-    
-    // In a real implementation, this would fetch actual client-specific data
-    // For now, we maintain the authentic data structure
-    if (selectedClient && metricsChart && aggregateChart) {
-        // Charts would be updated with client-specific authentic data
-        // This preserves your Q1 2025 engagement metrics structure
-        console.log('Loading data for client:', selectedClient);
-    }
-}
-
-// Filter by specific metric
-function filterByMetric() {
-    const selectedMetric = document.getElementById('metric_filter').value;
-    const tableRows = document.querySelectorAll('#clientTable tbody tr');
-    
-    if (!selectedMetric) {
-        // Show all rows
-        tableRows.forEach(row => {
-            row.style.display = '';
-        });
-        return;
-    }
-    
-    // Filter table to highlight selected metric performance
-    tableRows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-            // Add visual emphasis to the metric column
-            cells.forEach(cell => {
-                cell.classList.remove('bg-warning', 'bg-info');
-            });
-            
-            // Highlight metric-related performance
-            const scoreCell = cells[1]; // Assuming score is in second column
-            if (scoreCell) {
-                scoreCell.classList.add('bg-info', 'text-white');
-            }
-        }
-    });
-    
-    // Update charts to focus on selected metric
-    if (metricsChart && selectedMetric) {
-        metricsChart.data.datasets.forEach((dataset, index) => {
-            if (dataset.label.toLowerCase().includes(selectedMetric.toLowerCase())) {
-                dataset.borderWidth = 4;
-                dataset.pointRadius = 8;
-            } else {
-                dataset.borderWidth = 2;
-                dataset.pointRadius = 4;
-            }
-        });
-        metricsChart.update();
-    }
-}
-
-// Update comparison with selected clients
-function updateComparison() {
-    const selectedClients = Array.from(document.getElementById('client_compare').selectedOptions);
-    const comparisonDiv = document.getElementById('clientComparison');
-    
-    if (selectedClients.length === 0) {
-        if (comparisonDiv) {
-            comparisonDiv.innerHTML = '<p class="text-muted">Select clients above to compare their performance</p>';
-        }
-        return;
-    }
-    
-    // Create comparison view
-    let comparisonHTML = `
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6><i data-feather="users" class="me-2"></i>Client Comparison (${selectedClients.length} selected)</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-    `;
-    
-    selectedClients.forEach(option => {
-        const clientName = option.textContent.split(' (')[0];
-        const clientScore = option.textContent.match(/\((\d+)%\)/)[1];
+    rows.sort((a, b) => {
+        const aValue = a.cells[columnIndex].textContent.trim();
+        const bValue = b.cells[columnIndex].textContent.trim();
         
-        comparisonHTML += `
-            <div class="col-md-4 mb-3">
-                <div class="card border-primary">
-                    <div class="card-body text-center">
-                        <h5>${clientName}</h5>
-                        <h3 class="text-primary">${clientScore}%</h3>
-                        <div class="progress mb-2">
-                            <div class="progress-bar" style="width: ${clientScore}%"></div>
-                        </div>
-                        <small class="text-muted">Overall Engagement</small>
-                    </div>
-                </div>
-            </div>
-        `;
+        let comparison = 0;
+        if (sortType === 'numeric') {
+            const aNum = parseFloat(aValue.replace('%', '').replace(',', ''));
+            const bNum = parseFloat(bValue.replace('%', '').replace(',', ''));
+            comparison = aNum - bNum;
+        } else {
+            comparison = aValue.localeCompare(bValue);
+        }
+        
+        return isAscending ? comparison : -comparison;
     });
     
-    comparisonHTML += `
-                </div>
-                <div class="alert alert-info mt-3">
-                    <i data-feather="info" class="me-2"></i>
-                    Comparison based on your authentic Q1 2025 engagement metrics with proper weighting
-                </div>
-            </div>
-        </div>
-    `;
+    // Clear and append sorted rows
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Add click handlers for sortable columns and initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     
-    if (comparisonDiv) {
-        comparisonDiv.innerHTML = comparisonHTML;
-        // Reinitialize feather icons
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    sortableHeaders.forEach((header, index) => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const sortType = header.getAttribute('data-sort') === 'performance_percentage' ? 'numeric' : 'text';
+            sortTable(index, sortType);
+            
+            // Update sort indicators
+            sortableHeaders.forEach(h => h.classList.remove('sort-active'));
+            header.classList.add('sort-active');
+        });
+    });
+});
+
+// Client Selection Functions
+function toggleAllClients() {
+    const selectAllCheckbox = document.getElementById('selectAllClients');
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    
+    clientCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function updateClientSelection() {
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllClients');
+    
+    const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+    const totalBoxes = clientCheckboxes.length;
+    
+    // Update "Select All" checkbox state
+    if (checkedBoxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedBoxes.length === totalBoxes) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+    const countElement = document.getElementById('selectedCount');
+    if (countElement) {
+        countElement.textContent = checkedBoxes.length;
     }
 }
 
-function exportReport(format) {
-    alert('Export functionality coming soon! Your ' + format.toUpperCase() + ' report will include all client data and trends.');
+function filterClients() {
+    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+    const clientCheckboxes = document.querySelectorAll('#clientCheckboxes .form-check');
+    
+    clientCheckboxes.forEach(clientDiv => {
+        const label = clientDiv.querySelector('label');
+        const clientName = label.textContent.toLowerCase();
+        
+        if (clientName.includes(searchTerm)) {
+            clientDiv.style.display = 'block';
+        } else {
+            clientDiv.style.display = 'none';
+        }
+    });
+    
+    // Update "Select All" state after filtering
+    updateClientSelection();
 }
 
-// Auto-refresh every 60 seconds to show latest scores
-setTimeout(function() {
-    location.reload();
-}, 60000);
+function selectNone() {
+    const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+    clientCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateClientSelection();
+}
+
+function selectAtRisk() {
+    // First uncheck all
+    selectNone();
+    
+    // Then check only at-risk clients
+    const atRiskClients = document.querySelectorAll('[data-client-type="at-risk"] .client-checkbox');
+    atRiskClients.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateClientSelection();
+}
+
+function selectStable() {
+    // First uncheck all
+    selectNone();
+    
+    // Then check only stable clients
+    const stableClients = document.querySelectorAll('[data-client-type="stable"] .client-checkbox');
+    stableClients.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateClientSelection();
+}
+
+// Initialize client selection on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateClientSelection();
+});
+
+// Export functions
+function exportReport(format) {
+    if (format === 'pdf') {
+        window.print();
+    } else if (format === 'excel') {
+        alert('Excel export functionality coming soon!');
+    }
+}
 </script>
+
+<!-- Client Summary Modal -->
+<div class="modal fade" id="clientSummaryModal" tabindex="-1" aria-labelledby="clientSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientSummaryModalLabel">
+                    <span id="modalIcon"></span>
+                    <span id="modalClientName"></span>
+                    <span id="modalCategory" class="badge ms-2"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent" class="mb-3">
+                    <h6>AI Analysis:</h6>
+                    <p id="modalReason"></p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Recommended Actions:</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul id="modalActions" class="mb-0">
+                            <!-- Actions will be populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="modalViewClient" class="btn btn-primary">
+                    <i class="fas fa-chart-line me-1"></i>View Client Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
