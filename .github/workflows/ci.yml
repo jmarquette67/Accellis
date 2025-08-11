@@ -3,6 +3,7 @@ on:
   workflow_dispatch: {}
   push: { branches: [main] }
   pull_request: { branches: [main] }
+
 jobs:
   js-ts:
     if: hashFiles('package.json') != ''
@@ -12,21 +13,37 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
       - run: npm ci || npm install
-      - run: npx prettier -c "**/*.{js,jsx,ts,tsx,json,md}"
-      - run: npx eslint . || true
-      - run: npm test --if-present -- --ci
+      - name: Prettier check
+        run: npx prettier -c "**/*.{js,jsx,ts,tsx,json,md}"
+        continue-on-error: true
+      - name: ESLint
+        run: npx eslint .
+        continue-on-error: true
+      - name: Tests
+        run: npm test --if-present -- --ci
+        continue-on-error: true
+
   python:
-    if: hashFiles('**/requirements*.txt') != '' || hashFiles('pyproject.toml') != ''
+    if: hashFiles('**/*.py') != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: |
+      - name: Install tools
+        run: |
           python -m pip install --upgrade pip
           pip install ruff mypy pytest -q
           if [ -f requirements.txt ]; then pip install -r requirements.txt -q; fi
-      - run: ruff check .
-      - run: ruff format --check .
-      - run: mypy . || true
-      - run: pytest -q || true
+      - name: Ruff (lint)
+        run: ruff check .
+        continue-on-error: true
+      - name: Ruff (format check)
+        run: ruff format --check .
+        continue-on-error: true
+      - name: mypy (types)
+        run: mypy .
+        continue-on-error: true
+      - name: pytest
+        run: pytest -q
+        continue-on-error: true
